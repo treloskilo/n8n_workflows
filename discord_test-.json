@@ -1,0 +1,120 @@
+{
+  "updatedAt": "2025-11-06T10:29:02.000Z",
+  "createdAt": "2025-11-06T08:31:13.387Z",
+  "id": "dMTDviWw6nSf2kEW",
+  "name": "Discord_Test",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3c448289-d903-4106-84c3-f871b43fcf89",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1163183137178783786",
+          "mode": "id"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1163183137837297747",
+          "mode": "list",
+          "cachedResultName": "my_network",
+          "cachedResultUrl": "https://discord.com/channels/1163183137178783786/1163183137837297747"
+        },
+        "content": "kyu,yu,  μπλα μπλα",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -96
+      ],
+      "id": "ebfd7021-a801-41ca-8256-3289a139ec62",
+      "name": "Send a message",
+      "webhookId": "fffcdd44-09a9-4bab-ac8d-14208b1d539a",
+      "credentials": {
+        "discordOAuth2Api": {
+          "id": "8k3CMZKN9sxDsZRO",
+          "name": "Discord account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channelIds": [
+          "1163183137837297747"
+        ],
+        "roleIds": [
+          "1435903998917087273",
+          "1435907593720565843",
+          "1435924032426872914"
+        ],
+        "value": "ms",
+        "botMention": true
+      },
+      "type": "@jordanburke/n8n-nodes-discord.discordTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -192
+      ],
+      "id": "7aa90e28-159d-4437-81c8-37098982dd99",
+      "name": "Discord Trigger",
+      "webhookId": "de513057-04bd-4e25-ba99-13e3fd438b03",
+      "credentials": {
+        "discordApi": {
+          "id": "DlKx8JBoJA18xKHW",
+          "name": "Discord App account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8406c6d0-d28d-49a0-b1ab-36f4367f58ef",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-06T08:31:13.389Z",
+      "createdAt": "2025-11-06T08:31:13.389Z",
+      "role": "workflow:owner",
+      "workflowId": "dMTDviWw6nSf2kEW",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
