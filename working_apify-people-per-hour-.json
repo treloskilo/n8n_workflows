@@ -1,0 +1,1254 @@
+{
+  "updatedAt": "2025-11-26T22:05:47.000Z",
+  "createdAt": "2025-11-26T17:11:41.481Z",
+  "id": "apArQjq1ZukwLDzC",
+  "name": "Working_Apify People Per Hour",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -528,
+        -32
+      ],
+      "id": "21efc12d-04fd-467f-9ea5-542abd116e5d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "OHmiAvRB1gsj5z1R1",
+          "mode": "list",
+          "cachedResultName": "PeoplePerHour Job Scraper (getdataforme/PeoplePerHour-Job-Scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/OHmiAvRB1gsj5z1R1/input"
+        },
+        "customBody": "{\n    \"item_limit\": 20,\n    \"proxyConfiguration\": {\n        \"useApifyProxy\": true,\n        \"apifyProxyGroups\": [\n            \"RESIDENTIAL\"\n        ]\n    },\n    \"queries\": [\n        \"server\",\n        \"Greece\"\n    ]\n}",
+        "timeout": {}
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -32
+      ],
+      "id": "1cbf8aac-97b7-4839-8436-ac6ab6f0532e",
+      "name": "Run an Actor and get dataset",
+      "credentials": {
+        "apifyApi": {
+          "id": "PaDumLHavGVSAVJW",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04b2eed5-6d3f-45dd-874c-8c4402eae8d8",
+              "name": "Title - Query",
+              "value": "={{ $json.title }} - {{ $json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "78160a1c-93b8-466c-b2ab-87edd29a5963",
+              "name": "Description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "8a4dbfb0-013b-4be6-a499-2c047336ea18",
+              "name": "Buget in EUR (aprox)",
+              "value": "={{ $json.budget * 1.17 }}€\n",
+              "type": "string"
+            },
+            {
+              "id": "13e333a8-3ba1-47b6-a3cf-572ed32ed453",
+              "name": "Proposals",
+              "value": "={{ $json.proposal_count }}",
+              "type": "string"
+            },
+            {
+              "id": "9af213f3-aefc-4206-87c5-4d4596aed456",
+              "name": "Client Name",
+              "value": "={{ $json.client_name }}",
+              "type": "string"
+            },
+            {
+              "id": "2796dfb6-70d3-4df8-84c3-9a6d52b0d412",
+              "name": "Client Country",
+              "value": "={{ $json.client_country }}",
+              "type": "string"
+            },
+            {
+              "id": "84c27010-9b5b-4c4f-ad86-ffa58739fb4b",
+              "name": "Duration",
+              "value": "={{ $json.posted_date }} - {{ $json.expiry_date }}",
+              "type": "string"
+            },
+            {
+              "id": "84868d1d-6933-467f-9e64-64aad3ab702e",
+              "name": "URL",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        -32
+      ],
+      "id": "904cfcdb-5617-4634-9cfa-c45916316660",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// \"items\" contains the rows from Edit Fields\nconst rows = items;\n\n// Protect against empty data\nif (!rows.length) {\n  return [{ json: {}, binary: {} }];\n}\n\n// Get headers from first row\nconst headers = Object.keys(rows[0].json);\n\n// Styled HTML table\nlet html = `\n<!DOCTYPE html>\n<html>\n<head>\n<style>\nbody {\n  font-family: Arial, sans-serif;\n  padding: 20px;\n}\n\ntable {\n  border-collapse: collapse;\n  width: 100%;\n  font-size: 14px;\n}\n\nth {\n  background: #4CAF50;\n  color: white;\n  padding: 10px;\n  text-align: left;\n}\n\ntd {\n  padding: 10px;\n  border-bottom: 1px solid #ddd;\n}\n\ntr:nth-child(even) {\n  background-color: #f9f9f9;\n}\n\ntr:hover {\n  background-color: #f1f1f1;\n}\n</style>\n</head>\n<body>\n\n<h2>Generated Report</h2>\n\n<table>\n`;\n\n// Header row\nhtml += `<tr>`;\nfor (const h of headers) {\n  html += `<th>${h}</th>`;\n}\nhtml += `</tr>`;\n\n// Data rows\nfor (const row of rows) {\n  html += `<tr>`;\n  for (const h of headers) {\n    html += `<td>${row.json[h] ?? \"\"}</td>`;\n  }\n  html += `</tr>`;\n}\n\nhtml += `\n</table>\n\n</body>\n</html>\n`;\n\n// Convert HTML into a binary file\nconst buffer = Buffer.from(html, \"utf8\");\n\nreturn [\n  {\n    json: {\n      message: \"Styled HTML table created\",\n    },\n    binary: {\n      data: {\n        data: buffer.toString(\"base64\"),\n        mimeType: \"application/octet-stream\",  // FIX\n        fileName: \"PPH.htm\",         // Ensure .html extension\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -256
+      ],
+      "id": "69cd4c03-1dbc-4194-be25-aa57814c0ae6",
+      "name": "Convert to html table and export to html file",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "PPH Results for Server",
+        "message": "=Attached the pph file for Server Projects  ",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "PPH.pdf"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        -224
+      ],
+      "id": "ce444afa-3b5d-4251-a4d0-e1a44a17efc9",
+      "name": "Send a message",
+      "webhookId": "cb58e81d-93c3-4aec-aadf-9bb7c27f8d16",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// \"items\" contains the rows from Edit Fields\nconst rows = items;\n\n// Protect against empty data\nif (!rows.length) {\n  return [{ json: {}, binary: {} }];\n}\n\n// Get headers from first row\nconst headers = Object.keys(rows[0].json);\n\n// Styled HTML table\nlet html = `\n<!DOCTYPE html>\n<html>\n<head>\n<style>\nbody {\n  font-family: Arial, sans-serif;\n  padding: 20px;\n}\n\ntable {\n  border-collapse: collapse;\n  width: 100%;\n  font-size: 14px;\n}\n\nth {\n  background: #4CAF50;\n  color: white;\n  padding: 10px;\n  text-align: left;\n}\n\ntd {\n  padding: 10px;\n  border-bottom: 1px solid #ddd;\n}\n\ntr:nth-child(even) {\n  background-color: #f9f9f9;\n}\n\ntr:hover {\n  background-color: #f1f1f1;\n}\n</style>\n</head>\n<body>\n\n<h2>Generated Report</h2>\n\n<table>\n`;\n\n// Header row\nhtml += `<tr>`;\nfor (const h of headers) {\n  html += `<th>${h}</th>`;\n}\nhtml += `</tr>`;\n\n// Data rows\nfor (const row of rows) {\n  html += `<tr>`;\n  for (const h of headers) {\n    html += `<td>${row.json[h] ?? \"\"}</td>`;\n  }\n  html += `</tr>`;\n}\n\nhtml += `\n</table>\n\n</body>\n</html>\n`;\n\n// Convert HTML into a binary file\nconst buffer = Buffer.from(html, \"utf8\");\n\nreturn [\n  {\n    json: {\n      html,      // the full HTML string\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -160
+      ],
+      "id": "433c2092-5c4e-4ac8-b3c3-4d50b35b5596",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api.pdflayer.com/api/convert?access_key=80985d6b10e4f55460e77f50f2a8c55c",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "document_html",
+              "value": "={{ $json.html }}"
+            },
+            {
+              "name": "document_name",
+              "value": "PPH.pdf"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        416,
+        -80
+      ],
+      "id": "93333b19-cb09-428c-8b4b-ae46f3f1f766",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5408ede8-909f-4b43-bf00-0f2fc1ff9f2f",
+              "name": "PPH.pdf",
+              "value": "=data",
+              "type": "binary"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        -224
+      ],
+      "id": "491b8ba6-3cd6-4bc0-bd15-0df0a0fc380f",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nreturn $input.all().map(item => {\n    \n    // Check if the item has a binary container\n    if (item.binary) {\n\n        // Check for the newly created key 'PPH.pdf'\n        if (item.binary['PPH.pdf']) {\n            // ACTION 1: Change the internal file name metadata\n            item.binary['PPH.pdf'].fileName = 'PPH.pdf';\n        }\n\n        // ACTION 2: Remove the old property key\n        if (item.binary.data) {\n            delete item.binary.data;\n        }\n\n    }\n    // Return the modified item\n    return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -16
+      ],
+      "id": "95cd0ad6-a18c-4edb-add1-cf96c8e2fc1b",
+      "name": "Change to pph.pdf"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor and get dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to html table and export to html file": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Change to pph.pdf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Change to pph.pdf": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Run an Actor and get dataset": [
+      {
+        "json": {
+          "project_id": 4450756,
+          "title": "Server Replacement",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/databases/server-replacement-4450756",
+          "description": "Replace existing server and configure accordingly with existing settings. \n\nFreelancer needs to come into our office in Manchester to do the work. ",
+          "budget": 200,
+          "budget_converted": 262.8812016385981,
+          "currency": "GBP",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Databases",
+          "posted_date": "2025-11-24 17:49:15",
+          "expiry_date": "2025-12-24 17:49:15",
+          "location_type": "remote",
+          "proposal_count": 1,
+          "client_name": "Steve Emos",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4445449,
+          "title": "Newsletter server set up",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/programming-coding/newsletter-server-set-up-4445449",
+          "description": "I need a expert who can set up server for bulk mail sending. Need to have experience in following.\n\n\nNeed to set up MTA/SMTP server/ip rotation/bulk mail server\n\n=>Power MTA\n=>Interspire Email Marketer/Mailwizz\n=>Checking Inbox Score 10/10\n=>IP rotation\n=>DKIM Pass\n=>SPF Pass\n=>RDNS Pass\n=>MX/ElHO Implementation\n=>ADSP Set up\n=>Loading IP Pool\n=>DMARC\n=> Interspire Addons",
+          "budget": 330,
+          "budget_converted": 433.75398270368686,
+          "currency": "GBP",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Programming & Coding",
+          "posted_date": "2025-11-06 08:03:16",
+          "expiry_date": "2025-12-06 08:03:16",
+          "location_type": "remote",
+          "proposal_count": 15,
+          "client_name": "Malay B.",
+          "client_country": "India",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4451402,
+          "title": "DNS Migration for 2 Sites",
+          "url": "https://www.peopleperhour.com/freelance-jobs/design/web-design/dns-migration-for-2-sites-4451402",
+          "description": "Hi there, \nI recently updated the DNS on cloudflare for one of my sites, \"site#1\". I had gotten an email from my host asking me to \"...ensure that your Origin IP Settings within your Cloudflare dashboard are updated to point to the new server IP: XXX\"\nI have 2 websites hosted on the same server. So \"site#1\" is working properly but the \"site#2\" site is down. Can you help me with this please?\nSeems like an easy job for anyone who knows how.\nRegards,\nPhilip",
+          "budget": 25,
+          "budget_converted": 28.8775,
+          "currency": "EUR",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Design",
+          "sub_category": "Web Design",
+          "posted_date": "2025-11-26 16:55:06",
+          "expiry_date": "2025-12-26 16:55:06",
+          "location_type": "remote",
+          "proposal_count": 14,
+          "client_name": "Philip Cotter",
+          "client_country": "Ireland",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4450171,
+          "title": "Setup a OVH VPS server for a WordPress SaaS with DirectAdmin",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/programming-coding/setup-a-ovh-vps-server-for-a-wordpress-saas-with-directadmin-4450171",
+          "description": "I’m launching a self-hosted WordPress SaaS platform using AreaWP, and I’m looking for an experienced Linux SysAdmin / DevOps engineer who can setup my unmanaged OVH VPS as one time task.\n\nYou have to setup the unmanaged OVH VPS server to use the platform AreaWP. \n\nThe production server might run in the near future from 50 to 300 WordPress sites.\n\n- Apply security patches & OS updates\n- Install DirectAdmin\n- Optimize Nginx/Apache for WordPress\n- MariaDB/MySQL tuning/optimization\n- PHP/FPM tuning/optimization\n- Redis / OPcache optimization\n- DNS and SSL setup\n- Setup RAM/CPU/disk IO\n- Firewall configuration (CSF/UFW)\n- SSH hardening\n- Fail2Ban\n- Configure automatic backups\n- Remote storage (S3/Wasabi/OVH Archive) setup\n\nIn short:\n- Install DirectAdmin, Nginx or Apache, PHP 8.x, MariaDB/MySQL, SSL automation, Cron jobs.\n\nRequirements You MUST have experience with:\n- Linux server admin (Ubuntu/Debian)\n- DirectAdmin installation & management\n- Nginx/Apache tuning for WordPress\n- MySQL/MariaDB optimization\n- WordPress hosting optimization\n- VPS security hardening\\\n- OVH, Hetzner, or similar VPS systems\\\n- The server should be able to handle 50-300 WP Websites \n\nPreferable to have strong WordPress CMS understanding in development and designing.\n\nYou will not be handling the WordPress websites, you will only setup the VPS server and that's all.\n",
+          "budget": 150,
+          "budget_converted": 150,
+          "currency": "USD",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Programming & Coding",
+          "posted_date": "2025-11-22 01:50:26",
+          "expiry_date": "2025-12-22 01:50:26",
+          "location_type": "remote",
+          "proposal_count": 33,
+          "client_name": "Setup Ideas",
+          "client_country": "Lebanon",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4448374,
+          "title": "Server Guy / AI Engineer (Must Be a Real Killer)",
+          "url": "https://www.peopleperhour.com/freelance-jobs/artificial-intelligence/artificial-intelligence-website-development/server-guy-ai-engineer-must-be-a-real-killer-4448374",
+          "description": "We’re building a big platform and we need a hands-on engineer, not a middle-man, not an agency clown.\n\nIf you can’t execute fast, don’t apply.\n\nMust know:\n\t•\tTwilio (SMS/Voice/A2P)\n\t•\tWhatsApp API\n\t•\tOpenAI / Claude\n\t•\tServer setup, Docker, Linux\n\t•\tMessaging pipelines\n\t•\tClean API work\n\t•\tReal security + logging\n\nYour job:\nSet up our server, wire the APIs, get the whole thing talking clean and fast.\n\nWe’re NOT looking for:\nPeople who say “my employee can do it.”\nSlow responders.\nTheory guys.\nMiddle-men.\n\nWe ARE looking for:\nA real engineer who can start this week and take ownership.\n\nTo apply, send:\nYour experience\nLinks to similar work\nYour rate\nConfirmation YOU personally do the work\nWe’re hiring ASAP. Don’t waste our time.",
+          "budget": 1500,
+          "budget_converted": 1500,
+          "currency": "USD",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "AI Services",
+          "sub_category": "AI Website Development",
+          "posted_date": "2025-11-15 02:00:46",
+          "expiry_date": "2025-12-15 02:00:46",
+          "location_type": "remote",
+          "proposal_count": 19,
+          "client_name": "Ivana M.",
+          "client_country": "Philippines",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4449228,
+          "title": "Cloud server maintenance for PHP live data processing",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/databases/cloud-server-maintenance-for-php-live-data-processing-4449228",
+          "description": "Cloud server maintenance for PHP live data processing ",
+          "budget": 200,
+          "budget_converted": 262.8812016385981,
+          "currency": "GBP",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Databases",
+          "posted_date": "2025-11-18 14:26:54",
+          "expiry_date": "2025-12-18 14:26:54",
+          "location_type": "remote",
+          "proposal_count": 33,
+          "client_name": "Mark Baxter",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4449777,
+          "title": "Moving our project to an AWS back-end.",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/programming-coding/moving-our-project-to-an-aws-back-end-4449777",
+          "description": "We need to find a complete AWS Specialist who can help us design and implement a very high performance back-end for our current project. We need multiple servers, large transaction count per second, fast database implementation and the creation of Pop-Up Servers on demand. I appreciate this is a broad specification but I need to identify someone who can think outside the box and help us accomplish something very special.\n\nThis is a long-term opportunity but we will honour the PPH agreement and pay all fees you earn through PPH. This could lead to a lucrative fulltime contract for the right individual as this project grows.\n\nRight now we need someone who can listen to what we need to do and then, who can tell us how we can go about achieving this. Then you will make the magic happen and implement the right back-end for us that will allow us to scale and handle up to 500,000,000 within a 10 hour period. Are you the person we need. If so, tell us why we should hire you to be our Amazon Web Services Guru.\n\nYou must be fluent in English and, ideally, located in UK or Europe, but we will certainly consider any location if you are the expert we need.",
+          "budget": 23,
+          "budget_converted": 30.23133818843878,
+          "currency": "GBP",
+          "budget_bracket": 3,
+          "project_type": "hourly",
+          "category": "Technology & Programming",
+          "sub_category": "Programming & Coding",
+          "posted_date": "2025-11-20 13:21:37",
+          "expiry_date": "2025-12-20 13:21:37",
+          "location_type": "remote_country",
+          "proposal_count": 24,
+          "client_name": "David Case",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4450809,
+          "title": "DATABASE SPECIALIST ",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/databases/database-specialist-4450809",
+          "description": "I am seeking a skilled Database Specialist to join our team. This role is a unique blend of a Database Administrator (DBA) and a Developer, providing an exciting opportunity to work on both existing databases and new queries. As a DBA, you will play a crucial role in SQL development, data modelling, and database design, with a focus on optimising and maintaining complex database systems. This role will involve working closely with cross-functional teams to support the development and deployment.\n\n\nRESPONSIBILITIES :\n\n1. Manage and maintain SQL Server and MYSQL databases from development through production environments.\n2. Configure and monitor database servers to ensure peak performance, availability, and security.\n3. Implement data modelling techniques to support integration and performance goals.\n4. Troubleshoot and resolve database issues promptly and effectively.\n5. Automate routine tasks and document changes to streamline processes.\n6. Assist with query optimization and schema design to enhance system performance.\n7. Provide 24/7 support for mission-critical systems.\n8. Perform scheduled maintenance and support release deployments outside regular hours.\n\n\n\nREQUIREMENTS : \n\n1. A university degree, preferably in computer science, engineering, or other numerate disciplines.\n2. Certifications in the leading database management systems, i.e., Oracle, Microsoft SQL Server, IBM DB2, Sybase and MySQL.\n3. Certifications in Project Management is an added advantage\n4. 2 + years of experience with Oracle, Microsoft SQL and MySQL database administration.\n5. Experience with Business Intelligence product administration.\n6. Conceptual knowledge of all and in-depth knowledge of some of the following: Technical Architectures, Configuration Management, Software Development Life Cycle, Operating systems, Database systems",
+          "budget": 49,
+          "budget_converted": 49,
+          "currency": "USD",
+          "budget_bracket": 3,
+          "project_type": "hourly",
+          "category": "Technology & Programming",
+          "sub_category": "Databases",
+          "posted_date": "2025-11-25 05:24:55",
+          "expiry_date": "2025-12-25 05:24:55",
+          "location_type": "remote_country",
+          "proposal_count": 22,
+          "client_name": "Michelle L.",
+          "client_country": "United States",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4450112,
+          "title": "Looking to building and host Moodle",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/website-development/looking-to-building-and-host-moodle-4450112",
+          "description": "We are seeking a skilled freelancer to assist in the development and hosting of a Moodle learning management system. The ideal candidate will have extensive experience in setting up, configuring, and customizing Moodle to meet our specific educational requirements. Responsibilities include installing the platform on a secure server, integrating necessary plugins, and ensuring optimal performance and user experience. Additionally, knowledge of best practices for data protection and backup is essential. We invite proposals from professionals who are passionate about e-learning solutions and can deliver a robust, user-friendly platform.",
+          "budget": 30,
+          "budget_converted": 39.432180245789716,
+          "currency": "GBP",
+          "budget_bracket": 3,
+          "project_type": "hourly",
+          "category": "Technology & Programming",
+          "sub_category": "Website Development",
+          "posted_date": "2025-11-21 14:59:31",
+          "expiry_date": "2025-12-21 14:59:31",
+          "location_type": "remote",
+          "proposal_count": 41,
+          "client_name": "Craig S.",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4449081,
+          "title": "Cocos Creator Game",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/programming-coding/cocos-creator-game-4449081",
+          "description": "We are seeking an experienced Cocos Creator developer to design and develop an engaging online poker game. The ideal candidate will possess a deep understanding of game mechanics, user experience, and multiplayer functionalities within the Cocos Creator framework. You will be responsible for creating a visually appealing interface, implementing seamless gameplay, and ensuring robust server-side integration for real-time gaming experiences. If you have a proven track record of delivering high-quality games and are passionate about poker, we invite you to submit your proposal for this exciting project.",
+          "budget": 1500,
+          "budget_converted": 1500,
+          "currency": "USD",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Programming & Coding",
+          "posted_date": "2025-11-18 05:07:50",
+          "expiry_date": "2025-12-18 05:07:50",
+          "location_type": "remote",
+          "proposal_count": 15,
+          "client_name": "Vukasin Antovic",
+          "client_country": "Ukraine",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4450162,
+          "title": "Website Speed Optimization for Custom-Coded WordPress Site",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/website-development/website-speed-optimization-for-custom-coded-wordpress-site-4450162",
+          "description": "I need an expert to optimize the speed of my custom-coded, heavy WordPress website (theme-based but with extensive custom CSS/JS). Currently, the Google Page Speed Insights and GTmetrix scores are very low on both mobile and desktop.\n\nGoal:\nAchieve 90–95+ scores on Google Page Speed Insights & GTmetrix without breaking its:\nExisting functionality\nLayout/structure\nStyling/animations\nImages quality\nSEO setup & rankings\nURL structure\n\nRequirements:\nMust have strong coding experience with custom WordPress sites\nMust perform manual optimization (CSS/JS, critical rendering path, server tweaks, etc.)\nNo plugin-only optimizers - coding skills required\nOnly experienced specialists should apply\n\nNOTE: Should apply only if you have handled complex custom WordPress speed optimization before.",
+          "budget": 30,
+          "budget_converted": 30,
+          "currency": "USD",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Website Development",
+          "posted_date": "2025-11-21 17:51:57",
+          "expiry_date": "2025-12-21 17:51:57",
+          "location_type": "remote",
+          "proposal_count": 37,
+          "client_name": "Reyash Ahamed",
+          "client_country": "United Arab Emirates",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4449898,
+          "title": "Meta Pixel Double Firing, Catalogue Match Rate Not Right Either",
+          "url": "https://www.peopleperhour.com/freelance-jobs/digital-marketing/sem-google-ads-ppc/meta-pixel-double-firing-catalogue-match-rate-not-right-eit-4449898",
+          "description": "My Metapixel is double firing. It's picking up a server and a browser event for each event. Meta support isn't helping me. The product purchases are also not seemingly being picked up in catalogue matching. It's also telling me it's receiving content IDs that do not match any connected in the pixel.\n\nI need someone experienced because I know what I'm doing to a certain degree and I've tried a few things already. There's no GTM tag it's connected through the shopify app. I tried swapping pixels and swapping back to reset. I've also tried a deduplication script but I'm not sure if it was done right. I'm having no luck so whoever takes this on needs real experience. I also want to clarify I DO NOT need someone to manage my campaigns. I just need these issues fixing.\n\nPlease don't apply with Chat GPT (or any AI) written proposals, I will just assume you have no clue what you are talking about. I'm also not going to be overcharged either this price is not a placeholder it's the price of the job.\n\nI just want someone who can fix the issue, tell me what the issue is and how it was fixed/how it can be prevented. So if I have to set up another pixel in the future I can avoid getting in the same mess.",
+          "budget": 120,
+          "budget_converted": 157.72872098315887,
+          "currency": "GBP",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "Digital Marketing",
+          "sub_category": "SEM, Google Ads & PPC",
+          "posted_date": "2025-11-20 19:20:32",
+          "expiry_date": "2025-12-20 19:20:32",
+          "location_type": "remote",
+          "proposal_count": 15,
+          "client_name": "Jammy Bargains ..",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4449727,
+          "title": "Flutter Mobile & Tablet Integrated with Microsoft Nav/BC",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/mobile-app-development/flutter-mobile-tablet-integrated-with-microsoft-nav-bc-4449727",
+          "description": "I am looking for an experienced Flutter developer to build a modern, intuitive mobile/tablet application that integrates directly with Microsoft Navision 2018 or Business Central through API/OData/WS endpoints.\n\nTechnical expectations:\nFlutter for cross-platform delivery (iOS, Android, and tablets)\nStrong experience with REST/OData integration\nClean architecture (MVVM/BLoC)\nToken-based authentication\nAbility to work with our internal API endpoints\nStrong documentation discipline\n\nDeliverables – Action\nFull Flutter source code\nUI/UX mock-ups (Figma or similar)\nAPI service layer integrated to Navision/BC\nTest build for iOS/Android\nDeployment support to our internal servers / App Stores (optional)\nTechnical documentation and handover",
+          "budget": 520,
+          "budget_converted": 520,
+          "currency": "USD",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Mobile App Development",
+          "posted_date": "2025-11-20 10:29:08",
+          "expiry_date": "2025-12-20 10:29:08",
+          "location_type": "remote",
+          "proposal_count": 42,
+          "client_name": "Denis Mourghen",
+          "client_country": "Mauritius",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4447068,
+          "title": "502 error fix and website updates required.",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/website-development/502-error-fix-and-website-updates-required-4447068",
+          "description": "1. Immediate Tasks — Fix the Website Outage\n\nPlease investigate and resolve the root cause of the 502 error. This may involve:\n\nChecking the hosting server (PHP version, memory limits, resource usage, logs)\n\nVerifying that the WordPress installation loads without timeout or gateway errors\n\nReviewing the .htaccess file for corruption\n\nChecking for plugin or theme conflicts that may be causing the failure\n\nEnsuring the database is accessible and not corrupted\n\nRestarting or adjusting server services (PHP-FPM, Nginx/Apache) if applicable\n\nPlease restore the site to working order as soon as possible.\n\n2. WordPress Updates & Modernization\n\nOnce the site is operational, I’d like the following updates completed:\n\nCore & Security Maintenance\n\nUpdate WordPress core to the latest stable version\n\nUpdate all plugins and themes\n\nRemove unused plugins/themes\n\nEnsure security patches are applied\n\nImplement a backup solution (if not already in place)\n\nPerformance Improvements\n\nOptimize loading speed (caching, image optimization, script minimization)\n\nConfirm compatibility with current PHP version\n\nCheck for broken links or outdated content\n\nDesign & Usability Refresh\n\nReview the current theme for outdated components\n\nRecommend a modern, supported theme if needed\n\nImprove mobile responsiveness\n\nEnsure accessibility and modern UI standards\n\nOptional Enhancements (let me know after initial review)\n\nSEO improvements\n\nImproved page builder workflow or editing tools\n\nAdding analytics or updated integrations\n\n3. Deliverables\n\nSummary of the root cause of the 502 error\n\nConfirmation the site is fully restored and functioning\n\nList of updates completed\n\nRecommendations for further improvements (if applicable)",
+          "budget": 27,
+          "budget_converted": 35.48896222121074,
+          "currency": "GBP",
+          "budget_bracket": 3,
+          "project_type": "hourly",
+          "category": "Technology & Programming",
+          "sub_category": "Website Development",
+          "posted_date": "2025-11-11 10:11:42",
+          "expiry_date": "2025-12-11 10:11:42",
+          "location_type": "remote",
+          "proposal_count": 61,
+          "client_name": "Pete Carvell",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4445325,
+          "title": "Meta Pixel Double Firing, Catalogue Match Rate Not Right Either",
+          "url": "https://www.peopleperhour.com/freelance-jobs/digital-marketing/sem-google-ads-ppc/meta-pixel-double-firing-catalogue-match-rate-not-right-eit-4445325",
+          "description": "My Metapixel is double firing I've tried everything from adding a deduplication script to lowering the share data level from maximum to enhanced. It's still picking up a server and a browser event for each event. Meta support isn't helping me. The product purchases are also not seemingly being picked up in catalogue matching. It's also telling me it's receiving content IDs that do not match any connected in the pixel. Please no time wasters I know what this site is like a lot of people apply without knowing what they're applying for. I need someone experienced because I know what I'm doing to a certain degree and I'm having no luck so whoever takes this on needs real experience. I also want to clarify I DO NOT need someone to manage my campaigns. I just need these issues fixing.\n",
+          "budget": 50,
+          "budget_converted": 65.72030040964952,
+          "currency": "GBP",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Digital Marketing",
+          "sub_category": "SEM, Google Ads & PPC",
+          "posted_date": "2025-11-05 18:14:51",
+          "expiry_date": "2025-12-05 18:14:51",
+          "location_type": "remote",
+          "proposal_count": 12,
+          "client_name": "James S.",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4446511,
+          "title": "Freelancer Remote UX/UI Designer",
+          "url": "https://www.peopleperhour.com/freelance-jobs/design/web-design/freelancer-remote-ux-ui-designer-4446511",
+          "description": "## **About New Communication**\n\nNew Communication is a vibrant branding and web agency based in **Thessaloniki, Greece**, dedicated to building impactful brands and highly effective digital experiences for our clients. We believe that strategy, stunning visual design, and seamless functionality must work together. We’re seeking a talented, detail-oriented **Freelance UX/UI Designer** to collaborate with our in-house brand designers and development team on client website projects.\n\nThis is a **remote, project-based role** perfect for a designer who values flexibility, clear communication, and delivering a truly polished product.\n\n****\n\n### **The Role: Your Impact**\n\nYou will be the bridge between our client's brand strategy and the final website interface. \n\n### What You'll Be Doing:\n\n- **Wireframing & Prototyping:** Designing clear, conversion-focused sitemaps, user flows, and low-to-high-fidelity wireframes that define the website structure and user journey.\n- **UI Mockups & Polished Designs:** Translating approved wireframes and brand guidelines (developed by our in-house team) into pixel-perfect, cohesive user interface mockups, specifically for website projects.\n- **Collaboration with Brand Designers:** Working hand-in-hand with our internal brand designers to ensure the final UI is a seamless extension of the client's visual identity, typography, and colour palettes.\n- **Usability Focus:** Ensuring all designs prioritise **usability, accessibility (WCAG standards)**, and mobile-first responsiveness.\n- **Iteration & Feedback:** Proactively seeking and incorporating feedback from the internal team to refine designs and troubleshoot usability issues.\n\n### What You'll Need to Succeed\n\nWe’re looking for a freelancer with a proven track record, clarity of thought, and a commitment to quality.\n\n### Required Skills & Experience:\n\n- **2-4+ years** of professional experience focusing on designing websites and digital products.\n- **Exceptional proficiency with Figma** (our main design tool) including the ability to create and utilise components, styles, and auto-layout.\n- **Familiarity with Adobe Creative Suite (Photoshop, Illustrator)** is required to seamlessly work with assets and brand files provided by our in-house brand designers.\n- A **strong portfolio** demonstrating your process and the quality of your finished UI designs, particularly for web projects.\n- Proven ability to work independently, manage your own time, and meet deadlines in a **remote/freelance setting**.\n- **Strong understanding of web accessibility principles** (WCAG) and **SEO** and how to apply them in your designs.",
+          "budget": 10,
+          "budget_converted": 11.551,
+          "currency": "EUR",
+          "budget_bracket": 1,
+          "project_type": "hourly",
+          "category": "Design",
+          "sub_category": "Web Design",
+          "posted_date": "2025-11-10 05:26:03",
+          "expiry_date": "2025-12-10 05:26:03",
+          "location_type": "remote",
+          "proposal_count": 36,
+          "client_name": "Digital Newcom",
+          "client_country": "Greece",
+          "query": "Greece"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4445120,
+          "title": "Meta Pixel Double Firing, Catalogue Match Rate Not Right Either",
+          "url": "https://www.peopleperhour.com/freelance-jobs/digital-marketing/sem-google-ads-ppc/meta-pixel-double-firing-catalogue-match-rate-not-right-eit-4445120",
+          "description": "My Metapixel is double firing I've tried everything from adding a deduplication script to lowering the share data level from maximum to enhanced. It's still picking up a server and a browser event for each event. Meta support isn't helping me. The product purchases are also not seemingly being picked up in catalogue matching. It's also telling me it's receiving content IDs that do not match any connected in the pixel. Please no time wasters I know what this site is like a lot of people apply without knowing what they're applying for. I need someone experienced because I know what I'm doing to a certain degree and I'm having no luck so whoever takes this on needs real experience. I also want to clarify I DO NOT need someone to manage my campaigns. I just need these issues fixing.",
+          "budget": 40,
+          "budget_converted": 52.57624032771962,
+          "currency": "GBP",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Digital Marketing",
+          "sub_category": "SEM, Google Ads & PPC",
+          "posted_date": "2025-11-05 10:17:31",
+          "expiry_date": "2025-12-05 10:17:31",
+          "location_type": "remote",
+          "proposal_count": 13,
+          "client_name": "James S.",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4442577,
+          "title": "PayPal PCI DSS Scan \"Failed\" Assistance",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/e-commerce-cms-development/paypal-pci-dss-scan-failed-assistance-4442577",
+          "description": "We need ongoing support to pass PayPal PCI DSS scans using a VPS server with Alma OS and cPanel.  We use Web Apps using CMS and custom PHP.   The ASV scans are done through PayPal via a 3rd part (i believe) managepci(dot)com. Our goal is to ensure compliance every 90 days.\n\nProject goal\n- Secure ongoing support to pass PayPal PCI DSS scans every 90 days or so\n- using a VPS server with a cPanel environment.\n\nScope of work\n- Resolve issues when PayPal PCI DSS scans fail.\n- Ensure compliance with scan requirements every 90 days.\n- Conduct work/communication/completion during US business hours.\n- Please demonstrate your experience in PayPal PCI DSS scans\n- Please reply with your Fixed Rate fee to fix any issues and get scans to pass for this project to be considered\n- Project will be ongoing if you're selected\n\n\nAdditional Information:\n- Please demonstrate your experience in PayPal PCI DSS scans\n\nIdeal Candidate:\n- Experienced in PayPal PCI DSS scans\n- Expertise in compliance services\n- Audit skills required",
+          "budget": 85,
+          "budget_converted": 85,
+          "currency": "USD",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "eCommerce CMS Development",
+          "posted_date": "2025-10-28 16:34:12",
+          "expiry_date": "2025-11-27 16:34:12",
+          "location_type": "remote",
+          "proposal_count": 14,
+          "client_name": "Thomas S.",
+          "client_country": "United States",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4442335,
+          "title": "Host 2 static website with basic one time SEO ",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/website-development/host-2-static-website-with-basic-one-time-seo-4442335",
+          "description": "I have an urgent project to deploy two static websites on our existing shared hosting plan. The core requirements are straightforward but time-sensitive.\n\nFirstly, I need both static websites hosted on our shared server. The most critical functionality is the contact form; it must be configured to deliver all submission details directly to my email. I am fully open to your recommendation for the most reliable method to achieve this, whether through a script or a third-party service.\n\nSecondly, I require a one-time, foundational SEO setup to ensure the websites are visible to search engines. This is not for an ongoing campaign but for the essential groundwork. The specific tasks for this include creating and submitting the necessary robots.txt and sitemap.xml files, ensuring all meta titles and descriptions are properly implemented, registering the sites with Google Search Console and Bing Webmaster Tools, and adding Google Analytics while verifying that canonical URLs are correctly set.\n\nThe shared hosting with fast commit is brand new so you need to link the server to my domain. \n\nGiven the urgency, your estimated timeline for deployment is the key deciding factor for my selection. Please provide your soonest possible completion date",
+          "budget": 85,
+          "budget_converted": 111.7245106964042,
+          "currency": "GBP",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Website Development",
+          "posted_date": "2025-10-28 06:29:19",
+          "expiry_date": "2025-11-27 06:29:19",
+          "location_type": "remote",
+          "proposal_count": 49,
+          "client_name": "Fouzy B.",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4448772,
+          "title": "iOS Developer Needed – Padel Scoring App (iPhone + Apple Watch)",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/mobile-app-development/ios-developer-needed-padel-scoring-app-iphone-apple-w-4448772",
+          "description": "Description:\n\nI need an experienced iOS/watchOS developer to build a Padel scoring app for Apple Watch + iPhone.\n\nThe Watch app will handle point scoring (tap to add point, undo, server tracking), and the iPhone app will store match history, player profiles, and basic stats.\n\n\nI have a full technical spec ready to send to shortlisted developers.\n\n\nCore Requirements:\n\n    Swift + SwiftUI\n\n    Apple Watch scoring interface\n\n    Full padel scoring logic (games, sets, tie-breaks, golden point)\n\n    Haptic feedback\n\n    Sync between iPhone and Apple Watch (WatchConnectivity)\n\n    Match history + stats on iPhone\n\n    Simple player profiles\n\n    iCloud or Firebase (your recommendation)\n\n    App Store submission assistance\n\n\nDeliverables:\n\n    Full source code\n\n    All project files and assets\n\n    TestFlight build\n\n    Documentation\n\n\nOwnership:\n\nAll intellectual property, source code, and assets must be fully assigned to me upon payment. Developer retains no rights or permissions.\n\n\nPlease send:\n\n    Examples of similar Apple Watch/iOS apps\n\n    Estimated cost + timeline\n\n    Confirmation you accept full IP transfer\n",
+          "budget": 395,
+          "budget_converted": 519.1903732362313,
+          "currency": "GBP",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Mobile App Development",
+          "posted_date": "2025-11-17 04:47:39",
+          "expiry_date": "2025-12-17 04:47:39",
+          "location_type": "remote",
+          "proposal_count": 24,
+          "client_name": "James Shaw",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4444296,
+          "title": "Quotes and Invoices",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/programming-coding/quotes-and-invoices-4444296",
+          "description": "Core Framework Overview\n Platform\n• \tPrivate website hosted on my server\n• \tSecure login for you and any staff (if needed)\n• \tAdmin dashboard with access to all quotes, orders, change orders, and invoices\n\n Key Features\n1. Form Creation Hub\n• \tHomepage offers options:\n• \tCreate new: Quotation / Invoice / Change Order\n• \tView/Edit previous documents\n• \tAccess templates (Bathroom, Kitchen, Cabinetry, General Renovation)\n2. Template-Based Quoting System\n• \tEach template pre-populates categories and common services\n• \tCategories like:\n• \tCabinetry → Vanity, Finishing (Laminate, Painted, etc.)\n• \tPlumbing → Sink Plumbing, Shower Plumbing\n• \tTiling → Shower Tiling, Flooring Tiling\n• \tDemolition, Electrical, Painting, etc.\n• \tYou select/deselect services based on scope\n• \tEach selected item pulls:\n• \tDescription\n• \tUnit price\n• \tQuantity (editable)\n• \tTotal cost\n3. Dynamic Pricing & Customization\n• \tEditable pricing before finalizing\n• \tAdd custom line items manually\n• \tOptional notes per item (e.g., “includes disposal of old vanity”)\n4. Conversion Workflow\n• \tQuote → Order → Invoice\n• \tEach stage editable before locking\n• \tChange Orders can be created from existing quotes/orders\n5. PDF Generation\n• \tClean, professional layout\n• \tIncludes:\n• \tCompany branding\n• \tClient info\n• \tItemized breakdown\n• \tTotals, taxes, payment terms\n• \tOption to email directly or download",
+          "budget": 202,
+          "budget_converted": 202,
+          "currency": "USD",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Programming & Coding",
+          "posted_date": "2025-11-03 06:47:22",
+          "expiry_date": "2025-12-03 06:47:22",
+          "location_type": "remote",
+          "proposal_count": 35,
+          "client_name": "Ronal Sami",
+          "client_country": "Canada",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4447057,
+          "title": "AI Pet Art Generator",
+          "url": "https://www.peopleperhour.com/freelance-jobs/artificial-intelligence/artificial-intelligence-art-design/ai-pet-art-generator-4447057",
+          "description": "Project Overview\nWe are looking for a skilled full-stack developer to build a web platform focused on AI-powered pet photo style transformation and creative image synthesis.\n\nUsers can upload pet photos, choose from multiple artistic or themed styles, and generate unique AI-based results.\nThe platform should include a membership system, dual credit/subscription logic, integrated payment gateway, and a modular backend ready for future AI expansion.\n\nPlatform Architecture\nThe project will be developed primarily as a web-based platform with responsive design to ensure smooth use on both desktop and mobile devices.\nThe final version should be packaged as a PWA (Progressive Web App) and published on both App Store and Google Play, providing a dual-platform experience without separate native app development.\n\nScope of Work (Full-Stack Development)\nFront-End Development\n．Pet photo upload interface and generation workflow (Upload → Generate → Result display)\n．Style selection and categorization (Artistic, Historical, Trend, Movie themes, etc.)\n．“AI Style Transfer – Before/After Comparison” interactive viewer\n．Loading animation and visual feedback during generation\n．Fully responsive design for desktop and mobile\n．User gallery and “My Creations” page\n\nBack-End Development\n．User authentication and membership system\n．Dual credit & subscription system — both models should coexist and be switchable at any time\n．Integrated payment gateway (Stripe / PayPal or equivalent)\n．Full front-end control from backend — ability to modify display order, content, labels, and layout directly\n．Style management module — add new front-end styles from backend, including generation prompts and sample images\n．Cloud-based image storage and management (e.g., AWS / Firebase)\n．Admin panel for editing site logo, text, style categories, and prompts\n\nAI & API Integration\n．Integrate AI image generation and enhancement APIs (primarily OpenAI; extensible for others)\n．Support both text-prompt and image-upload generation modes\n．Integrate high-resolution enhancement services such as Gigapixel AI, LetsEnhance, or equivalent APIs\n．Modular architecture allowing flexible addition or replacement of AI modules\n．Support for multiple language-model APIs (ChatGPT, Gemini, etc.), with admin-side key management\n\nDeployment & Testing\n．Deploy to production server (AWS / Vercel / Render etc.)\n．Full performance and compatibility testing\n．PWA packaging and store submission (App Store / Google Play)\n．Delivery of all documentation and admin operation guides\n\nKey Requirements\n．Complete web platform (not native apps)\n．Responsive + PWA ready for dual-platform publication\n．Dual mode credit & subscription system\n．Backend-controlled front-end customization\n．Addable style modules with prompt + sample image configuration\n．Integration of AI generation + image enhancement APIs\n．ChatGPT / Gemini API support with editable keys\n．Scalable, modular, and maintainable structure\n\nProposal Requirements\nPlease include the following in your proposal:\n．Relevant past projects or demo links\n．Proposed architecture and tools you plan to use\n．Estimated timeline and pricing\n．Experience with AI APIs, payment systems, and credit logic\n．Experience with PWA packaging and dual-platform publishing\n\nIf you have any suggestions or alternative technical approaches, feel free to include them in your proposal.",
+          "budget": 1200,
+          "budget_converted": 1200,
+          "currency": "USD",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "AI Services",
+          "sub_category": "AI Art & Design",
+          "posted_date": "2025-11-11 09:39:56",
+          "expiry_date": "2025-12-11 09:39:56",
+          "location_type": "remote",
+          "proposal_count": 38,
+          "client_name": "Yi Chia Chang",
+          "client_country": "Taiwan, Province of China",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4442954,
+          "title": "Heidi Health – Vonage API Integration (Node.js / Python Project)",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/programming-coding/heidi-health-vonage-api-integration-node-js-python-pr-4442954",
+          "description": "We are a delivery partner engaged by a UK healthcare client who uses Heidi Health and Vonage. We seek an experienced subcontractor to design, build, and hand over a secure middleware integration that enables automatic transcription of inbound and outbound calls made via the Vonage Voice API, with transcripts processed by the Heidi Health API and ready for downstream clinical documentation.\n\n# Scope (Phase 1 – Post-Call Transcription)\n\n- Implement a custom integration server (Node.js or Python) operated in our environment (we host) to receive Vonage webhooks for call start/end and recording availability.\n- Fetch and, if needed, transcode audio (e.g., to MP3/OGG) before secure upload to Heidi for transcription.\n- Persist call metadata and transcripts in our controlled storage.\n- Implement robust security & compliance: webhook validation, secure credential handling, TLS in transit, encryption at rest, and UK data residency/GDPR alignment.\n- Provide documentation, tests, and deployment guidance (e.g., containerised service).\n\n# Optional/Phase 2 – Real-Time Transcription\n- Add WebSocket media streaming from Vonage to support near real-time transcript generation.\n\n# What we’ll provide\n- Hosting and environment control, Vonage/Heidi credentials, and access to a detailed technical brief.\n\n# What you’ll deliver\n- Technical specification and data flow, working middleware, test plan (including simulated calls), rollout documentation, and support for handover.\n\nThis subcontract is ideal for teams with proven experience in telephony APIs (Vonage/Nexmo), audio handling, and healthcare-grade security.",
+          "budget": 2500,
+          "budget_converted": 3286.0150204824763,
+          "currency": "GBP",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Programming & Coding",
+          "posted_date": "2025-10-29 16:16:53",
+          "expiry_date": "2025-11-28 16:16:53",
+          "location_type": "remote",
+          "proposal_count": 75,
+          "client_name": "Will B.",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4449098,
+          "title": "Urgent Webflow or Framer Developer Needed",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/website-development/urgent-webflow-or-framer-developer-needed-4449098",
+          "description": "I am looking for an experienced Webflow or Framer developer who can start immediately and rebuild my entire website into a secure, modern and fully hosted platform. My current website is built on WordPress with custom code and has ongoing security issues, including malware, vulnerabilities and constant developer dependency. I need to move to a system where I can edit everything myself without dealing with plugin failures or server problems.\nThis project involves a full rebuild of the entire website. Nearly all of the designs already exist in Figma, and I will provide full access to those files. You will either recreate the website exactly as designed in Figma or recommend a high quality template in Webflow or Framer that closely matches the structure and layout. I am open to whichever option is faster and cleaner but the final result must match the original design quality.\n\nThe work includes rebuilding all pages, implementing all layouts, interactions and content, and ensuring the entire site is fully responsive across desktop, tablet and mobile. You will be responsible for setting up CMS collections if needed, connecting contact forms and email notifications, creating any interactions or animations, and making sure the backend is set up in a way that allows me to easily update text, images and case studies without developer assistance.\n\nA major part of this project is the handoff. Once the site is built, I need full admin access along with a walkthrough of how to edit everything in the future. The goal is a clean, modern website that I can maintain independently without returning to WordPress or relying on developers for small changes.\n\nThis project is urgent. You must be able to begin immediately and must be able to complete the rebuild within roughly two weeks. Strong communication, attention to detail and speed are extremely important.\n\nYou must have a portfolio of Webflow or Framer websites that demonstrate your ability to rebuild or recreate full sites from Figma or from existing designs. Experience with responsive layout, animations, CMS setup and professional level visual quality is required.\n\nIf you can start right away and have the portfolio to show relevant experience, I would like to hear from you.",
+          "budget": 600,
+          "budget_converted": 600,
+          "currency": "USD",
+          "budget_bracket": 3,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Website Development",
+          "posted_date": "2025-11-18 07:56:14",
+          "expiry_date": "2025-12-18 07:56:14",
+          "location_type": "remote",
+          "proposal_count": 57,
+          "client_name": "Sarah J.",
+          "client_country": "United States",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4156907,
+          "title": "Tidy the server from X-ransom attack",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/website-development/tidy-the-server-from-x-ransom-attack-4156907",
+          "description": "Hello,\nOur Wordpress website was attacked by x-ransom. We have a backup of the WP and the database dump. We have detected some corrupted files there but it seems that there are still some left that were not detected. It has to be tidy after the attack.\n\nIt’s an internet shop with uploads files of around 100GB. It’s stored on a private hosting in LV.\n\nWhat is done do far:\n\n1. Update WordPress Version\n2. Use z’d updateSecure WP-Admin Login Credentials\n3. Set Up Safelist and Blocklist for the Admin Page\n4. Use Trusted WordPress Themes\n5. Install SSL Certificate\n6. Remove Unused WordPress Plugins and Themes\n\n1. Enable Two-Factor Authentication for WP-Admin\n2. Back Up WordPress\n3. Limit Login Attempts\n4. Change the WordPress Login Page URL\n5. Log Idle Users Out Automatically \n6. Monitor User Activity\n7. Check for Malware - found several none-Wordpress specious files and plugins. Deleted them.\n\n1. Disable PHP Error Reporting\n\n3. Turn File Editing Off\n4. Restrict Access Using the .htaccess File\n5. Change the Default WordPress Database Prefix - not done\n6. Disable XML-RPC\n7. Hide the WordPress Version\n8. Block Hotlinking - not done\n9. Manage File Permissions not done\n\n\nAfter making the list, we received another x-ransome attack. I suspect he has a server level access not only wp level.\nIf you apply, you need to be a server security and a Wordpress specialist.\nPlease, quote for the job.",
+          "budget": 100,
+          "budget_converted": 115.51,
+          "currency": "EUR",
+          "budget_bracket": 1,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Website Development",
+          "posted_date": "2024-02-04 06:39:32",
+          "expiry_date": "2024-03-05 06:39:32",
+          "location_type": "remote",
+          "proposal_count": 26,
+          "client_name": "Natalia D.",
+          "client_country": "Switzerland",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4445216,
+          "title": "Experienced WordPress other known CMS - Developer Wanted ",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/cms-development/experienced-wordpress-other-known-cms-developer-wanted-4445216",
+          "description": "Requirements:\n\nIn-depth experience with one or more major CMS platforms (e.g., WordPress, Joomla, Drupal, Typo3, CraftCMS, Shopify, etc.)\nConfident with PHP and/or other relevant languages for CMS customization (e.g., JavaScript, Python, Liquid)\nExperience building or customizing plugins, themes, or modules\nGood understanding of caching, performance optimization, and server configuration (e.g., .htaccess, Nginx)\nReliable, clear communicator, and proactive\nTime Zone & Location Preference:\nDue to the nature of our projects and the need for close communication, we strongly prefer to work with developers based in nearby countries or within our time zone (Central Europe, UTC+1 ±2h). This makes real-time collaboration easier and helps us avoid time barriers.\n\nIf you are located in Serbia, Romania, Bosnia, Ukraine, Tunisia, Egypt, or other nearby countries, we encourage you to apply!\n\n",
+          "budget": 25,
+          "budget_converted": 28.8775,
+          "currency": "EUR",
+          "budget_bracket": 3,
+          "project_type": "hourly",
+          "category": "Technology & Programming",
+          "sub_category": "CMS Development",
+          "posted_date": "2025-11-05 13:54:11",
+          "expiry_date": "2025-12-05 13:54:11",
+          "location_type": "remote_country",
+          "proposal_count": 36,
+          "client_name": "Anthony Van Maare",
+          "client_country": "Netherlands",
+          "query": "server"
+        }
+      },
+      {
+        "json": {
+          "project_id": 4451412,
+          "title": "YourHippo LMS ",
+          "url": "https://www.peopleperhour.com/freelance-jobs/technology-programming/programming-coding/yourhippo-lms-4451412",
+          "description": "Commercial criteria - NO AI responses please !!!!!!!!!!!!\n\n1. Must speak English \n2. Must not be an agent \n3. Must work UK hours\n4. Must be able to work full time \n5. Please post your expected hourly rate in the message back \n6. Must be able to send CV \n\nWe are a UK-based tech company delivering a modern Learning Management System (LMS) and high-quality e-learning content tailored for the care sector. Our platform helps care providers improve compliance, streamline training, and empower staff through simple, effective digital learning.\n\nWe are looking for an experienced Full-Stack Developer (4+ years) to help us continue building and enhancing our LMS platform using Laravel, MySQL, and modern web technologies.\n\n________________________________________\nAbout the Role\n\nThis role is perfect for a developer who enjoys working across the full stack—from backend logic and integrations to clean, intuitive user interfaces. You’ll be designing and building new features, improving existing functionality, contributing to architecture decisions, and helping shape the future of our platform.\n\nYou’ll work directly with our product, technical, and customer teams to deliver a reliable, secure, and scalable LMS used daily by organisations across the care sector.\n\n________________________________________\nKey Responsibilities\n\n• Develop new features and improvements in Laravel with clean, maintainable code.\n• Work across the full stack, including backend, frontend, databases, and APIs.\n• Build secure, scalable, and optimised solutions that support high volumes of learners.\n• Maintain and refine database structures using MySQL (including migrations, indexing, optimisation, etc.).\n• Implement responsive frontend components using Blade, Vue, React, or similar frameworks (depending on stack).\n• Integrate third-party APIs and build internal RESTful endpoints.\n• Contribute to architectural decisions and technical planning.\n• Monitor performance, troubleshoot issues, and contribute to ongoing platform stability.\n• Collaborate with the product team to translate requirements into practical solutions.\n• Participate in code reviews and maintain high coding standards.\n\n________________________________________\nSkills & Experience\n\nEssential:\n\n• Strong experience with Laravel (or similar modern PHP frameworks).\n• Solid understanding of MySQL, including optimisation and relational database design.\n• Good frontend development skills (Blade, Vue, React or similar).\n• Experience with version control (Git).\n• Strong understanding of API development, authentication, and web security best practices.\n• Ability to write clean, scalable, well-documented code.\n• Strong problem-solving skills and the ability to break down complex requirements.\n• Experience working in an agile environment or similar collaborative workflow.\n\nDesirable:\n\n• 4+ years professional experience as a Full-Stack or Backend Developer.\n• Experience working on SaaS products or LMS platforms.\n• Knowledge of queues, workers, and asynchronous processing (e.g., Laravel Queues).\n• Experience with server management, Linux, or cloud hosting (AWS, DigitalOcean, etc.).\n• Familiarity with Docker, CI/CD pipelines, or automated testing.\n• Understanding of UX principles or design best practices.\n\n________________________________________\nWho We’re Looking For\n\n• A capable, confident developer who enjoys owning features end-to-end.\n• Someone who takes pride in writing clean, scalable code.\n• A fast learner who enjoys working with modern tools and technologies.\n• A proactive problem-solver who loves improving how things work.\n• A collaborative team member who communicates clearly and contributes ideas.\n• Someone who thrives in a growing tech business where their work will have a real impact.\n\n________________________________________\nWhat We Offer\n\n• The chance to work on a meaningful, mission-driven product in a growing sector.\n• Opportunities to expand your role into architecture, DevOps, leadership, or product.\n• A supportive team, autonomy in your work, and room to innovate.\n• Full overview and onboarding into our platform, workflows, and development practices.\n\n\n",
+          "budget": 210,
+          "budget_converted": 276.025261720528,
+          "currency": "GBP",
+          "budget_bracket": 2,
+          "project_type": "fixed_price",
+          "category": "Technology & Programming",
+          "sub_category": "Programming & Coding",
+          "posted_date": "2025-11-26 17:28:56",
+          "expiry_date": "2025-12-26 17:28:56",
+          "location_type": "remote",
+          "proposal_count": 16,
+          "client_name": "Jamie S.",
+          "client_country": "United Kingdom",
+          "query": "server"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "Title - Query": "Server Replacement - server",
+          "Description": "Replace existing server and configure accordingly with existing settings. \n\nFreelancer needs to come into our office in Manchester to do the work. ",
+          "Buget in EUR (aprox)": "234€\n",
+          "Proposals": "1",
+          "Client Name": "Steve Emos",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-24 17:49:15 - 2025-12-24 17:49:15"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Newsletter server set up - server",
+          "Description": "I need a expert who can set up server for bulk mail sending. Need to have experience in following.\n\n\nNeed to set up MTA/SMTP server/ip rotation/bulk mail server\n\n=>Power MTA\n=>Interspire Email Marketer/Mailwizz\n=>Checking Inbox Score 10/10\n=>IP rotation\n=>DKIM Pass\n=>SPF Pass\n=>RDNS Pass\n=>MX/ElHO Implementation\n=>ADSP Set up\n=>Loading IP Pool\n=>DMARC\n=> Interspire Addons",
+          "Buget in EUR (aprox)": "386.09999999999997€\n",
+          "Proposals": "15",
+          "Client Name": "Malay B.",
+          "Client Country": "India",
+          "Duration": "2025-11-06 08:03:16 - 2025-12-06 08:03:16"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "DNS Migration for 2 Sites - server",
+          "Description": "Hi there, \nI recently updated the DNS on cloudflare for one of my sites, \"site#1\". I had gotten an email from my host asking me to \"...ensure that your Origin IP Settings within your Cloudflare dashboard are updated to point to the new server IP: XXX\"\nI have 2 websites hosted on the same server. So \"site#1\" is working properly but the \"site#2\" site is down. Can you help me with this please?\nSeems like an easy job for anyone who knows how.\nRegards,\nPhilip",
+          "Buget in EUR (aprox)": "29.25€\n",
+          "Proposals": "14",
+          "Client Name": "Philip Cotter",
+          "Client Country": "Ireland",
+          "Duration": "2025-11-26 16:55:06 - 2025-12-26 16:55:06"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Setup a OVH VPS server for a WordPress SaaS with DirectAdmin - server",
+          "Description": "I’m launching a self-hosted WordPress SaaS platform using AreaWP, and I’m looking for an experienced Linux SysAdmin / DevOps engineer who can setup my unmanaged OVH VPS as one time task.\n\nYou have to setup the unmanaged OVH VPS server to use the platform AreaWP. \n\nThe production server might run in the near future from 50 to 300 WordPress sites.\n\n- Apply security patches & OS updates\n- Install DirectAdmin\n- Optimize Nginx/Apache for WordPress\n- MariaDB/MySQL tuning/optimization\n- PHP/FPM tuning/optimization\n- Redis / OPcache optimization\n- DNS and SSL setup\n- Setup RAM/CPU/disk IO\n- Firewall configuration (CSF/UFW)\n- SSH hardening\n- Fail2Ban\n- Configure automatic backups\n- Remote storage (S3/Wasabi/OVH Archive) setup\n\nIn short:\n- Install DirectAdmin, Nginx or Apache, PHP 8.x, MariaDB/MySQL, SSL automation, Cron jobs.\n\nRequirements You MUST have experience with:\n- Linux server admin (Ubuntu/Debian)\n- DirectAdmin installation & management\n- Nginx/Apache tuning for WordPress\n- MySQL/MariaDB optimization\n- WordPress hosting optimization\n- VPS security hardening\\\n- OVH, Hetzner, or similar VPS systems\\\n- The server should be able to handle 50-300 WP Websites \n\nPreferable to have strong WordPress CMS understanding in development and designing.\n\nYou will not be handling the WordPress websites, you will only setup the VPS server and that's all.\n",
+          "Buget in EUR (aprox)": "175.5€\n",
+          "Proposals": "33",
+          "Client Name": "Setup Ideas",
+          "Client Country": "Lebanon",
+          "Duration": "2025-11-22 01:50:26 - 2025-12-22 01:50:26"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Server Guy / AI Engineer (Must Be a Real Killer) - server",
+          "Description": "We’re building a big platform and we need a hands-on engineer, not a middle-man, not an agency clown.\n\nIf you can’t execute fast, don’t apply.\n\nMust know:\n\t•\tTwilio (SMS/Voice/A2P)\n\t•\tWhatsApp API\n\t•\tOpenAI / Claude\n\t•\tServer setup, Docker, Linux\n\t•\tMessaging pipelines\n\t•\tClean API work\n\t•\tReal security + logging\n\nYour job:\nSet up our server, wire the APIs, get the whole thing talking clean and fast.\n\nWe’re NOT looking for:\nPeople who say “my employee can do it.”\nSlow responders.\nTheory guys.\nMiddle-men.\n\nWe ARE looking for:\nA real engineer who can start this week and take ownership.\n\nTo apply, send:\nYour experience\nLinks to similar work\nYour rate\nConfirmation YOU personally do the work\nWe’re hiring ASAP. Don’t waste our time.",
+          "Buget in EUR (aprox)": "1755€\n",
+          "Proposals": "19",
+          "Client Name": "Ivana M.",
+          "Client Country": "Philippines",
+          "Duration": "2025-11-15 02:00:46 - 2025-12-15 02:00:46"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Cloud server maintenance for PHP live data processing - server",
+          "Description": "Cloud server maintenance for PHP live data processing ",
+          "Buget in EUR (aprox)": "234€\n",
+          "Proposals": "33",
+          "Client Name": "Mark Baxter",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-18 14:26:54 - 2025-12-18 14:26:54"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Moving our project to an AWS back-end. - server",
+          "Description": "We need to find a complete AWS Specialist who can help us design and implement a very high performance back-end for our current project. We need multiple servers, large transaction count per second, fast database implementation and the creation of Pop-Up Servers on demand. I appreciate this is a broad specification but I need to identify someone who can think outside the box and help us accomplish something very special.\n\nThis is a long-term opportunity but we will honour the PPH agreement and pay all fees you earn through PPH. This could lead to a lucrative fulltime contract for the right individual as this project grows.\n\nRight now we need someone who can listen to what we need to do and then, who can tell us how we can go about achieving this. Then you will make the magic happen and implement the right back-end for us that will allow us to scale and handle up to 500,000,000 within a 10 hour period. Are you the person we need. If so, tell us why we should hire you to be our Amazon Web Services Guru.\n\nYou must be fluent in English and, ideally, located in UK or Europe, but we will certainly consider any location if you are the expert we need.",
+          "Buget in EUR (aprox)": "26.909999999999997€\n",
+          "Proposals": "24",
+          "Client Name": "David Case",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-20 13:21:37 - 2025-12-20 13:21:37"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "DATABASE SPECIALIST  - server",
+          "Description": "I am seeking a skilled Database Specialist to join our team. This role is a unique blend of a Database Administrator (DBA) and a Developer, providing an exciting opportunity to work on both existing databases and new queries. As a DBA, you will play a crucial role in SQL development, data modelling, and database design, with a focus on optimising and maintaining complex database systems. This role will involve working closely with cross-functional teams to support the development and deployment.\n\n\nRESPONSIBILITIES :\n\n1. Manage and maintain SQL Server and MYSQL databases from development through production environments.\n2. Configure and monitor database servers to ensure peak performance, availability, and security.\n3. Implement data modelling techniques to support integration and performance goals.\n4. Troubleshoot and resolve database issues promptly and effectively.\n5. Automate routine tasks and document changes to streamline processes.\n6. Assist with query optimization and schema design to enhance system performance.\n7. Provide 24/7 support for mission-critical systems.\n8. Perform scheduled maintenance and support release deployments outside regular hours.\n\n\n\nREQUIREMENTS : \n\n1. A university degree, preferably in computer science, engineering, or other numerate disciplines.\n2. Certifications in the leading database management systems, i.e., Oracle, Microsoft SQL Server, IBM DB2, Sybase and MySQL.\n3. Certifications in Project Management is an added advantage\n4. 2 + years of experience with Oracle, Microsoft SQL and MySQL database administration.\n5. Experience with Business Intelligence product administration.\n6. Conceptual knowledge of all and in-depth knowledge of some of the following: Technical Architectures, Configuration Management, Software Development Life Cycle, Operating systems, Database systems",
+          "Buget in EUR (aprox)": "57.33€\n",
+          "Proposals": "22",
+          "Client Name": "Michelle L.",
+          "Client Country": "United States",
+          "Duration": "2025-11-25 05:24:55 - 2025-12-25 05:24:55"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Looking to building and host Moodle - server",
+          "Description": "We are seeking a skilled freelancer to assist in the development and hosting of a Moodle learning management system. The ideal candidate will have extensive experience in setting up, configuring, and customizing Moodle to meet our specific educational requirements. Responsibilities include installing the platform on a secure server, integrating necessary plugins, and ensuring optimal performance and user experience. Additionally, knowledge of best practices for data protection and backup is essential. We invite proposals from professionals who are passionate about e-learning solutions and can deliver a robust, user-friendly platform.",
+          "Buget in EUR (aprox)": "35.099999999999994€\n",
+          "Proposals": "41",
+          "Client Name": "Craig S.",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-21 14:59:31 - 2025-12-21 14:59:31"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Cocos Creator Game - server",
+          "Description": "We are seeking an experienced Cocos Creator developer to design and develop an engaging online poker game. The ideal candidate will possess a deep understanding of game mechanics, user experience, and multiplayer functionalities within the Cocos Creator framework. You will be responsible for creating a visually appealing interface, implementing seamless gameplay, and ensuring robust server-side integration for real-time gaming experiences. If you have a proven track record of delivering high-quality games and are passionate about poker, we invite you to submit your proposal for this exciting project.",
+          "Buget in EUR (aprox)": "1755€\n",
+          "Proposals": "15",
+          "Client Name": "Vukasin Antovic",
+          "Client Country": "Ukraine",
+          "Duration": "2025-11-18 05:07:50 - 2025-12-18 05:07:50"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Website Speed Optimization for Custom-Coded WordPress Site - server",
+          "Description": "I need an expert to optimize the speed of my custom-coded, heavy WordPress website (theme-based but with extensive custom CSS/JS). Currently, the Google Page Speed Insights and GTmetrix scores are very low on both mobile and desktop.\n\nGoal:\nAchieve 90–95+ scores on Google Page Speed Insights & GTmetrix without breaking its:\nExisting functionality\nLayout/structure\nStyling/animations\nImages quality\nSEO setup & rankings\nURL structure\n\nRequirements:\nMust have strong coding experience with custom WordPress sites\nMust perform manual optimization (CSS/JS, critical rendering path, server tweaks, etc.)\nNo plugin-only optimizers - coding skills required\nOnly experienced specialists should apply\n\nNOTE: Should apply only if you have handled complex custom WordPress speed optimization before.",
+          "Buget in EUR (aprox)": "35.099999999999994€\n",
+          "Proposals": "37",
+          "Client Name": "Reyash Ahamed",
+          "Client Country": "United Arab Emirates",
+          "Duration": "2025-11-21 17:51:57 - 2025-12-21 17:51:57"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Meta Pixel Double Firing, Catalogue Match Rate Not Right Either - server",
+          "Description": "My Metapixel is double firing. It's picking up a server and a browser event for each event. Meta support isn't helping me. The product purchases are also not seemingly being picked up in catalogue matching. It's also telling me it's receiving content IDs that do not match any connected in the pixel.\n\nI need someone experienced because I know what I'm doing to a certain degree and I've tried a few things already. There's no GTM tag it's connected through the shopify app. I tried swapping pixels and swapping back to reset. I've also tried a deduplication script but I'm not sure if it was done right. I'm having no luck so whoever takes this on needs real experience. I also want to clarify I DO NOT need someone to manage my campaigns. I just need these issues fixing.\n\nPlease don't apply with Chat GPT (or any AI) written proposals, I will just assume you have no clue what you are talking about. I'm also not going to be overcharged either this price is not a placeholder it's the price of the job.\n\nI just want someone who can fix the issue, tell me what the issue is and how it was fixed/how it can be prevented. So if I have to set up another pixel in the future I can avoid getting in the same mess.",
+          "Buget in EUR (aprox)": "140.39999999999998€\n",
+          "Proposals": "15",
+          "Client Name": "Jammy Bargains ..",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-20 19:20:32 - 2025-12-20 19:20:32"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Flutter Mobile & Tablet Integrated with Microsoft Nav/BC - server",
+          "Description": "I am looking for an experienced Flutter developer to build a modern, intuitive mobile/tablet application that integrates directly with Microsoft Navision 2018 or Business Central through API/OData/WS endpoints.\n\nTechnical expectations:\nFlutter for cross-platform delivery (iOS, Android, and tablets)\nStrong experience with REST/OData integration\nClean architecture (MVVM/BLoC)\nToken-based authentication\nAbility to work with our internal API endpoints\nStrong documentation discipline\n\nDeliverables – Action\nFull Flutter source code\nUI/UX mock-ups (Figma or similar)\nAPI service layer integrated to Navision/BC\nTest build for iOS/Android\nDeployment support to our internal servers / App Stores (optional)\nTechnical documentation and handover",
+          "Buget in EUR (aprox)": "608.4€\n",
+          "Proposals": "42",
+          "Client Name": "Denis Mourghen",
+          "Client Country": "Mauritius",
+          "Duration": "2025-11-20 10:29:08 - 2025-12-20 10:29:08"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "502 error fix and website updates required. - server",
+          "Description": "1. Immediate Tasks — Fix the Website Outage\n\nPlease investigate and resolve the root cause of the 502 error. This may involve:\n\nChecking the hosting server (PHP version, memory limits, resource usage, logs)\n\nVerifying that the WordPress installation loads without timeout or gateway errors\n\nReviewing the .htaccess file for corruption\n\nChecking for plugin or theme conflicts that may be causing the failure\n\nEnsuring the database is accessible and not corrupted\n\nRestarting or adjusting server services (PHP-FPM, Nginx/Apache) if applicable\n\nPlease restore the site to working order as soon as possible.\n\n2. WordPress Updates & Modernization\n\nOnce the site is operational, I’d like the following updates completed:\n\nCore & Security Maintenance\n\nUpdate WordPress core to the latest stable version\n\nUpdate all plugins and themes\n\nRemove unused plugins/themes\n\nEnsure security patches are applied\n\nImplement a backup solution (if not already in place)\n\nPerformance Improvements\n\nOptimize loading speed (caching, image optimization, script minimization)\n\nConfirm compatibility with current PHP version\n\nCheck for broken links or outdated content\n\nDesign & Usability Refresh\n\nReview the current theme for outdated components\n\nRecommend a modern, supported theme if needed\n\nImprove mobile responsiveness\n\nEnsure accessibility and modern UI standards\n\nOptional Enhancements (let me know after initial review)\n\nSEO improvements\n\nImproved page builder workflow or editing tools\n\nAdding analytics or updated integrations\n\n3. Deliverables\n\nSummary of the root cause of the 502 error\n\nConfirmation the site is fully restored and functioning\n\nList of updates completed\n\nRecommendations for further improvements (if applicable)",
+          "Buget in EUR (aprox)": "31.589999999999996€\n",
+          "Proposals": "61",
+          "Client Name": "Pete Carvell",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-11 10:11:42 - 2025-12-11 10:11:42"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Meta Pixel Double Firing, Catalogue Match Rate Not Right Either - server",
+          "Description": "My Metapixel is double firing I've tried everything from adding a deduplication script to lowering the share data level from maximum to enhanced. It's still picking up a server and a browser event for each event. Meta support isn't helping me. The product purchases are also not seemingly being picked up in catalogue matching. It's also telling me it's receiving content IDs that do not match any connected in the pixel. Please no time wasters I know what this site is like a lot of people apply without knowing what they're applying for. I need someone experienced because I know what I'm doing to a certain degree and I'm having no luck so whoever takes this on needs real experience. I also want to clarify I DO NOT need someone to manage my campaigns. I just need these issues fixing.\n",
+          "Buget in EUR (aprox)": "58.5€\n",
+          "Proposals": "12",
+          "Client Name": "James S.",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-05 18:14:51 - 2025-12-05 18:14:51"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Freelancer Remote UX/UI Designer - Greece",
+          "Description": "## **About New Communication**\n\nNew Communication is a vibrant branding and web agency based in **Thessaloniki, Greece**, dedicated to building impactful brands and highly effective digital experiences for our clients. We believe that strategy, stunning visual design, and seamless functionality must work together. We’re seeking a talented, detail-oriented **Freelance UX/UI Designer** to collaborate with our in-house brand designers and development team on client website projects.\n\nThis is a **remote, project-based role** perfect for a designer who values flexibility, clear communication, and delivering a truly polished product.\n\n****\n\n### **The Role: Your Impact**\n\nYou will be the bridge between our client's brand strategy and the final website interface. \n\n### What You'll Be Doing:\n\n- **Wireframing & Prototyping:** Designing clear, conversion-focused sitemaps, user flows, and low-to-high-fidelity wireframes that define the website structure and user journey.\n- **UI Mockups & Polished Designs:** Translating approved wireframes and brand guidelines (developed by our in-house team) into pixel-perfect, cohesive user interface mockups, specifically for website projects.\n- **Collaboration with Brand Designers:** Working hand-in-hand with our internal brand designers to ensure the final UI is a seamless extension of the client's visual identity, typography, and colour palettes.\n- **Usability Focus:** Ensuring all designs prioritise **usability, accessibility (WCAG standards)**, and mobile-first responsiveness.\n- **Iteration & Feedback:** Proactively seeking and incorporating feedback from the internal team to refine designs and troubleshoot usability issues.\n\n### What You'll Need to Succeed\n\nWe’re looking for a freelancer with a proven track record, clarity of thought, and a commitment to quality.\n\n### Required Skills & Experience:\n\n- **2-4+ years** of professional experience focusing on designing websites and digital products.\n- **Exceptional proficiency with Figma** (our main design tool) including the ability to create and utilise components, styles, and auto-layout.\n- **Familiarity with Adobe Creative Suite (Photoshop, Illustrator)** is required to seamlessly work with assets and brand files provided by our in-house brand designers.\n- A **strong portfolio** demonstrating your process and the quality of your finished UI designs, particularly for web projects.\n- Proven ability to work independently, manage your own time, and meet deadlines in a **remote/freelance setting**.\n- **Strong understanding of web accessibility principles** (WCAG) and **SEO** and how to apply them in your designs.",
+          "Buget in EUR (aprox)": "11.7€\n",
+          "Proposals": "36",
+          "Client Name": "Digital Newcom",
+          "Client Country": "Greece",
+          "Duration": "2025-11-10 05:26:03 - 2025-12-10 05:26:03"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Meta Pixel Double Firing, Catalogue Match Rate Not Right Either - server",
+          "Description": "My Metapixel is double firing I've tried everything from adding a deduplication script to lowering the share data level from maximum to enhanced. It's still picking up a server and a browser event for each event. Meta support isn't helping me. The product purchases are also not seemingly being picked up in catalogue matching. It's also telling me it's receiving content IDs that do not match any connected in the pixel. Please no time wasters I know what this site is like a lot of people apply without knowing what they're applying for. I need someone experienced because I know what I'm doing to a certain degree and I'm having no luck so whoever takes this on needs real experience. I also want to clarify I DO NOT need someone to manage my campaigns. I just need these issues fixing.",
+          "Buget in EUR (aprox)": "46.8€\n",
+          "Proposals": "13",
+          "Client Name": "James S.",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-05 10:17:31 - 2025-12-05 10:17:31"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "PayPal PCI DSS Scan \"Failed\" Assistance - server",
+          "Description": "We need ongoing support to pass PayPal PCI DSS scans using a VPS server with Alma OS and cPanel.  We use Web Apps using CMS and custom PHP.   The ASV scans are done through PayPal via a 3rd part (i believe) managepci(dot)com. Our goal is to ensure compliance every 90 days.\n\nProject goal\n- Secure ongoing support to pass PayPal PCI DSS scans every 90 days or so\n- using a VPS server with a cPanel environment.\n\nScope of work\n- Resolve issues when PayPal PCI DSS scans fail.\n- Ensure compliance with scan requirements every 90 days.\n- Conduct work/communication/completion during US business hours.\n- Please demonstrate your experience in PayPal PCI DSS scans\n- Please reply with your Fixed Rate fee to fix any issues and get scans to pass for this project to be considered\n- Project will be ongoing if you're selected\n\n\nAdditional Information:\n- Please demonstrate your experience in PayPal PCI DSS scans\n\nIdeal Candidate:\n- Experienced in PayPal PCI DSS scans\n- Expertise in compliance services\n- Audit skills required",
+          "Buget in EUR (aprox)": "99.44999999999999€\n",
+          "Proposals": "14",
+          "Client Name": "Thomas S.",
+          "Client Country": "United States",
+          "Duration": "2025-10-28 16:34:12 - 2025-11-27 16:34:12"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Host 2 static website with basic one time SEO  - server",
+          "Description": "I have an urgent project to deploy two static websites on our existing shared hosting plan. The core requirements are straightforward but time-sensitive.\n\nFirstly, I need both static websites hosted on our shared server. The most critical functionality is the contact form; it must be configured to deliver all submission details directly to my email. I am fully open to your recommendation for the most reliable method to achieve this, whether through a script or a third-party service.\n\nSecondly, I require a one-time, foundational SEO setup to ensure the websites are visible to search engines. This is not for an ongoing campaign but for the essential groundwork. The specific tasks for this include creating and submitting the necessary robots.txt and sitemap.xml files, ensuring all meta titles and descriptions are properly implemented, registering the sites with Google Search Console and Bing Webmaster Tools, and adding Google Analytics while verifying that canonical URLs are correctly set.\n\nThe shared hosting with fast commit is brand new so you need to link the server to my domain. \n\nGiven the urgency, your estimated timeline for deployment is the key deciding factor for my selection. Please provide your soonest possible completion date",
+          "Buget in EUR (aprox)": "99.44999999999999€\n",
+          "Proposals": "49",
+          "Client Name": "Fouzy B.",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-10-28 06:29:19 - 2025-11-27 06:29:19"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "iOS Developer Needed – Padel Scoring App (iPhone + Apple Watch) - server",
+          "Description": "Description:\n\nI need an experienced iOS/watchOS developer to build a Padel scoring app for Apple Watch + iPhone.\n\nThe Watch app will handle point scoring (tap to add point, undo, server tracking), and the iPhone app will store match history, player profiles, and basic stats.\n\n\nI have a full technical spec ready to send to shortlisted developers.\n\n\nCore Requirements:\n\n    Swift + SwiftUI\n\n    Apple Watch scoring interface\n\n    Full padel scoring logic (games, sets, tie-breaks, golden point)\n\n    Haptic feedback\n\n    Sync between iPhone and Apple Watch (WatchConnectivity)\n\n    Match history + stats on iPhone\n\n    Simple player profiles\n\n    iCloud or Firebase (your recommendation)\n\n    App Store submission assistance\n\n\nDeliverables:\n\n    Full source code\n\n    All project files and assets\n\n    TestFlight build\n\n    Documentation\n\n\nOwnership:\n\nAll intellectual property, source code, and assets must be fully assigned to me upon payment. Developer retains no rights or permissions.\n\n\nPlease send:\n\n    Examples of similar Apple Watch/iOS apps\n\n    Estimated cost + timeline\n\n    Confirmation you accept full IP transfer\n",
+          "Buget in EUR (aprox)": "462.15€\n",
+          "Proposals": "24",
+          "Client Name": "James Shaw",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-17 04:47:39 - 2025-12-17 04:47:39"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Quotes and Invoices - server",
+          "Description": "Core Framework Overview\n Platform\n• \tPrivate website hosted on my server\n• \tSecure login for you and any staff (if needed)\n• \tAdmin dashboard with access to all quotes, orders, change orders, and invoices\n\n Key Features\n1. Form Creation Hub\n• \tHomepage offers options:\n• \tCreate new: Quotation / Invoice / Change Order\n• \tView/Edit previous documents\n• \tAccess templates (Bathroom, Kitchen, Cabinetry, General Renovation)\n2. Template-Based Quoting System\n• \tEach template pre-populates categories and common services\n• \tCategories like:\n• \tCabinetry → Vanity, Finishing (Laminate, Painted, etc.)\n• \tPlumbing → Sink Plumbing, Shower Plumbing\n• \tTiling → Shower Tiling, Flooring Tiling\n• \tDemolition, Electrical, Painting, etc.\n• \tYou select/deselect services based on scope\n• \tEach selected item pulls:\n• \tDescription\n• \tUnit price\n• \tQuantity (editable)\n• \tTotal cost\n3. Dynamic Pricing & Customization\n• \tEditable pricing before finalizing\n• \tAdd custom line items manually\n• \tOptional notes per item (e.g., “includes disposal of old vanity”)\n4. Conversion Workflow\n• \tQuote → Order → Invoice\n• \tEach stage editable before locking\n• \tChange Orders can be created from existing quotes/orders\n5. PDF Generation\n• \tClean, professional layout\n• \tIncludes:\n• \tCompany branding\n• \tClient info\n• \tItemized breakdown\n• \tTotals, taxes, payment terms\n• \tOption to email directly or download",
+          "Buget in EUR (aprox)": "236.33999999999997€\n",
+          "Proposals": "35",
+          "Client Name": "Ronal Sami",
+          "Client Country": "Canada",
+          "Duration": "2025-11-03 06:47:22 - 2025-12-03 06:47:22"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "AI Pet Art Generator - server",
+          "Description": "Project Overview\nWe are looking for a skilled full-stack developer to build a web platform focused on AI-powered pet photo style transformation and creative image synthesis.\n\nUsers can upload pet photos, choose from multiple artistic or themed styles, and generate unique AI-based results.\nThe platform should include a membership system, dual credit/subscription logic, integrated payment gateway, and a modular backend ready for future AI expansion.\n\nPlatform Architecture\nThe project will be developed primarily as a web-based platform with responsive design to ensure smooth use on both desktop and mobile devices.\nThe final version should be packaged as a PWA (Progressive Web App) and published on both App Store and Google Play, providing a dual-platform experience without separate native app development.\n\nScope of Work (Full-Stack Development)\nFront-End Development\n．Pet photo upload interface and generation workflow (Upload → Generate → Result display)\n．Style selection and categorization (Artistic, Historical, Trend, Movie themes, etc.)\n．“AI Style Transfer – Before/After Comparison” interactive viewer\n．Loading animation and visual feedback during generation\n．Fully responsive design for desktop and mobile\n．User gallery and “My Creations” page\n\nBack-End Development\n．User authentication and membership system\n．Dual credit & subscription system — both models should coexist and be switchable at any time\n．Integrated payment gateway (Stripe / PayPal or equivalent)\n．Full front-end control from backend — ability to modify display order, content, labels, and layout directly\n．Style management module — add new front-end styles from backend, including generation prompts and sample images\n．Cloud-based image storage and management (e.g., AWS / Firebase)\n．Admin panel for editing site logo, text, style categories, and prompts\n\nAI & API Integration\n．Integrate AI image generation and enhancement APIs (primarily OpenAI; extensible for others)\n．Support both text-prompt and image-upload generation modes\n．Integrate high-resolution enhancement services such as Gigapixel AI, LetsEnhance, or equivalent APIs\n．Modular architecture allowing flexible addition or replacement of AI modules\n．Support for multiple language-model APIs (ChatGPT, Gemini, etc.), with admin-side key management\n\nDeployment & Testing\n．Deploy to production server (AWS / Vercel / Render etc.)\n．Full performance and compatibility testing\n．PWA packaging and store submission (App Store / Google Play)\n．Delivery of all documentation and admin operation guides\n\nKey Requirements\n．Complete web platform (not native apps)\n．Responsive + PWA ready for dual-platform publication\n．Dual mode credit & subscription system\n．Backend-controlled front-end customization\n．Addable style modules with prompt + sample image configuration\n．Integration of AI generation + image enhancement APIs\n．ChatGPT / Gemini API support with editable keys\n．Scalable, modular, and maintainable structure\n\nProposal Requirements\nPlease include the following in your proposal:\n．Relevant past projects or demo links\n．Proposed architecture and tools you plan to use\n．Estimated timeline and pricing\n．Experience with AI APIs, payment systems, and credit logic\n．Experience with PWA packaging and dual-platform publishing\n\nIf you have any suggestions or alternative technical approaches, feel free to include them in your proposal.",
+          "Buget in EUR (aprox)": "1404€\n",
+          "Proposals": "38",
+          "Client Name": "Yi Chia Chang",
+          "Client Country": "Taiwan, Province of China",
+          "Duration": "2025-11-11 09:39:56 - 2025-12-11 09:39:56"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Heidi Health – Vonage API Integration (Node.js / Python Project) - server",
+          "Description": "We are a delivery partner engaged by a UK healthcare client who uses Heidi Health and Vonage. We seek an experienced subcontractor to design, build, and hand over a secure middleware integration that enables automatic transcription of inbound and outbound calls made via the Vonage Voice API, with transcripts processed by the Heidi Health API and ready for downstream clinical documentation.\n\n# Scope (Phase 1 – Post-Call Transcription)\n\n- Implement a custom integration server (Node.js or Python) operated in our environment (we host) to receive Vonage webhooks for call start/end and recording availability.\n- Fetch and, if needed, transcode audio (e.g., to MP3/OGG) before secure upload to Heidi for transcription.\n- Persist call metadata and transcripts in our controlled storage.\n- Implement robust security & compliance: webhook validation, secure credential handling, TLS in transit, encryption at rest, and UK data residency/GDPR alignment.\n- Provide documentation, tests, and deployment guidance (e.g., containerised service).\n\n# Optional/Phase 2 – Real-Time Transcription\n- Add WebSocket media streaming from Vonage to support near real-time transcript generation.\n\n# What we’ll provide\n- Hosting and environment control, Vonage/Heidi credentials, and access to a detailed technical brief.\n\n# What you’ll deliver\n- Technical specification and data flow, working middleware, test plan (including simulated calls), rollout documentation, and support for handover.\n\nThis subcontract is ideal for teams with proven experience in telephony APIs (Vonage/Nexmo), audio handling, and healthcare-grade security.",
+          "Buget in EUR (aprox)": "2925€\n",
+          "Proposals": "75",
+          "Client Name": "Will B.",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-10-29 16:16:53 - 2025-11-28 16:16:53"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Urgent Webflow or Framer Developer Needed - server",
+          "Description": "I am looking for an experienced Webflow or Framer developer who can start immediately and rebuild my entire website into a secure, modern and fully hosted platform. My current website is built on WordPress with custom code and has ongoing security issues, including malware, vulnerabilities and constant developer dependency. I need to move to a system where I can edit everything myself without dealing with plugin failures or server problems.\nThis project involves a full rebuild of the entire website. Nearly all of the designs already exist in Figma, and I will provide full access to those files. You will either recreate the website exactly as designed in Figma or recommend a high quality template in Webflow or Framer that closely matches the structure and layout. I am open to whichever option is faster and cleaner but the final result must match the original design quality.\n\nThe work includes rebuilding all pages, implementing all layouts, interactions and content, and ensuring the entire site is fully responsive across desktop, tablet and mobile. You will be responsible for setting up CMS collections if needed, connecting contact forms and email notifications, creating any interactions or animations, and making sure the backend is set up in a way that allows me to easily update text, images and case studies without developer assistance.\n\nA major part of this project is the handoff. Once the site is built, I need full admin access along with a walkthrough of how to edit everything in the future. The goal is a clean, modern website that I can maintain independently without returning to WordPress or relying on developers for small changes.\n\nThis project is urgent. You must be able to begin immediately and must be able to complete the rebuild within roughly two weeks. Strong communication, attention to detail and speed are extremely important.\n\nYou must have a portfolio of Webflow or Framer websites that demonstrate your ability to rebuild or recreate full sites from Figma or from existing designs. Experience with responsive layout, animations, CMS setup and professional level visual quality is required.\n\nIf you can start right away and have the portfolio to show relevant experience, I would like to hear from you.",
+          "Buget in EUR (aprox)": "702€\n",
+          "Proposals": "57",
+          "Client Name": "Sarah J.",
+          "Client Country": "United States",
+          "Duration": "2025-11-18 07:56:14 - 2025-12-18 07:56:14"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Tidy the server from X-ransom attack - server",
+          "Description": "Hello,\nOur Wordpress website was attacked by x-ransom. We have a backup of the WP and the database dump. We have detected some corrupted files there but it seems that there are still some left that were not detected. It has to be tidy after the attack.\n\nIt’s an internet shop with uploads files of around 100GB. It’s stored on a private hosting in LV.\n\nWhat is done do far:\n\n1. Update WordPress Version\n2. Use z’d updateSecure WP-Admin Login Credentials\n3. Set Up Safelist and Blocklist for the Admin Page\n4. Use Trusted WordPress Themes\n5. Install SSL Certificate\n6. Remove Unused WordPress Plugins and Themes\n\n1. Enable Two-Factor Authentication for WP-Admin\n2. Back Up WordPress\n3. Limit Login Attempts\n4. Change the WordPress Login Page URL\n5. Log Idle Users Out Automatically \n6. Monitor User Activity\n7. Check for Malware - found several none-Wordpress specious files and plugins. Deleted them.\n\n1. Disable PHP Error Reporting\n\n3. Turn File Editing Off\n4. Restrict Access Using the .htaccess File\n5. Change the Default WordPress Database Prefix - not done\n6. Disable XML-RPC\n7. Hide the WordPress Version\n8. Block Hotlinking - not done\n9. Manage File Permissions not done\n\n\nAfter making the list, we received another x-ransome attack. I suspect he has a server level access not only wp level.\nIf you apply, you need to be a server security and a Wordpress specialist.\nPlease, quote for the job.",
+          "Buget in EUR (aprox)": "117€\n",
+          "Proposals": "26",
+          "Client Name": "Natalia D.",
+          "Client Country": "Switzerland",
+          "Duration": "2024-02-04 06:39:32 - 2024-03-05 06:39:32"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "Experienced WordPress other known CMS - Developer Wanted  - server",
+          "Description": "Requirements:\n\nIn-depth experience with one or more major CMS platforms (e.g., WordPress, Joomla, Drupal, Typo3, CraftCMS, Shopify, etc.)\nConfident with PHP and/or other relevant languages for CMS customization (e.g., JavaScript, Python, Liquid)\nExperience building or customizing plugins, themes, or modules\nGood understanding of caching, performance optimization, and server configuration (e.g., .htaccess, Nginx)\nReliable, clear communicator, and proactive\nTime Zone & Location Preference:\nDue to the nature of our projects and the need for close communication, we strongly prefer to work with developers based in nearby countries or within our time zone (Central Europe, UTC+1 ±2h). This makes real-time collaboration easier and helps us avoid time barriers.\n\nIf you are located in Serbia, Romania, Bosnia, Ukraine, Tunisia, Egypt, or other nearby countries, we encourage you to apply!\n\n",
+          "Buget in EUR (aprox)": "29.25€\n",
+          "Proposals": "36",
+          "Client Name": "Anthony Van Maare",
+          "Client Country": "Netherlands",
+          "Duration": "2025-11-05 13:54:11 - 2025-12-05 13:54:11"
+        }
+      },
+      {
+        "json": {
+          "Title - Query": "YourHippo LMS  - server",
+          "Description": "Commercial criteria - NO AI responses please !!!!!!!!!!!!\n\n1. Must speak English \n2. Must not be an agent \n3. Must work UK hours\n4. Must be able to work full time \n5. Please post your expected hourly rate in the message back \n6. Must be able to send CV \n\nWe are a UK-based tech company delivering a modern Learning Management System (LMS) and high-quality e-learning content tailored for the care sector. Our platform helps care providers improve compliance, streamline training, and empower staff through simple, effective digital learning.\n\nWe are looking for an experienced Full-Stack Developer (4+ years) to help us continue building and enhancing our LMS platform using Laravel, MySQL, and modern web technologies.\n\n________________________________________\nAbout the Role\n\nThis role is perfect for a developer who enjoys working across the full stack—from backend logic and integrations to clean, intuitive user interfaces. You’ll be designing and building new features, improving existing functionality, contributing to architecture decisions, and helping shape the future of our platform.\n\nYou’ll work directly with our product, technical, and customer teams to deliver a reliable, secure, and scalable LMS used daily by organisations across the care sector.\n\n________________________________________\nKey Responsibilities\n\n• Develop new features and improvements in Laravel with clean, maintainable code.\n• Work across the full stack, including backend, frontend, databases, and APIs.\n• Build secure, scalable, and optimised solutions that support high volumes of learners.\n• Maintain and refine database structures using MySQL (including migrations, indexing, optimisation, etc.).\n• Implement responsive frontend components using Blade, Vue, React, or similar frameworks (depending on stack).\n• Integrate third-party APIs and build internal RESTful endpoints.\n• Contribute to architectural decisions and technical planning.\n• Monitor performance, troubleshoot issues, and contribute to ongoing platform stability.\n• Collaborate with the product team to translate requirements into practical solutions.\n• Participate in code reviews and maintain high coding standards.\n\n________________________________________\nSkills & Experience\n\nEssential:\n\n• Strong experience with Laravel (or similar modern PHP frameworks).\n• Solid understanding of MySQL, including optimisation and relational database design.\n• Good frontend development skills (Blade, Vue, React or similar).\n• Experience with version control (Git).\n• Strong understanding of API development, authentication, and web security best practices.\n• Ability to write clean, scalable, well-documented code.\n• Strong problem-solving skills and the ability to break down complex requirements.\n• Experience working in an agile environment or similar collaborative workflow.\n\nDesirable:\n\n• 4+ years professional experience as a Full-Stack or Backend Developer.\n• Experience working on SaaS products or LMS platforms.\n• Knowledge of queues, workers, and asynchronous processing (e.g., Laravel Queues).\n• Experience with server management, Linux, or cloud hosting (AWS, DigitalOcean, etc.).\n• Familiarity with Docker, CI/CD pipelines, or automated testing.\n• Understanding of UX principles or design best practices.\n\n________________________________________\nWho We’re Looking For\n\n• A capable, confident developer who enjoys owning features end-to-end.\n• Someone who takes pride in writing clean, scalable code.\n• A fast learner who enjoys working with modern tools and technologies.\n• A proactive problem-solver who loves improving how things work.\n• A collaborative team member who communicates clearly and contributes ideas.\n• Someone who thrives in a growing tech business where their work will have a real impact.\n\n________________________________________\nWhat We Offer\n\n• The chance to work on a meaningful, mission-driven product in a growing sector.\n• Opportunities to expand your role into architecture, DevOps, leadership, or product.\n• A supportive team, autonomy in your work, and room to innovate.\n• Full overview and onboarding into our platform, workflows, and development practices.\n\n\n",
+          "Buget in EUR (aprox)": "245.7€\n",
+          "Proposals": "16",
+          "Client Name": "Jamie S.",
+          "Client Country": "United Kingdom",
+          "Duration": "2025-11-26 17:28:56 - 2025-12-26 17:28:56"
+        }
+      }
+    ]
+  },
+  "versionId": "001a0d60-73ad-4a1b-b391-0cf30a68df0f",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-26T17:11:41.482Z",
+      "createdAt": "2025-11-26T17:11:41.482Z",
+      "role": "workflow:owner",
+      "workflowId": "apArQjq1ZukwLDzC",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
