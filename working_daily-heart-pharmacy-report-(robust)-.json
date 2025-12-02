@@ -1,0 +1,277 @@
+{
+  "updatedAt": "2025-11-09T10:09:01.000Z",
+  "createdAt": "2025-11-07T16:13:01.519Z",
+  "id": "UOENNazBb0Zhhz1L",
+  "name": "Working_Daily Heart Pharmacy Report (Robust)",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 23,
+              "minute": 55
+            }
+          ]
+        }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -96
+      ],
+      "id": "7c8d0310-e530-41b7-aa2d-23a03486aeb3"
+    },
+    {
+      "parameters": {
+        "url": "https://heartpharmacy.gr/proionta/today_sells.php",
+        "responseFormat": "string",
+        "options": {},
+        "headerParametersUi": {
+          "parameter": []
+        }
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -96
+      ],
+      "id": "8b707643-8167-4861-9017-ff5cf6d04aca"
+    },
+    {
+      "parameters": {
+        "functionCode": "const rawData = $json[\"data\"];\nlet dataArray = [];\n\n// Function to parse CSV\nfunction parseCSV(csv) {\n  const lines = csv.split(/\\r?\\n/).filter(line => line.trim() !== '');\n  if (lines.length === 0) return [];\n  const headers = lines[0].split(',').map(h => h.trim());\n  const rows = lines.slice(1).map(line => {\n    const values = line.split(',').map(v => v.trim());\n    let obj = {};\n    headers.forEach((h, i) => obj[h] = values[i] || '');\n    return obj;\n  });\n  return rows;\n}\n\n// Function to parse HTML table\nfunction parseHTMLTable(html) {\n  const tables = html.match(/<table[\\s\\S]*?<\\/table>/gi);\n  if (!tables) return [];\n  const table = tables[0];\n  const rows = table.match(/<tr[\\s\\S]*?<\\/tr>/gi) || [];\n  if (rows.length === 0) return [];\n  const headers = (rows.shift().match(/<t[dh][\\s\\S]*?<\\/t[dh]>/gi) || []).map(h => h.replace(/<[^>]*>/g, '').trim());\n  return rows.map(r => {\n    const cells = (r.match(/<t[dh][\\s\\S]*?<\\/t[dh]>/gi) || []).map(c => c.replace(/<[^>]*>/g, '').trim());\n    let obj = {};\n    headers.forEach((h, i) => obj[h] = cells[i] || '');\n    return obj;\n  });\n}\n\n// Detect if rawData is full HTML\nif (rawData.trim().startsWith('<!DOCTYPE html>') || rawData.trim().startsWith('<html')) {\n  return [{ json: { html: rawData } }];\n}\n\n// Try JSON first\ntry {\n  const parsed = JSON.parse(rawData);\n  if (Array.isArray(parsed)) dataArray = parsed;\n  else dataArray = [parsed];\n} catch (errJson) {\n  // Try CSV\n  const csvData = parseCSV(rawData);\n  if (csvData.length > 0) dataArray = csvData;\n  else {\n    // Try HTML table\n    const htmlData = parseHTMLTable(rawData);\n    if (htmlData.length > 0) dataArray = htmlData;\n    else dataArray = [{ info: rawData }];\n  }\n}\n\n// Build HTML table for JSON/CSV/HTML table data\nlet tableRows = '';\nif (dataArray.length > 0) {\n  const headers = Object.keys(dataArray[0]);\n  tableRows += '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';\n  for (const row of dataArray) {\n    const rowHtml = headers.map(h => `<td>${row[h] !== undefined ? row[h] : ''}</td>`).join('');\n    tableRows += `<tr>${rowHtml}</tr>`;\n  }\n}\n\n// Function to format date as \"Month Day, Year\"\nfunction formatDate(date) {\n  const months = [\n    \"January\",\"February\",\"March\",\"April\",\"May\",\"June\",\n    \"July\",\"August\",\"September\",\"October\",\"November\",\"December\"\n  ];\n  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;\n}\n\nconst todayFormatted = formatDate(new Date());\n\n// Final HTML output\nconst html = `\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Top Selling Products (Today)</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            background-color: #f9fafb;\n            margin: 40px;\n        }\n        h2 {\n            color: #333;\n        }\n        table {\n            border-collapse: collapse;\n            width: 100%;\n            max-width: 800px;\n            background: white;\n            box-shadow: 0 0 10px rgba(0,0,0,0.1);\n        }\n        th, td {\n            padding: 12px 15px;\n            text-align: left;\n            border-bottom: 1px solid #ddd;\n        }\n        th {\n            background-color: #007bff;\n            color: white;\n        }\n        tr:hover {\n            background-color: #f1f1f1;\n        }\n        .container {\n            display: flex;\n            flex-direction: column;\n            align-items: center;\n        }\n        .note {\n            color: #666;\n            font-size: 0.9em;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n<div class=\"container\">\n    <h2>Top Selling Products — ${todayFormatted}</h2>\n    <table>\n        ${tableRows}\n    </table>\n    <p class=\"note\">Data is updated based on orders added today (local server time).</p>\n</div>\n</body>\n</html>\n`;\n\nreturn [{ json: { html } }];"
+      },
+      "name": "Convert to HTML",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -96
+      ],
+      "id": "d871760e-dda2-4c7b-aedc-abe798fc465c"
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "Heart Pharmacy - Todays Selling Report",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "50434626-da2a-4b1f-8bfc-0dcf2fe5e9c4",
+      "name": "Send a message",
+      "webhookId": "1dd6fc4d-6478-4802-9697-8bc9eaab3a00",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Convert to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to HTML": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "71d88ff2-1faa-4bd4-b8b3-d3e3cc8fd595",
+  "activeVersionId": "71d88ff2-1faa-4bd4-b8b3-d3e3cc8fd595",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-07T16:13:01.523Z",
+      "createdAt": "2025-11-07T16:13:01.523Z",
+      "role": "workflow:owner",
+      "workflowId": "UOENNazBb0Zhhz1L",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-11-28T13:36:06.316Z",
+    "createdAt": "2025-11-28T13:36:06.316Z",
+    "versionId": "71d88ff2-1faa-4bd4-b8b3-d3e3cc8fd595",
+    "workflowId": "UOENNazBb0Zhhz1L",
+    "nodes": [
+      {
+        "parameters": {
+          "triggerTimes": {
+            "item": [
+              {
+                "hour": 23,
+                "minute": 55
+              }
+            ]
+          }
+        },
+        "name": "Cron",
+        "type": "n8n-nodes-base.cron",
+        "typeVersion": 1,
+        "position": [
+          -480,
+          -96
+        ],
+        "id": "7c8d0310-e530-41b7-aa2d-23a03486aeb3"
+      },
+      {
+        "parameters": {
+          "url": "https://heartpharmacy.gr/proionta/today_sells.php",
+          "responseFormat": "string",
+          "options": {},
+          "headerParametersUi": {
+            "parameter": []
+          }
+        },
+        "name": "HTTP Request",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 1,
+        "position": [
+          -224,
+          -96
+        ],
+        "id": "8b707643-8167-4861-9017-ff5cf6d04aca"
+      },
+      {
+        "parameters": {
+          "functionCode": "const rawData = $json[\"data\"];\nlet dataArray = [];\n\n// Function to parse CSV\nfunction parseCSV(csv) {\n  const lines = csv.split(/\\r?\\n/).filter(line => line.trim() !== '');\n  if (lines.length === 0) return [];\n  const headers = lines[0].split(',').map(h => h.trim());\n  const rows = lines.slice(1).map(line => {\n    const values = line.split(',').map(v => v.trim());\n    let obj = {};\n    headers.forEach((h, i) => obj[h] = values[i] || '');\n    return obj;\n  });\n  return rows;\n}\n\n// Function to parse HTML table\nfunction parseHTMLTable(html) {\n  const tables = html.match(/<table[\\s\\S]*?<\\/table>/gi);\n  if (!tables) return [];\n  const table = tables[0];\n  const rows = table.match(/<tr[\\s\\S]*?<\\/tr>/gi) || [];\n  if (rows.length === 0) return [];\n  const headers = (rows.shift().match(/<t[dh][\\s\\S]*?<\\/t[dh]>/gi) || []).map(h => h.replace(/<[^>]*>/g, '').trim());\n  return rows.map(r => {\n    const cells = (r.match(/<t[dh][\\s\\S]*?<\\/t[dh]>/gi) || []).map(c => c.replace(/<[^>]*>/g, '').trim());\n    let obj = {};\n    headers.forEach((h, i) => obj[h] = cells[i] || '');\n    return obj;\n  });\n}\n\n// Detect if rawData is full HTML\nif (rawData.trim().startsWith('<!DOCTYPE html>') || rawData.trim().startsWith('<html')) {\n  return [{ json: { html: rawData } }];\n}\n\n// Try JSON first\ntry {\n  const parsed = JSON.parse(rawData);\n  if (Array.isArray(parsed)) dataArray = parsed;\n  else dataArray = [parsed];\n} catch (errJson) {\n  // Try CSV\n  const csvData = parseCSV(rawData);\n  if (csvData.length > 0) dataArray = csvData;\n  else {\n    // Try HTML table\n    const htmlData = parseHTMLTable(rawData);\n    if (htmlData.length > 0) dataArray = htmlData;\n    else dataArray = [{ info: rawData }];\n  }\n}\n\n// Build HTML table for JSON/CSV/HTML table data\nlet tableRows = '';\nif (dataArray.length > 0) {\n  const headers = Object.keys(dataArray[0]);\n  tableRows += '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';\n  for (const row of dataArray) {\n    const rowHtml = headers.map(h => `<td>${row[h] !== undefined ? row[h] : ''}</td>`).join('');\n    tableRows += `<tr>${rowHtml}</tr>`;\n  }\n}\n\n// Function to format date as \"Month Day, Year\"\nfunction formatDate(date) {\n  const months = [\n    \"January\",\"February\",\"March\",\"April\",\"May\",\"June\",\n    \"July\",\"August\",\"September\",\"October\",\"November\",\"December\"\n  ];\n  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;\n}\n\nconst todayFormatted = formatDate(new Date());\n\n// Final HTML output\nconst html = `\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Top Selling Products (Today)</title>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            background-color: #f9fafb;\n            margin: 40px;\n        }\n        h2 {\n            color: #333;\n        }\n        table {\n            border-collapse: collapse;\n            width: 100%;\n            max-width: 800px;\n            background: white;\n            box-shadow: 0 0 10px rgba(0,0,0,0.1);\n        }\n        th, td {\n            padding: 12px 15px;\n            text-align: left;\n            border-bottom: 1px solid #ddd;\n        }\n        th {\n            background-color: #007bff;\n            color: white;\n        }\n        tr:hover {\n            background-color: #f1f1f1;\n        }\n        .container {\n            display: flex;\n            flex-direction: column;\n            align-items: center;\n        }\n        .note {\n            color: #666;\n            font-size: 0.9em;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n<div class=\"container\">\n    <h2>Top Selling Products — ${todayFormatted}</h2>\n    <table>\n        ${tableRows}\n    </table>\n    <p class=\"note\">Data is updated based on orders added today (local server time).</p>\n</div>\n</body>\n</html>\n`;\n\nreturn [{ json: { html } }];"
+        },
+        "name": "Convert to HTML",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [
+          32,
+          -96
+        ],
+        "id": "d871760e-dda2-4c7b-aedc-abe798fc465c"
+      },
+      {
+        "parameters": {
+          "sendTo": "seremvas76@gmail.com",
+          "subject": "Heart Pharmacy - Todays Selling Report",
+          "message": "={{ $json.html }}",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.1,
+        "position": [
+          256,
+          -96
+        ],
+        "id": "50434626-da2a-4b1f-8bfc-0dcf2fe5e9c4",
+        "name": "Send a message",
+        "webhookId": "1dd6fc4d-6478-4802-9697-8bc9eaab3a00",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "WBaGzd89qjgz8bxH",
+            "name": "Gmail account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cron": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Convert to HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Convert to HTML": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a message": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
