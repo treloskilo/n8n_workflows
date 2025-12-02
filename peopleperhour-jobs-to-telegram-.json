@@ -1,0 +1,71 @@
+{
+  "updatedAt": "2025-11-12T14:36:01.087Z",
+  "createdAt": "2025-11-12T14:36:01.087Z",
+  "id": "6Zzf3GdZ4RiOXLKl",
+  "name": "PeoplePerHour Jobs to Telegram",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://www.peopleperhour.com/freelance-server-jobs",
+        "responseFormat": "string",
+        "options": {}
+      },
+      "id": "6115d28d-a6a2-4f3b-9756-78e6e2fc3d00",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cheerio = require('cheerio');\\nconst $ = cheerio.load(items[0].json);\\n\\nconst projects = [];\\n$('.search-result').each((i, el) => {\\n  const title = $(el).find('.search-result-title a').text().trim();\\n  const url = $(el).find('.search-result-title a').attr('href');\\n  if (title && url) {\\n    projects.push({\\n      title,\\n      url: url.startsWith('http') ? url : `https://www.peopleperhour.com${url}`\\n    });\\n  }\\n});\\n\\nreturn projects.map(p => ({ json: p }));\"\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        16
+      ],
+      "id": "423aed8d-28b6-43ab-a895-7e1c5a3a01e5",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d6ac9a4a-b244-4ea6-b3fa-5321c1299854",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-12T14:36:01.090Z",
+      "createdAt": "2025-11-12T14:36:01.090Z",
+      "role": "workflow:owner",
+      "workflowId": "6Zzf3GdZ4RiOXLKl",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
