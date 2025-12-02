@@ -1,0 +1,177 @@
+{
+  "updatedAt": "2025-11-07T14:29:02.972Z",
+  "createdAt": "2025-11-07T14:29:02.972Z",
+  "id": "5giso8DrXcCEgqMO",
+  "name": "My workflow 2",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 23,
+              "minute": 59
+            }
+          ]
+        }
+      },
+      "id": "6b6ad521-ccde-4965-acb6-9c489ba130f7",
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://heartpharmacy.gr/proionta/today_sells.php",
+        "responseFormat": "string",
+        "options": {}
+      },
+      "id": "c974c021-e048-439e-b100-017fe5bc1dad",
+      "name": "Fetch Today Sells",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        128,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "dataToBinary",
+        "options": {}
+      },
+      "id": "d6cf9d31-fd9d-43e8-8392-be1961c4cba5",
+      "name": "Convert to Binary (HTML File)",
+      "type": "n8n-nodes-base.moveBinaryData",
+      "typeVersion": 1,
+      "position": [
+        352,
+        168
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "HeartPharmacy – Today’s Sales Report",
+        "additionalFields": {}
+      },
+      "id": "c231c6e8-e188-48c4-8102-efa6e0787972",
+      "name": "Send Daily Sales Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        576,
+        96
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "subject": "⚠️ HeartPharmacy – Workflow Error at {{$now}}",
+        "additionalFields": {}
+      },
+      "id": "da2dd887-139a-4b04-b42c-b9c910c9ecf9",
+      "name": "Send Failure Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        800,
+        240
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Today Sells",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Today Sells": {
+      "main": [
+        [
+          {
+            "node": "Convert to Binary (HTML File)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Failure Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Binary (HTML File)": {
+      "main": [
+        [
+          {
+            "node": "Send Daily Sales Report",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Failure Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Daily Sales Report": {
+      "main": [
+        [
+          {
+            "node": "Send Failure Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9befe39f-2537-4af0-8eb0-8289e19a04a4",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-07T14:29:02.974Z",
+      "createdAt": "2025-11-07T14:29:02.974Z",
+      "role": "workflow:owner",
+      "workflowId": "5giso8DrXcCEgqMO",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
