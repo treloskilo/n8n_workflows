@@ -1,0 +1,204 @@
+{
+  "updatedAt": "2025-11-28T18:29:25.350Z",
+  "createdAt": "2025-11-28T18:29:25.350Z",
+  "id": "vvQGx3jHoGXyzTbc",
+  "name": "Price Finder Agent",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "id": "fee75445-6160-4689-9b34-ff278a3dfff2",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9bc80fb1-2b40-496c-8399-7e5ed024b76a",
+      "name": "Price Finder Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        -304,
+        -160
+      ],
+      "notesInFlow": true,
+      "notes": "Queries Skroutz/Bestprice"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "6a8afbd2-b673-4131-b682-8f4dcd5a3d20",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9bc8fd8d-7cfd-4cb1-9220-a4f03b3a1023",
+      "name": "SerpApi",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        80
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "cbeg6B9GGeKg2E6D",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Product_Results"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "product name": "={{ $json.output.product_name }}",
+            "Best Price Low Price": "={{ $json.output.bestprice_low }}",
+            "Bestprice Max Price": "={{ $json.output.bestprice_max }}",
+            "Skroutz Low Price": "={{ $json.output.skroutz_low }}",
+            "Skroutz Max Price": "={{ $json.output.skroutz_max }}"
+          },
+          "matchingColumns": [
+            "product name"
+          ]
+        },
+        "options": {}
+      },
+      "id": "41ec855f-f16b-4100-b6ea-d77e9a31981a",
+      "name": "Update Results Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        96,
+        -160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "971783fa-dd5f-4077-a58e-09c9573c70ad",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        64
+      ]
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Price Finder Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Price Finder Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpApi": {
+      "ai_tool": [
+        [
+          {
+            "node": "Price Finder Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Price Finder Agent": {
+      "main": [
+        [
+          {
+            "node": "Update Results Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "1968c9a2-c280-41ba-8500-0f3a4fc9d13f",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-28T18:29:25.356Z",
+      "createdAt": "2025-11-28T18:29:25.356Z",
+      "role": "workflow:owner",
+      "workflowId": "vvQGx3jHoGXyzTbc",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
