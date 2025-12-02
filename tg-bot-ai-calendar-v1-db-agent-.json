@@ -1,0 +1,438 @@
+{
+  "updatedAt": "2025-10-23T12:55:55.390Z",
+  "createdAt": "2025-10-23T12:55:55.390Z",
+  "id": "fsBMg5l7a9nT9AFE",
+  "name": "TG-Bot-AI-Calendar-v1-db-agent",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f52714fd-53b5-4aea-aa34-7c4f332a0e33",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1792,
+        224
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "41f456c2-cfa7-466d-9ccb-4d1f6fd21028",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1792,
+        48
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "623e72bc-4f93-45cb-a267-2abbc8277966",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        1952,
+        48
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "additionalFields": {}
+      },
+      "id": "1c7a67ad-1ad5-49ec-b504-89c4d35e02c6",
+      "name": "Get Calendar Event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        1808,
+        432
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "additionalFields": {}
+      },
+      "id": "5c3470dc-1f37-423b-85d4-60228211a55f",
+      "name": "Create Calendar Event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        2000,
+        432
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "additionalFields": {}
+      },
+      "id": "41ed5d63-fa3b-4a13-9509-1a57f520bc23",
+      "name": "Update Calendar Event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        2208,
+        432
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "additionalFields": {}
+      },
+      "id": "d493d018-9633-4b53-8a86-d7d2e6570c3d",
+      "name": "Delete Calendar Event",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "position": [
+        2400,
+        432
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "content": ""
+      },
+      "id": "aa4480d3-eb6f-4227-adb9-7cdae8f7f99f",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7eda4039-ec71-4cd9-aca2-ab8a1fcb748a",
+      "name": "Is start?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1264,
+        224
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "id": "91f589ad-9b93-4366-9669-2713fb7deb8b",
+      "name": "Welcome message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1264,
+        32
+      ],
+      "webhookId": "9c4dbbb3-5cbf-42c2-a131-c9ea378bfe3e",
+      "executeOnce": true,
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ac7a8d62-bda1-4d3e-ab3a-db51436651a8",
+      "name": "Variables TG",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        832,
+        224
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0533e358-e8b8-4f90-9a16-99bbcbd7eba7",
+      "name": "Initialization",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1040,
+        224
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "id": "efbef976-61dc-40e8-8ed1-6af66fa64a5c",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        608,
+        224
+      ],
+      "webhookId": "b563a6a0-1072-4ede-a728-56a7e3ff7ff3",
+      "typeVersion": 1.1,
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "145d129b-06b9-42ed-8443-13c8c929134d",
+      "name": "Define Type",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1504,
+        224
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "id": "9abb3f97-6def-408a-9947-cf3ecb4eed77",
+      "name": "Send Answer",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        2144,
+        224
+      ],
+      "webhookId": "c391c4d5-9fca-4b77-b578-a2f0ddc02ac8",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": ""
+      },
+      "id": "9d472256-378e-4c29-a7f4-3e0477cc87d9",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is start?": {
+      "main": [
+        [
+          {
+            "node": "Welcome message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Define Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Variables TG": {
+      "main": [
+        [
+          {
+            "node": "Initialization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialization": {
+      "main": [
+        [
+          {
+            "node": "Is start?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Variables TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Calendar Event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Calendar Event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Calendar Event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Calendar Event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "bf977127-aeae-4bfe-bf3e-9b97fb80c874",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-23T12:55:55.394Z",
+      "createdAt": "2025-10-23T12:55:55.394Z",
+      "role": "workflow:owner",
+      "workflowId": "fsBMg5l7a9nT9AFE",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
