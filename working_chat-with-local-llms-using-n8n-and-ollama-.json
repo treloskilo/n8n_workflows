@@ -1,0 +1,204 @@
+{
+  "updatedAt": "2025-10-27T14:42:28.000Z",
+  "createdAt": "2025-10-26T13:58:06.425Z",
+  "id": "2Arc5ktZdmMK4p5z",
+  "name": "Working_Chat with local LLMs using n8n and Ollama",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "475385fa-28f3-45c4-bd1a-10dde79f74f2",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        -288,
+        576
+      ],
+      "webhookId": "ebdeba3f-6b4f-49f3-ba0a-8253dd226161",
+      "typeVersion": 1.1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "id": "61133dc6-dcd9-44ff-85f2-5d8cc2ce813e",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "position": [
+        1120,
+        848
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "ollamaApi": {
+          "id": "0ETxcr9uFCQDEfJV",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Chat with local LLMs using n8n and Ollama\nThis n8n workflow allows you to seamlessly interact with your self-hosted Large Language Models (LLMs) through a user-friendly chat interface. By connecting to Ollama, a powerful tool for managing local LLMs, you can send prompts and receive AI-generated responses directly within n8n.\n\n### How it works\n1. When chat message received: Captures the user's input from the chat interface.\n2. Chat LLM Chain: Sends the input to the Ollama server and receives the AI-generated response.\n3. Delivers the LLM's response back to the chat interface.\n\n### Set up steps\n* Make sure Ollama is installed and running on your machine before executing this workflow.\n* Edit the Ollama address if different from the default.\n",
+        "height": 473,
+        "width": 485
+      },
+      "id": "3e89571f-7c87-44c6-8cfd-4903d5e1cdc5",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Ollama setup\n* Connect to your local Ollama, usually on http://localhost:11434\n* If running in Docker, make sure that the n8n container has access to the host's network in order to connect to Ollama. You can do this by passing `--net=host` option when starting the n8n Docker container",
+        "height": 258,
+        "width": 368,
+        "color": 6
+      },
+      "id": "9345cadf-a72e-4d3d-b9f0-d670744065fe",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        832
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}"
+      },
+      "id": "eeffdd4e-6795-4ebc-84f7-87b5ac4167d9",
+      "name": "Chat LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1136,
+        624
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        624
+      ],
+      "id": "bbc8699d-3744-4ada-bcff-a6707daaabcb",
+      "name": "Telegram Trigger",
+      "webhookId": "481ca76e-2ede-49d7-b53b-d2ecea6c0c0e",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1488,
+        624
+      ],
+      "id": "fadc68f3-04e8-4795-a7c4-ffdd7d8ae385",
+      "name": "Send a text message",
+      "webhookId": "01d63f5a-4fec-4d4f-bb0d-af076bc59c31",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        []
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Chat LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateId": "2384",
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b44506b5-711d-4695-b763-c6bbb93d545c",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-26T13:58:06.430Z",
+      "createdAt": "2025-10-26T13:58:06.430Z",
+      "role": "workflow:owner",
+      "workflowId": "2Arc5ktZdmMK4p5z",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
