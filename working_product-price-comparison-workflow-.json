@@ -1,0 +1,368 @@
+{
+  "updatedAt": "2025-11-28T19:58:34.000Z",
+  "createdAt": "2025-11-28T18:34:34.094Z",
+  "id": "ZhbL4BYTjaCEyB94",
+  "name": "Working_Product Price Comparison Workflow",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFile",
+        "fileToWatch": {
+          "__rl": true,
+          "value": "17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI",
+          "mode": "list",
+          "cachedResultName": "Products",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI/edit?usp=drivesdk"
+        }
+      },
+      "id": "900d6bbd-016a-4a35-9687-ba0ffd86dbd5",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        176
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI",
+          "mode": "list",
+          "cachedResultName": "Products",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "7a83d1df-658d-4d20-a8c0-80ebf453411c",
+      "name": "Read Products from Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -560,
+        176
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "63d74e37-2f4d-438b-a043-8c193d33e82a",
+      "name": "Extract Product Names",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -336,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert price comparison and data extraction assistant. Your mission is to find the minimum and maximum current price for the specific product listed in the input, sourcing data exclusively from two Greek price comparison websites: bestprice.gr and skroutz.gr.\n\n**Input Product Name:**\n{{ $json[\"Product Name\"] }}\n\n---\n\n### **Agent Instructions & Execution Steps**\n\n1.  **Search Query Construction:**\n    * You must construct a single, highly specific Google Search query using Advanced Search Operators.\n    * The query must include the full product name and explicitly limit the results to the two target domains.\n    * **The query must be formatted EXACTLY as follows:**\n        `{{ $json[\"Product Name\"] }} site:bestprice.gr OR site:skroutz.gr`\n\n2.  **Tool Use:**\n    * Execute the constructed query using the **SerpApi (Google Search)** tool.\n\n3.  **Data Analysis and Extraction:**\n    * Analyze the search results, focusing on the titles, snippets, and displayed price information from the organic results returned by the Search Tool.\n    * Extract the four required price points:\n        * **bestprice_low:** The lowest price found on bestprice.gr.\n        * **bestprice_max:** The highest price found on bestprice.gr.\n        * **skroutz_low:** The lowest price found on skroutz.gr.\n        * **skroutz_max:** The highest price found on skroutz.gr.\n    * **Price Handling:** All extracted price values must be numeric (e.g., 55.99). You must remove any currency symbols (€) or trailing zeroes that are not part of the required decimal format.\n    * **Missing Price Handling:** If a required price (e.g., the max price for a site) cannot be clearly determined from the search snippets, set its value to **0.00**.\n\n4.  **Final Output Formatting:**\n    * Your final, entire response must be a valid JSON object that matches the structure defined by the Output Parser.\n    * **You must not include any introductory text, concluding remarks, explanations, or markdown fences (```json) outside of the required JSON object.**\n\n**Required Final JSON Format:**\n\n```json\n{\n  \"product_name\": \"{{ $json.product_name }}\",\n  \"bestprice_low\": \"XX.XX\",\n  \"bestprice_max\": \"XX.XX\",\n  \"skroutz_low\": \"XX.XX\",\n  \"skroutz_max\": \"XX.XX\"\n}",
+        "options": {}
+      },
+      "id": "756211c2-8aeb-462d-a390-9e6904140042",
+      "name": "AI Agent - Price Search",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -160,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1T3GK-q30zxIRFPolqZ3XgDsN3335ED6qGRrUk7FYYa8",
+          "mode": "list",
+          "cachedResultName": "Product_Results",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1T3GK-q30zxIRFPolqZ3XgDsN3335ED6qGRrUk7FYYa8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1T3GK-q30zxIRFPolqZ3XgDsN3335ED6qGRrUk7FYYa8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "product name ": "={{ $json.product_name }}",
+            "Best Price Low Price": "={{ $json.bestprice_low }}",
+            "Bestprice Max Price": "={{ $json.bestprice_max }}",
+            "Skroutz Low Price": "={{ $json.skroutz_low }}",
+            "Skroutz Max Price": "={{ $json.skroutz_max }}"
+          },
+          "matchingColumns": [
+            "product name "
+          ],
+          "schema": [
+            {
+              "id": "product name ",
+              "displayName": "product name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Best Price Low Price",
+              "displayName": "Best Price Low Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bestprice Max Price",
+              "displayName": "Bestprice Max Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skroutz Low Price",
+              "displayName": "Skroutz Low Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skroutz Max Price",
+              "displayName": "Skroutz Max Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c9e817af-182f-4de6-80c2-391899e888a9",
+      "name": "Write to Product Results Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        448,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        368
+      ],
+      "id": "ff3e2898-522a-4517-a186-ac950543236c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "q": "={{ $json['Product Name'] }}",
+        "additionalFields": {
+          "gl": "gr"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-serpapi.serpApiTool",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        384
+      ],
+      "id": "86c8f8d1-1767-4012-aca8-11d6a840f87e",
+      "name": "Google search in SerpApi",
+      "credentials": {
+        "serpApi": {
+          "id": "cbeg6B9GGeKg2E6D",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of items) {\n  // Get the raw output string from the AI Agent\n  const rawOutput = item.json.output;\n\n  // 1. Remove the markdown code block wrappers (```json\\n and \\n```)\n  let cleanJsonString = rawOutput.replace(/```json\\s*/, '').replace(/\\s*```/, '');\n\n  // 2. Remove any extra leading or trailing whitespace\n  cleanJsonString = cleanJsonString.trim();\n\n  try {\n    // 3. Parse the cleaned string into a proper JavaScript object\n    const parsedData = JSON.parse(cleanJsonString);\n\n    // 4. Convert price strings to numbers (for better handling in Google Sheets)\n    parsedData.bestprice_low = parseFloat(parsedData.bestprice_low);\n    parsedData.bestprice_max = parseFloat(parsedData.bestprice_max);\n    parsedData.skroutz_low = parseFloat(parsedData.skroutz_low);\n    parsedData.skroutz_max = parseFloat(parsedData.skroutz_max);\n\n    // Replace the original item with the cleaned and parsed data\n    item.json = parsedData;\n\n  } catch (error) {\n    // Handle cases where parsing fails (e.g., bad AI output)\n    console.error(\"Failed to parse JSON from AI Agent:\", error);\n    item.json = {\n      product_name: \"Error\",\n      error_message: \"JSON Parsing Failed\"\n    };\n  }\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        160
+      ],
+      "id": "7bb2ef2f-1261-45f6-bc6d-1233a1dc8bba",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Products from Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Products from Sheet": {
+      "main": [
+        [
+          {
+            "node": "Extract Product Names",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Product Names": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Price Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Price Search": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Price Search",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google search in SerpApi": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Price Search",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Write to Product Results Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "186359e9-4c8c-49fd-8cb7-832162418a1e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-28T18:34:34.096Z",
+      "createdAt": "2025-11-28T18:34:34.096Z",
+      "role": "workflow:owner",
+      "workflowId": "ZhbL4BYTjaCEyB94",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
