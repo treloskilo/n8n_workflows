@@ -1,0 +1,281 @@
+{
+  "updatedAt": "2025-10-25T14:38:55.000Z",
+  "createdAt": "2025-10-25T14:27:49.804Z",
+  "id": "mi8jqOITaYbAuVRV",
+  "name": "Telegram Gemini Smart Scheduler Looping Limited",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e58b43f9-9228-4574-8fcb-a8054adb458a",
+      "name": "Telegram Trigger",
+      "webhookId": "0922f7fe-5e2c-4c5c-a847-4f5867eb13a3",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=You are James, a business virtual assistant helping CEOs. You interact like a professional assistant with polite language. You manage Google Calendar: create, update, delete events, tasks, reminders. Always calculate dates and durations based on business rules and current availability."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        64
+      ],
+      "id": "8a9b7f97-3304-40be-8578-14c00602e845",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "value": "treloskilo@gmail.com",
+          "mode": "list"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1408,
+        112
+      ],
+      "id": "13b96e53-6876-460d-9fa9-6d612c576eb3",
+      "name": "Get availability in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine availability or find next 45-min slot with attempt count\nconst events = $items('check_availability', 0) || [];\nconst businessStartHour = 9;\nconst businessEndHour = 17;\nconst durationMinutes = 45;\nfunction addMinutes(date, minutes) { return new Date(date.getTime() + minutes*60000); }\n\nlet nextStart = $json.originalStart ? new Date($json.originalStart) : new Date($fromAI('Start', '', 'string'));\nlet attempts = $json.attempts || 0;\nlet slotFound = false;\nfor (let i=0; i<100; i++) {\n  const nextEnd = addMinutes(nextStart, durationMinutes);\n  const conflict = events.find(e => {\n    const evStart = new Date(e.json.start.dateTime || e.json.start.date);\n    const evEnd = new Date(e.json.end.dateTime || e.json.end.date);\n    return (nextStart < evEnd && nextEnd > evStart);\n  });\n  if (!conflict && nextStart.getHours() >= businessStartHour && nextEnd.getHours() <= businessEndHour) {\n    slotFound = true;\n    break;\n  } else {\n    nextStart = addMinutes(nextStart, 15);\n  }\n}\nattempts++;\nreturn [{ json: { slotAvailable: slotFound, suggestedStart: nextStart.toISOString(), suggestedEnd: addMinutes(nextStart, durationMinutes).toISOString(), attempts } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        112
+      ],
+      "id": "729f1fef-e2b4-4cb8-a5ce-bbabbe2d65ac",
+      "name": "Find Next Available Slot"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.slotAvailable ? '✅ The requested slot is available.' : '⛔ The requested slot is busy. Next available: ' + $json.suggestedStart + '. Do you want me to schedule it?' }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1904,
+        112
+      ],
+      "id": "bd355b88-3627-4211-a26b-2258d1e644da",
+      "name": "Telegram Propose Slot",
+      "webhookId": "73216f9f-a41a-40d4-9154-7f08b4a45853",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "877d2758-9381-41ff-bc3f-8037dfc54d78",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Confirm Yes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d74584f3-b417-4bfe-86db-a2cbfa5a54d5",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Confirm No"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1840,
+        -208
+      ],
+      "id": "037c6f4c-8f75-49bd-9cd1-bfb6badd1b52",
+      "name": "Switch Confirm Slot"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "value": "treloskilo@gmail.com",
+          "mode": "list"
+        },
+        "start": "={{ $json.suggestedStart }}",
+        "end": "={{ $json.suggestedEnd }}",
+        "additionalFields": {
+          "description": "={{ $fromAI('Description', '', 'string') }}",
+          "summary": "={{ $fromAI('Summary', '', 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        112
+      ],
+      "id": "87448faf-fc90-4e21-8f6d-b0b74856f882",
+      "name": "Create Event Confirmed",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ '✅ Event successfully scheduled at ' + $json.suggestedStart }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2656,
+        112
+      ],
+      "id": "6210aea1-12d2-48a1-8059-aebe9edf3bfb",
+      "name": "Telegram Confirmed",
+      "webhookId": "2010009e-af60-4e35-864d-0758b5258a1a",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ '⚠️ Maximum 3 suggestions reached. Please provide a new preferred time.' }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2384,
+        448
+      ],
+      "id": "84bea9a5-025b-45b1-9fe3-d6ab08626fce",
+      "name": "Telegram Max Attempts",
+      "webhookId": "4479aa3b-0dee-45f1-816c-1dd0c3d2f89b"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Only loop if attempts < 3\nif ($json.attempts >= 3) { return [{ json: { stopLoop: true } }]; } else { return [{ json: { stopLoop: false } }]; }"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        432
+      ],
+      "id": "dbc145e3-2bb6-4ba7-bb8a-a6112b4c69fc",
+      "name": "Check Attempts"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "47a4eca2-20b8-420b-bfdb-f53372abbcf3",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-25T14:27:49.806Z",
+      "createdAt": "2025-10-25T14:27:49.806Z",
+      "role": "workflow:owner",
+      "workflowId": "mi8jqOITaYbAuVRV",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
