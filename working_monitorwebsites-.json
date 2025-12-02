@@ -1,0 +1,1268 @@
+{
+  "updatedAt": "2025-11-12T09:28:16.000Z",
+  "createdAt": "2025-10-17T12:45:35.491Z",
+  "id": "nWNK3gIN64qh6zjg",
+  "name": "Working_MonitorWebsites",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "00defcb4-3367-4ae2-bf41-2672b9d54dc0",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -848,
+        112
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b0cbcff5-bfcf-46a5-a386-65c4dd56c42f",
+              "name": "date",
+              "type": "string",
+              "value": "={{ $json.headers.date }}"
+            },
+            {
+              "id": "8c4155e4-bcc6-41dd-9582-346a57a7b997",
+              "name": "website",
+              "type": "string",
+              "value": "={{ $('Split Out').item.json.Websites }}"
+            },
+            {
+              "id": "9af72278-5b29-406a-b4c5-f47f3d805063",
+              "name": "IS_UP",
+              "type": "boolean",
+              "value": "={{ $json.statusCode <= 400  }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a5fe207a-871e-45e6-b02a-25ac3fdb26a0",
+      "name": "Calculate Status",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        448,
+        112
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Websites }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {}
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "11209746-8dd3-49bb-b139-0ef2b774ecf0",
+      "name": "Perform Site Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -48,
+        112
+      ],
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "7191e7cb-f2e1-4288-aa68-21f6efefafc5",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.IS_UP }}",
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "UP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "e07edddc-70be-46ed-9f5c-7fba0ed52bc3",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.IS_UP }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "DOWN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10391cbe-2d91-4a51-a611-7e51ff1c0797",
+      "name": "Status Router",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        688,
+        112
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "Websites",
+        "options": {}
+      },
+      "id": "d92ee3d5-ce40-4ced-8caf-4f9d55ee664b",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        -240,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72b729c6-e0af-46f0-955f-c649e9d397bc",
+              "name": "Websites",
+              "type": "string",
+              "value": "=https://heartpharmacy.gr\n"
+            },
+            {
+              "id": "25457f32-6440-404d-8e99-eb772e552982",
+              "name": "wait_secs",
+              "type": "number",
+              "value": 5
+            },
+            {
+              "id": "4f646a6a-3f84-4410-bed2-3b0d770066c7",
+              "name": "telegram_chat_id",
+              "type": "string",
+              "value": "5870531738"
+            },
+            {
+              "id": "5ea1be97-40ce-4696-9454-ecb17127e674",
+              "name": "alert_email",
+              "type": "string",
+              "value": "treloskilo@gmail.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f3dd4308-d1ea-498a-9482-b671440a01b5",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -640,
+        112
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ce076f11-d745-43a9-8069-a55759ceb0c9",
+              "name": "Websites",
+              "type": "array",
+              "value": "={{\n  // we split by line, and only keep non-empty lines\n  $json.Websites.split('\\n').filter((url) => url)\n}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "50bed2c0-b0b2-406c-9690-27f7b80aad0e",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -448,
+        112
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {},
+      "id": "e5a53788-bf10-459b-978d-42d762bac99a",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        240,
+        112
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('Config').item.json.wait_secs }}"
+      },
+      "id": "831dfe32-b22f-46ed-bf81-3aebe672fd92",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        944,
+        144
+      ],
+      "webhookId": "eeedbd07-c2f9-409f-b0b5-a3a764d9d51e",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b0cbcff5-bfcf-46a5-a386-65c4dd56c42f",
+              "name": "date",
+              "type": "string",
+              "value": "={{ $json.headers.date }}"
+            },
+            {
+              "id": "8c4155e4-bcc6-41dd-9582-346a57a7b997",
+              "name": "website",
+              "type": "string",
+              "value": "={{ $('Split Out').item.json.Websites }}"
+            },
+            {
+              "id": "9af72278-5b29-406a-b4c5-f47f3d805063",
+              "name": "IS_UP",
+              "type": "boolean",
+              "value": "={{ $json.statusCode <= 400  }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c8bf75ef-d149-426d-b3b5-7793bb9244b2",
+      "name": "Calculate Status1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        448,
+        384
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Websites }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {}
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "eeab9567-467d-4a8a-b62b-b8043996df0d",
+      "name": "Perform Site Test1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -48,
+        384
+      ],
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "90080096-f35f-4e4f-9735-0c8fb6bc9140",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        224,
+        384
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "7191e7cb-f2e1-4288-aa68-21f6efefafc5",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.IS_UP }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "UP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 1,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "e07edddc-70be-46ed-9f5c-7fba0ed52bc3",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.IS_UP }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "DOWN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "423eb287-ef9a-4e53-a67e-6f9f35f6e10c",
+      "name": "Status Router1",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        624,
+        384
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config').item.json.telegram_chat_id }}",
+        "text": "={{ $('Calculate Status').item.json.website }} is DOWN.\n- Current date: {{ $now.format('dd-MM-yyyy') }}\n- Current time: {{ $now.format('hh:mm a') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "095351aa-0662-422f-bd30-b74a304be4ca",
+      "name": "Send a text message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        896,
+        608
+      ],
+      "webhookId": "79cd546b-5eab-4505-8ced-2cd1175ce61a",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Config').item.json.telegram_chat_id }}",
+        "text": "={{ $('Calculate Status').item.json.website }} is UP.\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e0424a0c-42d6-4836-b078-06849ef99759",
+      "name": "Send a text message1",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        912,
+        368
+      ],
+      "webhookId": "79cd546b-5eab-4505-8ced-2cd1175ce61a",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Perform Site Test1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Calculate Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Calculate Status1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Perform Site Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status Router": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status Router1": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Calculate Status": {
+      "main": [
+        [
+          {
+            "node": "Status Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Status1": {
+      "main": [
+        [
+          {
+            "node": "Status Router1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform Site Test": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Perform Site Test1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        12
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f9ca8e62-3612-4a34-bc48-ebd0c1dcb408",
+  "activeVersionId": "f9ca8e62-3612-4a34-bc48-ebd0c1dcb408",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-17T12:45:35.498Z",
+      "createdAt": "2025-10-17T12:45:35.498Z",
+      "role": "workflow:owner",
+      "workflowId": "nWNK3gIN64qh6zjg",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-11-28T13:36:06.316Z",
+    "createdAt": "2025-11-28T13:36:06.316Z",
+    "versionId": "f9ca8e62-3612-4a34-bc48-ebd0c1dcb408",
+    "workflowId": "nWNK3gIN64qh6zjg",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "id": "00defcb4-3367-4ae2-bf41-2672b9d54dc0",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "position": [
+          -848,
+          112
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b0cbcff5-bfcf-46a5-a386-65c4dd56c42f",
+                "name": "date",
+                "type": "string",
+                "value": "={{ $json.headers.date }}"
+              },
+              {
+                "id": "8c4155e4-bcc6-41dd-9582-346a57a7b997",
+                "name": "website",
+                "type": "string",
+                "value": "={{ $('Split Out').item.json.Websites }}"
+              },
+              {
+                "id": "9af72278-5b29-406a-b4c5-f47f3d805063",
+                "name": "IS_UP",
+                "type": "boolean",
+                "value": "={{ $json.statusCode <= 400  }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "a5fe207a-871e-45e6-b02a-25ac3fdb26a0",
+        "name": "Calculate Status",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          448,
+          112
+        ],
+        "typeVersion": 3.3
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.Websites }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "batching": {
+              "batch": {}
+            },
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "11209746-8dd3-49bb-b139-0ef2b774ecf0",
+        "name": "Perform Site Test",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          -48,
+          112
+        ],
+        "typeVersion": 4.2,
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "version": 1,
+                    "leftValue": "",
+                    "caseSensitive": true,
+                    "typeValidation": "strict"
+                  },
+                  "conditions": [
+                    {
+                      "id": "7191e7cb-f2e1-4288-aa68-21f6efefafc5",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "leftValue": "={{ $json.IS_UP }}",
+                      "rightValue": ""
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "UP"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "version": 1,
+                    "leftValue": "",
+                    "caseSensitive": true,
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "id": "e07edddc-70be-46ed-9f5c-7fba0ed52bc3",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "false",
+                        "singleValue": true
+                      },
+                      "leftValue": "={{ $json.IS_UP }}",
+                      "rightValue": ""
+                    }
+                  ]
+                },
+                "renameOutput": true,
+                "outputKey": "DOWN"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "10391cbe-2d91-4a51-a611-7e51ff1c0797",
+        "name": "Status Router",
+        "type": "n8n-nodes-base.switch",
+        "position": [
+          688,
+          112
+        ],
+        "typeVersion": 3
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "Websites",
+          "options": {}
+        },
+        "id": "d92ee3d5-ce40-4ced-8caf-4f9d55ee664b",
+        "name": "Split Out",
+        "type": "n8n-nodes-base.splitOut",
+        "position": [
+          -240,
+          112
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "72b729c6-e0af-46f0-955f-c649e9d397bc",
+                "name": "Websites",
+                "type": "string",
+                "value": "=https://heartpharmacy.gr\n"
+              },
+              {
+                "id": "25457f32-6440-404d-8e99-eb772e552982",
+                "name": "wait_secs",
+                "type": "number",
+                "value": 5
+              },
+              {
+                "id": "4f646a6a-3f84-4410-bed2-3b0d770066c7",
+                "name": "telegram_chat_id",
+                "type": "string",
+                "value": "5870531738"
+              },
+              {
+                "id": "5ea1be97-40ce-4696-9454-ecb17127e674",
+                "name": "alert_email",
+                "type": "string",
+                "value": "treloskilo@gmail.com"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f3dd4308-d1ea-498a-9482-b671440a01b5",
+        "name": "Config",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          -640,
+          112
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ce076f11-d745-43a9-8069-a55759ceb0c9",
+                "name": "Websites",
+                "type": "array",
+                "value": "={{\n  // we split by line, and only keep non-empty lines\n  $json.Websites.split('\\n').filter((url) => url)\n}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "50bed2c0-b0b2-406c-9690-27f7b80aad0e",
+        "name": "Edit Fields",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          -448,
+          112
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {},
+        "id": "e5a53788-bf10-459b-978d-42d762bac99a",
+        "name": "Merge",
+        "type": "n8n-nodes-base.merge",
+        "position": [
+          240,
+          112
+        ],
+        "typeVersion": 3.2
+      },
+      {
+        "parameters": {
+          "amount": "={{ $('Config').item.json.wait_secs }}"
+        },
+        "id": "831dfe32-b22f-46ed-bf81-3aebe672fd92",
+        "name": "Wait",
+        "type": "n8n-nodes-base.wait",
+        "position": [
+          944,
+          144
+        ],
+        "webhookId": "eeedbd07-c2f9-409f-b0b5-a3a764d9d51e",
+        "typeVersion": 1.1
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b0cbcff5-bfcf-46a5-a386-65c4dd56c42f",
+                "name": "date",
+                "type": "string",
+                "value": "={{ $json.headers.date }}"
+              },
+              {
+                "id": "8c4155e4-bcc6-41dd-9582-346a57a7b997",
+                "name": "website",
+                "type": "string",
+                "value": "={{ $('Split Out').item.json.Websites }}"
+              },
+              {
+                "id": "9af72278-5b29-406a-b4c5-f47f3d805063",
+                "name": "IS_UP",
+                "type": "boolean",
+                "value": "={{ $json.statusCode <= 400  }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "c8bf75ef-d149-426d-b3b5-7793bb9244b2",
+        "name": "Calculate Status1",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          448,
+          384
+        ],
+        "typeVersion": 3.3
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.Websites }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "batching": {
+              "batch": {}
+            },
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "eeab9567-467d-4a8a-b62b-b8043996df0d",
+        "name": "Perform Site Test1",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          -48,
+          384
+        ],
+        "typeVersion": 4.2,
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {},
+        "id": "90080096-f35f-4e4f-9735-0c8fb6bc9140",
+        "name": "Merge1",
+        "type": "n8n-nodes-base.merge",
+        "position": [
+          224,
+          384
+        ],
+        "typeVersion": 3.2
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "version": 1,
+                    "leftValue": "",
+                    "caseSensitive": true,
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "id": "7191e7cb-f2e1-4288-aa68-21f6efefafc5",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "leftValue": "={{ $json.IS_UP }}",
+                      "rightValue": ""
+                    }
+                  ]
+                },
+                "renameOutput": true,
+                "outputKey": "UP"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "version": 1,
+                    "leftValue": "",
+                    "caseSensitive": true,
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "id": "e07edddc-70be-46ed-9f5c-7fba0ed52bc3",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "false",
+                        "singleValue": true
+                      },
+                      "leftValue": "={{ $json.IS_UP }}",
+                      "rightValue": ""
+                    }
+                  ]
+                },
+                "renameOutput": true,
+                "outputKey": "DOWN"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "423eb287-ef9a-4e53-a67e-6f9f35f6e10c",
+        "name": "Status Router1",
+        "type": "n8n-nodes-base.switch",
+        "position": [
+          624,
+          384
+        ],
+        "typeVersion": 3
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Config').item.json.telegram_chat_id }}",
+          "text": "={{ $('Calculate Status').item.json.website }} is DOWN.\n- Current date: {{ $now.format('dd-MM-yyyy') }}\n- Current time: {{ $now.format('hh:mm a') }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "id": "095351aa-0662-422f-bd30-b74a304be4ca",
+        "name": "Send a text message",
+        "type": "n8n-nodes-base.telegram",
+        "position": [
+          896,
+          608
+        ],
+        "webhookId": "79cd546b-5eab-4505-8ced-2cd1175ce61a",
+        "typeVersion": 1.2,
+        "credentials": {
+          "telegramApi": {
+            "id": "i5VGPAGcIQB6DQ6M",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Config').item.json.telegram_chat_id }}",
+          "text": "={{ $('Calculate Status').item.json.website }} is UP.\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "id": "e0424a0c-42d6-4836-b078-06849ef99759",
+        "name": "Send a text message1",
+        "type": "n8n-nodes-base.telegram",
+        "position": [
+          912,
+          368
+        ],
+        "webhookId": "79cd546b-5eab-4505-8ced-2cd1175ce61a",
+        "typeVersion": 1.2,
+        "credentials": {
+          "telegramApi": {
+            "id": "i5VGPAGcIQB6DQ6M",
+            "name": "Telegram account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "Perform Site Test1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Calculate Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Config": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge1": {
+        "main": [
+          [
+            {
+              "node": "Calculate Status1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Perform Site Test",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Status Router": {
+        "main": [
+          [
+            {
+              "node": "Send a text message1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Status Router1": {
+        "main": [
+          [],
+          []
+        ]
+      },
+      "Calculate Status": {
+        "main": [
+          [
+            {
+              "node": "Status Router",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Config",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Status1": {
+        "main": [
+          [
+            {
+              "node": "Status Router1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Perform Site Test": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Perform Site Test1": {
+        "main": [
+          [
+            {
+              "node": "Merge1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Merge1",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
