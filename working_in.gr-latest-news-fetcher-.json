@@ -1,0 +1,189 @@
+{
+  "updatedAt": "2025-11-05T17:41:11.000Z",
+  "createdAt": "2025-11-05T12:09:32.229Z",
+  "id": "ddg7Nds3sxZH1B19",
+  "name": "Working_in.gr Latest News Fetcher",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyHour",
+              "minute": 5
+            }
+          ]
+        }
+      },
+      "id": "bb8ebe74-3ea9-4ba9-920f-e38c13cc9651",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.in.gr/feed/",
+        "options": {}
+      },
+      "id": "e44fe283-dff3-4c34-8f0e-5b016b5dbb58",
+      "name": "Get in.gr RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -416,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "30ca4908-1b00-4322-80fb-48df573e58e1",
+      "name": "XML to JSON",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "=Ημερομηνία Άρθρου \n{{ $json.pubDate }}\n\nΏρα αποστολής\n{{ $now.format('hh:mm a') }}\n\nΤίτλος\n{{ $json[\"title\"] }}\n\nΣύνδεσμος\n{{ $json[\"link\"] }}\n\n",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "903cb22b-3575-4a1b-9f95-e763e335d526",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -176
+      ],
+      "webhookId": "deecea67-8615-4be7-b281-f1dd76b497ec",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $node[\"XML to JSON\"].json.rss.channel.item;\n\nreturn items.map(item => {\n  const date = new Date(item.pubDate);\n  const day = String(date.getDate()).padStart(2, '0');\n  const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-based\n  const year = date.getFullYear();\n  const formattedDate = `${day}-${month}-${year}`;\n  return {\n    title: item.title,\n    link: item.link,\n    pubDate: formattedDate,\n    description: item.description,\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -160
+      ],
+      "id": "c6536c53-593d-4a46-9dd6-9967719b1af7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "maxItems": 15
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -160
+      ],
+      "id": "bd5f803b-89b9-4d4d-9b3e-7cced049a3a1",
+      "name": "Limit"
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get in.gr RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get in.gr RSS": {
+      "main": [
+        [
+          {
+            "node": "XML to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML to JSON": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "17870ad7-735a-4dab-8a2a-c858ba9f102a",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-05T12:09:32.232Z",
+      "createdAt": "2025-11-05T12:09:32.232Z",
+      "role": "workflow:owner",
+      "workflowId": "ddg7Nds3sxZH1B19",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
