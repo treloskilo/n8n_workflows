@@ -1,0 +1,862 @@
+{
+  "updatedAt": "2025-11-14T15:43:59.000Z",
+  "createdAt": "2025-11-13T09:05:29.464Z",
+  "id": "wxMt7C6IWnDg6raO",
+  "name": "Working_Invoice AI Agent - Gemini",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1424,
+        368
+      ],
+      "id": "cb6e8729-9b8b-4b37-98cb-756106a70a74",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Google Drive').item.json.fileExtension }}",
+                    "rightValue": "jpg",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "efa9ce6a-1a6a-454d-ad18-5d9630aad08e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "JPG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0cd460a6-6891-4628-8649-ec5f79fbc18e",
+                    "leftValue": "={{ $('Google Drive').item.json.fileExtension }}",
+                    "rightValue": "png",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PNG"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "78e2a8c8-029e-43cf-a99a-ffc9dc875899",
+                    "leftValue": "={{ $('Google Drive').item.json.fileExtension }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1024,
+        64
+      ],
+      "id": "1ea37b1c-58fb-49a8-9fb5-c034d2d2a1a4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        352
+      ],
+      "id": "c90f7ac1-981a-4243-b872-623b39bf7db3",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate OCR text from all pages\nlet aggregatedText = '';\nlet pageTexts = [];\n\nfor (const item of $input.all()) {\n  try {\n    // Access candidates array from the new structure\n    const candidates = item.json.candidates;\n    \n    if (!candidates || !Array.isArray(candidates)) {\n      continue;\n    }\n    \n    // Loop through each candidate\n    for (let i = 0; i < candidates.length; i++) {\n      const candidate = candidates[i];\n      \n      // Extract text from content.parts\n      if (candidate.content && candidate.content.parts) {\n        for (const part of candidate.content.parts) {\n          if (part.text) {\n            const pageNumber = i + 1; // Use candidate index as page number\n            const pageText = part.text;\n            \n            // Store individual page text\n            pageTexts.push({\n              pageNumber: pageNumber,\n              text: pageText\n            });\n            \n            // Aggregate all text\n            aggregatedText += pageText + '\\n\\n';\n          }\n        }\n      }\n    }\n    \n  } catch (error) {\n    // Handle error with more details\n    return [{\n      json: {\n        error,\n        aggregatedText: '',\n        debug: JSON.stringify(item.json, null, 2)\n      }\n    }];\n  }\n}\n\n// Return only the aggregated result\nreturn [{\n  json: {\n    aggregatedText: aggregatedText.trim(),\n    totalPages: pageTexts.length,\n    pages: pageTexts\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        464
+      ],
+      "id": "f6d4059d-3826-4428-a60b-281728786d40",
+      "name": "Agg Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bb7642bc-f6e6-43e3-872b-04d1a5cb0e4c",
+              "name": "extracted_text_pdf",
+              "value": "={{ $json.aggregatedText }}",
+              "type": "string"
+            },
+            {
+              "id": "5e8991d3-0c09-4626-8162-d1254fa99add",
+              "name": "extracted_text_image",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -336,
+        352
+      ],
+      "id": "d8f78f2f-5381-437f-a1bd-8443ad1bc77e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1WrT48EhZuJ0refpt6gNXGQgQc51kGQz6",
+          "mode": "list",
+          "cachedResultName": "Apodeikseis",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1WrT48EhZuJ0refpt6gNXGQgQc51kGQz6"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1648,
+        368
+      ],
+      "id": "24b92be8-356c-4ae6-af32-8faaba9a9075",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.extracted_text_pdf ?? $json.extracted_text_image }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"title\": \"ReceiptExtractionSchema\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"date\": {\n      \"type\": \"string\",\n      \"description\": \"Extract the transaction date and time from the receipt. Return in DD-MM-YYYY HH:MM:SS format (24-hour). If time is not available, use 00:00:00.\"\n    },\n    \"receiptId\": {\n      \"type\": \"string\",\n      \"description\": \"Receipt number, invoice number, or transaction ID. If not found, return empty string.\"\n    },\n    \"vendor\": {\n      \"type\": \"string\",\n      \"description\": \"Business or merchant name. Usually the largest or topmost text on the receipt. Exclude address.\"\n    },\n    \"category\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"Advertising and Marketing\",\n        \"Bank Charges and Fees\",\n        \"Business Tax Fees Licenses\",\n        \"Delivery Freight Express\",\n        \"Fuel Costs\",\n        \"Insurance (Business)\",\n        \"Interest and Bank Charges\",\n        \"Legal and Accounting Fees\",\n        \"Maintenance and Repairs\",\n        \"Meals and Entertainment\",\n        \"Office Expenses\",\n        \"Professional Development\",\n        \"Property Taxes\",\n        \"Rent\",\n        \"Salaries and Wages\",\n        \"Supplies\",\n        \"Telephone and Internet\",\n        \"Travel - Accommodation\",\n        \"Travel - Airfare\",\n        \"Travel - Other\",\n        \"Utilities\",\n        \"Vehicle - Fuel\",\n        \"Vehicle - Insurance\",\n        \"Vehicle - Maintenance\",\n        \"Vehicle - Other\",\n        \"Groceries\",\n        \"Other Expenses\"\n      ],\n      \"description\": \"Canadian business expense category. Must be one of the predefined categories.\"\n    },\n    \"expenseType\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"Electronics\",\n        \"Computer Equipment\",\n        \"Software\",\n        \"Office Supplies\",\n        \"Office Furniture\",\n        \"Office Snacks\",\n        \"Groceries\",\n        \"Hotel Stay\",\n        \"Lodging\",\n        \"Business Meals\",\n        \"Client Meals\",\n        \"Team Meals\",\n        \"Gasoline\",\n        \"Diesel\",\n        \"Vehicle Maintenance\",\n        \"Vehicle Repairs\",\n        \"Vehicle Purchase\",\n        \"Vehicle Lease\",\n        \"Car Wash\",\n        \"Parking\",\n        \"Hardware\",\n        \"Tools\",\n        \"Office Repairs\",\n        \"Building Maintenance\",\n        \"Uniforms\",\n        \"Work Clothing\",\n        \"Pharmacy Items\",\n        \"Health Benefits\",\n        \"Dental Services\",\n        \"Airfare\",\n        \"Train/Bus Tickets\",\n        \"Taxi/Rideshare\",\n        \"Shipping\",\n        \"Courier Services\",\n        \"Internet Service\",\n        \"Phone Service\",\n        \"Advertising\",\n        \"Marketing Materials\",\n        \"Training Course\",\n        \"Conference Fee\",\n        \"Books\",\n        \"Bank Fees\",\n        \"Transaction Fees\",\n        \"Insurance Premium\",\n        \"Legal Fees\",\n        \"Accounting Fees\",\n        \"Other\"\n      ],\n      \"description\": \"Specific type of expense. Must be one of the predefined types based on items purchased.\"\n    },\n    \"description\": {\n      \"type\": \"string\",\n      \"description\": \"Detailed description of items or services. List multiple items separated by commas. Max 200 characters.\"\n    },\n    \"total\": {\n      \"type\": \"number\",\n      \"description\": \"Final amount after taxes (amount actually paid).\"\n    },\n    \"subtotal\": {\n      \"type\": \"number\",\n      \"description\": \"Amount before taxes (pre-tax subtotal).\"\n    },\n    \"gstHst\": {\n      \"type\": \"number\",\n      \"description\": \"GST or HST amount paid. Return with 2 decimal places.\"\n    },\n    \"pst\": {\n      \"type\": \"number\",\n      \"description\": \"PST or QST amount, if applicable. Otherwise 0.00.\"\n    },\n    \"totalTax\": {\n      \"type\": \"number\",\n      \"description\": \"Total tax (GST/HST + PST).\"\n    },\n    \"paymentMethod\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"Corporate Credit Card\",\n        \"Corporate Debit\",\n        \"Business Bank Transfer\",\n        \"Cash (Reimbursable)\",\n        \"Personal (Reimbursable)\",\n        \"Cheque\"\n      ],\n      \"description\": \"Method of payment used.\"\n    },\n    \"notes\": {\n      \"type\": \"string\",\n      \"description\": \"Business purpose or context. Max 100 characters. Empty if none.\"\n    }\n  },\n  \"required\": [\n    \"date\",\n    \"vendor\",\n    \"category\",\n    \"expenseType\",\n    \"total\",\n    \"subtotal\",\n    \"gstHst\",\n    \"pst\",\n    \"totalTax\"\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        112
+      ],
+      "id": "8dfda198-7359-43cd-8aa3-f5a925b21bc2",
+      "name": "Information Extractor",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": "gpt4.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        432,
+        400
+      ],
+      "id": "16725503-7072-47cf-9b8e-1567e89b421c",
+      "name": "Azure OpenAI Chat Model",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ttuIg1tCpYD0z6egoBzPlJX6kYqWvtJIHW1rC63ieRc",
+          "mode": "list",
+          "cachedResultName": "2025_Expenses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ttuIg1tCpYD0z6egoBzPlJX6kYqWvtJIHW1rC63ieRc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ttuIg1tCpYD0z6egoBzPlJX6kYqWvtJIHW1rC63ieRc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $json.output.date }}",
+            "Vendor": "={{ $json.output.vendor }}",
+            "Category": "={{ $json.output.category }}",
+            "ExpenseType": "={{ $json.output.expenseType }}",
+            "Description": "={{ $json.output.description }}",
+            "Subtotal": "={{ $json.output.subtotal }}",
+            "TotalTax": "={{ $json.output.totalTax }}",
+            "Total": "={{ $json.output.total }}",
+            "ghstHst": "={{ $json.output.gstHst }}"
+          },
+          "matchingColumns": [
+            "output"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Vendor",
+              "displayName": "Vendor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ExpenseType",
+              "displayName": "ExpenseType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subtotal",
+              "displayName": "Subtotal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TotalTax",
+              "displayName": "TotalTax",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ghstHst",
+              "displayName": "ghstHst",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        496,
+        224
+      ],
+      "id": "2d7f8618-6430-4dfe-97b2-f9e1b9a54d7b",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $('Google Sheets').item.json['Date'].split(' ')[0].replace(/-/g, '') }}_{{ $('Google Sheets').item.json['Category'].replace(/[^a-zA-Z0-9]/g, '') }}_{{ $('Google Sheets').item.json['Vendor'].replace(/[^a-zA-Z0-9]/g, '') }}_${{ $('Google Sheets').item.json['Total'].toFixed(2) }}.{{ $('Google Drive').item.json.fileExtension }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        944,
+        224
+      ],
+      "id": "83f85f5f-354f-49b3-9dc1-8316225e8854",
+      "name": "Update File Name",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "57c2ff75-2006-4c8b-ba9b-b779a75b465d",
+              "leftValue": "={{ $json.extracted_text_pdf || $json.extracted_text_image}}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        368
+      ],
+      "id": "ce386dc3-b0e3-498f-9e63-691dd653c35e",
+      "name": "CheckError"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1aFFP1K4OKMs9yNYv-kh8Gm8dTMUurU3z",
+          "mode": "list",
+          "cachedResultName": "Error",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1aFFP1K4OKMs9yNYv-kh8Gm8dTMUurU3z"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        192,
+        512
+      ],
+      "id": "701e1203-0d58-47cd-94e5-b8f222b72483",
+      "name": "Move to Error Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Gemini 2.5 Pro",
+        "height": 500,
+        "width": 440,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        160
+      ],
+      "typeVersion": 1,
+      "id": "f3556b03-aff3-4b55-99ec-922e6f797123",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-05-06:generateContent?key=AIzaSyCVabG-IWzMYi9atq37zdvc3-QKu62SSrA",
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\"text\": \"Extract the content from the file and output it while keeping the original format.\"},\n        {\n          \"inline_data\": {\n            \"mime_type\": \"application/pdf\",\n            \"data\": \"{{ $json.data }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 1,\n    \"maxOutputTokens\": 65536\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -768,
+        464
+      ],
+      "id": "a868f60f-623c-4ab9-bed4-25d907e1a668",
+      "name": "OCR API - PDF Gemini"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCVabG-IWzMYi9atq37zdvc3-QKu62SSrA",
+        "sendBody": true,
+        "specifyBody": "=json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\"text\": \"Extract the content from the image and output it while keeping the original format.\"},\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Google Drive').item.json.mimeType }}\",\n            \"data\": \"{{ $json.data }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 1,\n    \"maxOutputTokens\": 65536\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -656,
+        288
+      ],
+      "id": "fb0967e3-fbec-4e7d-924f-7539a6fce6aa",
+      "name": "OCR API - Image Gemini"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1batspVHFNqIc4CjWSOlkNGF7u7-xrvbF",
+          "mode": "list",
+          "cachedResultName": "Asxeta",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1batspVHFNqIc4CjWSOlkNGF7u7-xrvbF"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        720,
+        224
+      ],
+      "id": "05b0e2be-8e1a-4128-ac4f-7c62d99731ea",
+      "name": "Move to Processed_Gemini Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        96,
+        304
+      ],
+      "id": "cc8918e1-d2a5-4b73-ad82-55d9917afe61",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function cleanJsonOutput(text) {\n  return text\n    .replace(/^```json\\s*/i, '') // remove opening markdown fence\n    .replace(/```$/, '')         // remove closing fence\n    .trim();\n}\n\ntry {\n  const clean = cleanJsonOutput(modelOutput);\n  const data = JSON.parse(clean);\n  console.log(\"Parsed:\", data);\n} catch (e) {\n  console.error(\"Failed to parse JSON:\", e);\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -144
+      ],
+      "id": "e8adb55b-d1c5-46a8-8201-c53dd8cc0da9",
+      "name": "Code in JavaScript",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "=\n✅ <b>Processed successfully</b>\n📅 <b>Date:</b> {{ $('Google Sheets').item.json.Date }}\n🏷️ <b>Vendor:</b> {{ $('Google Sheets').item.json.Vendor }}\n💶 <b>Total:</b> {{ $('Google Sheets').item.json.Total }}€\n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        224
+      ],
+      "id": "ad01f78b-96d3-4af1-8bd7-f09d173fc8d8",
+      "name": "Send a text message",
+      "webhookId": "b4aba736-73de-4b9e-a7ea-d8b888449ada",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "OCR API - Image Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OCR API - Image Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OCR API - PDF Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agg Data": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "CheckError",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Move to Processed_Gemini Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckError": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move to Error Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR API - PDF Gemini": {
+      "main": [
+        [
+          {
+            "node": "Agg Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR API - Image Gemini": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move to Processed_Gemini Folder": {
+      "main": [
+        [
+          {
+            "node": "Update File Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    },
+    "Update File Name": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d3c14fd7-fb82-47c2-b95a-4237900a6997",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-13T09:05:29.466Z",
+      "createdAt": "2025-11-13T09:05:29.466Z",
+      "role": "workflow:owner",
+      "workflowId": "wxMt7C6IWnDg6raO",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
