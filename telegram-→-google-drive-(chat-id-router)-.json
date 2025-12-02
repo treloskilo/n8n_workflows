@@ -1,0 +1,108 @@
+{
+  "updatedAt": "2025-10-22T10:57:06.731Z",
+  "createdAt": "2025-10-22T10:57:06.731Z",
+  "id": "uPfdHxkc7CbfjHtL",
+  "name": "Telegram → Google Drive (chat ID router)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          {}
+        ],
+        "additionalFields": {}
+      },
+      "id": "4c07df2b-e9d0-4deb-9387-5fc6ae7dbc6e",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookUri": "",
+      "webhookId": "1ed05e35-1008-4a78-aa47-8b809ba26cf7",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const items = $input.all();\n\n// Google Drive folder IDs\nconst FOLDER_APLES_APODEIKSEIS = '1bYzpNtw20Iwhtm_7ZYvgZdhJoM9W2LYs';\nconst FOLDER_ASXETA = '1batspVHFNqIc4CjWSOlkNGF7u7-xrvbF';\nconst FOLDER_DEH_EYDAP = '1nwJtxfTtD3PFvT5lbTXP7hU3T0SLR9z0';\n\nreturn items.map(item => {\n  const chatId = item.json.message?.chat?.id || '';\n  let folderId;\n\n  // Routing logic based on chat ID\n  if (String(chatId).endsWith('1')) {\n    folderId = FOLDER_APLES_APODEIKSEIS;\n  } else if (String(chatId).endsWith('2')) {\n    folderId = FOLDER_ASXETA;\n  } else {\n    folderId = FOLDER_DEH_EYDAP; // default\n  }\n\n  return {\n    json: {\n      folderId,\n      chatId\n    },\n    binary: item.binary // preserve Telegram image binary\n  };\n});"
+      },
+      "id": "95579b98-7d05-4262-a39c-4f1895c5d6a2",
+      "name": "Decide Folder (by Chat ID)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        304,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "binaryData": true,
+        "parents": [
+          "={{$json.folderId}}"
+        ],
+        "options": {}
+      },
+      "id": "1f9f9e3f-8830-412b-8ce6-5d9eb0042962",
+      "name": "Upload to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        608,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Decide Folder (by Chat ID)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide Folder (by Chat ID)": {
+      "main": [
+        [
+          {
+            "node": "Upload to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "46dc5e37-676f-4313-9356-444b65f49ead",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-22T10:57:06.734Z",
+      "createdAt": "2025-10-22T10:57:06.734Z",
+      "role": "workflow:owner",
+      "workflowId": "uPfdHxkc7CbfjHtL",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
