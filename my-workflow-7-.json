@@ -1,0 +1,76 @@
+{
+  "updatedAt": "2025-11-28T16:37:03.000Z",
+  "createdAt": "2025-11-27T08:55:56.553Z",
+  "id": "h6ihVlf1LxffrFmg",
+  "name": "My workflow 7",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6419de1a-6aaf-4930-84b6-e2414d866325",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.newjobs.gr/search?location=Athens&query=IT&day_range=7",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "4d67fb53-5b03-481f-babf-0ce415b310f1",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "885f3c73-9957-443c-8c2c-28c186dfbcd0",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-27T08:55:56.555Z",
+      "createdAt": "2025-11-27T08:55:56.555Z",
+      "role": "workflow:owner",
+      "workflowId": "h6ihVlf1LxffrFmg",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
