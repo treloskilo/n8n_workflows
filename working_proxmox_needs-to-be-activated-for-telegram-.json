@@ -1,0 +1,1281 @@
+{
+  "updatedAt": "2025-11-01T20:12:53.000Z",
+  "createdAt": "2025-10-19T17:41:25.972Z",
+  "id": "ED2vBpHOPOB6Js57",
+  "name": "Working_Proxmox_Needs to be activated for Telegram",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "=https://192.168.70.11:8006/api2/json{{ $('If').item.json.output.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "vmid",
+              "value": "={{ $('If').item.json.output.details.vmid }}"
+            },
+            {
+              "name": "cores",
+              "value": "={{ $('If').item.json.output.details.cores }}"
+            },
+            {
+              "name": "memory",
+              "value": "={{ $('If').item.json.output.details.memory }}"
+            },
+            {
+              "name": "net0",
+              "value": "={{ $('If').item.json.output.details.net0 }}"
+            },
+            {
+              "name": "sockets",
+              "value": "={{ $('If').item.json.output.details.sockets }}"
+            },
+            {
+              "name": "ostype",
+              "value": "={{ $('If').item.json.output.details.ostype }}"
+            },
+            {
+              "name": "ide2",
+              "value": "={{ $json.output.details.ide2 }}"
+            },
+            {
+              "name": "scsi0",
+              "value": "={{ $json.output.details.scsi0 }}"
+            },
+            {
+              "name": "scsihw",
+              "value": "={{ $json.output.details.scsihw }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "89da92f5-4f5c-4e94-9569-f06a1074336f",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2032,
+        416
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is Proxmox API Documentation ensure to read the details from here",
+        "url": "https://pve.proxmox.com/pve-docs/api-viewer/index.html"
+      },
+      "id": "f1f6c081-d660-40f0-b44f-a9e0885a418a",
+      "name": "Proxmox API Documentation",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "position": [
+        144,
+        736
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "options": {
+          "prompt": "Instructions:\n--------------\n{instructions}\n--------------\nCompletion:\n--------------\n{completion}\n--------------\n\nAbove, the Completion did not satisfy the constraints given in the Instructions.\nError:\n--------------\n{error}\n--------------\n\nPlease try again. Please only respond with an answer that satisfies the constraints laid out in the Instructions:"
+        }
+      },
+      "id": "4a3e8e57-9425-4dde-a4a9-210b5d047318",
+      "name": "Auto-fixing Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "position": [
+        480,
+        752
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-exp",
+        "options": {}
+      },
+      "id": "4ebc16e4-16ef-4a92-a4b2-6018dbc5f85f",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        400,
+        1056
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n \"response_type\": \"POST\",\n \"url\": \"/nodes/psb1/qemu\",\n \"details\": {\n \"vmid\": 105,\n \"cores\": 4,\n \"memory\": 8192,\n \"net0\": \"virtio,bridge=vmbr0\",\n \"disk0\": \"local:10,format=qcow2\",\n \"sockets\": 1,\n \"ostype\": \"l26\"\n },\n \"message\": \"The VM with ID 105 has been successfully configured to be created on node psb1.\"\n}"
+      },
+      "id": "d38438d5-1be5-4342-8966-e6c802a76230",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        624,
+        1056
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "toolDescription": "=This is Proxmox which will help you to get the details of existing Proxmox installations, ensure to append to existing url : https://192.168.70.11:8006/api2/ to get response from existing proxmox \n\nMy prommox nodes are named as prxm01, psb2 and psb3\nprxm01 : https://192.168.70.11:8006/api2/\n",
+        "url": "https://192.168.70.11:8006/api2/json/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "abaa8d9f-1eae-422f-9f17-0161b67396d7",
+      "name": "Proxmox",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "position": [
+        400,
+        736
+      ],
+      "typeVersion": 1.1,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "=GET",
+        "url": "=https://192.168.70.11:8006/api2/json{{ $json.output.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "b1323cc0-cc90-4e87-9a39-bf3923944231",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1520,
+        384
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## API Key for Proxmox\n** Create Credentails *** ensure to create credentials in Proxmox Data Center as API Key and then create credentails. \n** Add Credentials to n8n ** Click on Credentails, add new Credentails and Chose Header Auth\n** In Header Auth Below will be used \nName : Authorization\nValue : PVEAPIToken=<user>@<realm>!<token-id>=<token-value>\n\nSuppose my token id is n8n and key is 1234 so value will be as below\n\nValue : PVEAPIToken=root@pam!n8n=1234\n",
+        "height": 1221.0199187779397,
+        "width": 736.2768017274677
+      },
+      "id": "aeeabfdc-6187-4f57-b792-7d436260c520",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1344,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Trigger\nYou can use any trigger as input, a chat, telegram, email etc",
+        "height": 702.0895748933872,
+        "width": 492.990678850593,
+        "color": 6
+      },
+      "id": "b77e52ff-4e4f-4a41-8163-035eed39e0c9",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        576
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-exp",
+        "options": {}
+      },
+      "id": "1fe3fb1b-c2df-4ab5-b041-aeb66883aea4",
+      "name": "Google Gemini Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        2320,
+        384
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Porxmox Custom AI Agent \nIt uses the intelligence provided to it including the Proxmox API Wiki, Proxmox Cluster Linked and Proxmox API Documentation.\n\nThe AI Model connected with this is Gemini, you can connect any AI Model by Ollama, OpenAI, Claude etc.\n\nOutput Parser is used to ensure the fixed output structure that can be used for API URL",
+        "height": 1260.380358008782,
+        "width": 789.7678716732242,
+        "color": 5
+      },
+      "id": "bb0e1be9-4998-41c1-8a05-a6120d803119",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ced4c72e-08a2-4e9a-9be0-aed312581b7c",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        -240,
+        400
+      ],
+      "webhookId": "63de8c82-04fc-4126-8bbf-b0eb62794d74",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "4c44b0a2-822a-46d7-a135-d3dafd5304cb",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        -640,
+        1024
+      ],
+      "webhookId": "c86fa48b-ae66-46f2-b438-f156225a5c74",
+      "typeVersion": 1.1,
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "id": "43cb5ca3-71b1-4e7a-b7e0-f737ea02a52b",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        -640,
+        672
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "path": "459d848d-72ed-490f-bc48-e5dc60242896",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "f40a4577-406e-4331-9187-4c2dfd3d62e6",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -640,
+        864
+      ],
+      "webhookId": "459d848d-72ed-490f-bc48-e5dc60242896",
+      "typeVersion": 2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## HTTP methods\nGET\tRetrieve resources\tFetch VM status, list nodes, get logs.\n\nPOST\tCreate or trigger actions\tStart/stop VMs, create backups.\n\nPUT\tUpdate/replace entire resource configuration\tModify VM configurations.\n\nDELETE\tDelete resources\tRemove VMs, delete users, remove files.\n\nOPTIONS\tFetch supported methods for an endpoint\tCheck available operations for an API.\n\nPATCH\tApply partial updates\tUpdate specific fields in VM settings.",
+        "height": 1245.2937736920358,
+        "width": 486.2369951168387,
+        "color": 3
+      },
+      "id": "2dbd911e-9557-4f00-905f-53fdbcc108f7",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        832,
+        16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get the proxmox API details from Proxmox Wiki",
+        "url": "https://pve.proxmox.com/wiki/Proxmox_VE_API"
+      },
+      "id": "208b9421-b4ac-4d50-a0ed-cbde42597c7b",
+      "name": "Proxmox API Wiki",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "position": [
+        272,
+        736
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Access all items from the incoming node\nconst items = $input.all();\n\n// Combine all fields of each item into a single string\nconst combinedData = items.map(item => {\n const inputData = item.json; // Access the JSON data of the current item\n \n // Combine all fields into a single string\n const combinedField = Object.entries(inputData)\n .map(([key, value]) => {\n // Handle objects or arrays by converting them to JSON strings\n const formattedValue = typeof value === 'object' ? JSON.stringify(value) : value;\n return `${key}: ${formattedValue}`;\n })\n .join(' | '); // Combine key-value pairs as a single string with a delimiter\n\n // Return the new structure\n return {\n json: {\n combinedField // Only keep the combined field for table representation\n },\n };\n});\n\n// Output the combined data\nreturn combinedData;\n"
+      },
+      "id": "b3dda2f2-3b73-4138-91da-b22d016d4947",
+      "name": "Structure Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1920,
+        176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Porxmox Custom AI Agent (Get)\nThis agent will convert the response from proxmox to meaningful explanation",
+        "height": 517.5348441931358,
+        "width": 895.2529822972874,
+        "color": 5
+      },
+      "id": "9e998692-bc1b-4bd0-bba2-e88d57e3b3fa",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2128,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Created or triggered an action on the server.\nResponse will come back here",
+        "height": 712.4591709572671,
+        "width": 900.3261837471116,
+        "color": 5
+      },
+      "id": "f8c06a22-6261-423d-ab4d-6f5a7a0bad4e",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2128,
+        576
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Access the 'data' field from the input\nlet rawData = $json[\"data\"];\n\n// Split the string by colon (:) to extract parts\nlet parts = rawData.split(\":\");\n\n// Create an object with the extracted parts\nreturn {\n upid: parts[0], // UPID\n node: parts[1], // Node (e.g., psb1)\n processID: parts[2], // Process ID\n taskID: parts[3], // Task ID\n timestamp: parts[4], // Timestamp\n operation: parts[5], // Operation (e.g., aptupdate)\n user: parts[7] // User (e.g., root@pam!n8n)\n};\n"
+      },
+      "id": "cfbde6b2-5332-4c51-a035-a030096deb73",
+      "name": "Structgure Response from Proxmox",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2560,
+        832
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract required fields from the input\nlet node = $json[\"node\"] || \"unknown node\";\nlet operation = $json[\"operation\"] || \"unknown operation\";\nlet user = $json[\"user\"] || \"unknown user\";\nlet rawTimestamp = $json[\"timestamp\"] || \"unknown timestamp\";\n\n// Convert timestamp to a readable format\nlet readableTimestamp = \"Invalid timestamp\";\ntry {\n let timestamp = parseInt(rawTimestamp, 16) * 1000; // Convert hex to milliseconds\n readableTimestamp = new Date(timestamp).toLocaleString();\n} catch (error) {\n readableTimestamp = \"Unable to parse timestamp\";\n}\n\n// Construct the simple message\nlet message = `The operation '${operation}' was executed successfully on node '${node}' by user '${user}' at '${readableTimestamp}'.`;\n\nreturn {\n message: message\n};\n"
+      },
+      "id": "02a52bdb-a055-4060-afb0-ac7b8f06ffd2",
+      "name": "Format Response and Hide Sensitive Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2768,
+        880
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "da8ce97e-70bf-42a4-981c-e2133bcee24a",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.output.details }}",
+              "rightValue": ""
+            },
+            {
+              "id": "d7052c40-9a43-452e-901c-6c8fd0122e5f",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.output.details }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "3084922e-424d-4164-96fc-db93bc4ef5b1",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1504,
+        592
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "method": "=POST",
+        "url": "=https://192.168.70.11:8006/api2/json{{ $json.output.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "724af75f-2d57-4860-bc91-ce1a0455ab9e",
+      "name": "HTTP Request2",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1840,
+        720
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "5ef1aa50-514f-4055-817b-381d1f950108",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2272,
+        672
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://192.168.70.11:8006/api2/json{{ $json.output.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "5768bca1-f846-453a-8fe2-ad5e6a0318d9",
+      "name": "HTTP Request3",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1840,
+        896
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-exp",
+        "options": {}
+      },
+      "id": "ee6df2f1-e51a-4a01-b57a-bd851e334d91",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        32,
+        736
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "agent": "conversationalAgent",
+        "promptType": "define",
+        "text": "=You are a are a Proxmox version 9 Information Output Expert who will provide the summary of the information generated about proxmox. \n\nHere is the information about proxmox : \nfrom url {{ $('AI Agent').item.json.output.url}}\n\nand the {{ $json.combinedField }}\n\n",
+        "options": {}
+      },
+      "id": "003019b5-f71a-4ea5-84c0-fac51f36f35e",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2304,
+        176
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "da8ce97e-70bf-42a4-981c-e2133bcee24a",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.output.details }}",
+              "rightValue": ""
+            },
+            {
+              "id": "d7052c40-9a43-452e-901c-6c8fd0122e5f",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.output.details }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "d361c446-79f3-4ef3-90e3-645b62071e37",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1520,
+        816
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://192.168.70.11:8006/api2/json{{ $json.output.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "6a0b1d0e-94ff-4c5f-9c72-f317a17d9368",
+      "name": "HTTP Request4",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1840,
+        1072
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "d00dc690-ee9a-433a-a99b-36204b502d21",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2304,
+        960
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "agent": "reActAgent",
+        "promptType": "define",
+        "text": "=You are a Proxmox version 9 AI Agent expert designed to generate API commands based on user input. \nThis is Proxmox which will help you to get the details of existing Proxmox installations, ensure to append to existing url : https://192.168.70.11:8006/api2/ to get response from existing proxmox \n\nMy prommox node is named as prxm01\nprxm01 : https://192.168.70.11:8006/api2/\n\nYour objectives are:\n\n### **1. Understand User Intent**\n- Parse user requests related to Proxmox operations.\n- Accurately interpret intent to generate valid Proxmox API commands.\n\n### **2. Refer to tools**\n- **Proxmox API Documentation**\n= ** Proxmox API Wiki**\n- **Proxmox**\n- Ensure every generated command meets the API's specifications, including required fields.\n\n### **3. Structure Responses**\nEvery response must include:\n- `response_type`: The HTTP method (e.g., POST, GET, DELETE).\n- `url`: The API endpoint, complete with placeholders (e.g., `/nodes/{node}/qemu/{vmid}`).\n- `details`: The payload for the request. Exclude optional fields if not explicitly defined by the user to allow default handling by Proxmox.\n\n### **4. Validate Inputs**\n- **Mandatory Fields**:\n - Validate user input for required parameters.\n - If missing fields are detected, respond with:\n {\n \"message\": \"Missing required parameters: [list of missing parameters].\"\n }\n\n- **Optional Fields**:\n - Omit fields not provided by the user to leverage Proxmox's defaults.\n\n### **5. Default Behavior**\n- If the user omits the `node`, default to `prxm01`.\n- Automatically generate the next available VM ID (`vmid`) by querying Proxmox for the highest existing ID.\n\n### **6. Rules for Outputs**\n- Always respond in strict JSON format:\n - Start with `{` and end with `}`.\n - Avoid additional information or comments.\n - Do not include sensitive data such as passwords, fingerprints, or keys.\n- If input is unrelated to Proxmox, respond with:\n\n {\n \"response_type\": \"Invalid\"\n }\n\n### **7. Examples**\n\n1. Create a VM\nThe default storage for VM's is named VMs_Storage.\nInput: \"Create a VM with ID 201, 2 cores, 4GB RAM, and 32GB disk on prxm01 using virtio network and SCSI storage.\"\nOutput:\n{\n \"response_type\": \"POST\",\n \"url\": \"/nodes/prxm01/qemu\",\n \"details\": {\n \"vmid\": 201,\n \"cores\": 2,\n \"memory\": 4096,\n \"sockets\": 1\",\n \"scsi0\": \"VMs_Storage:vm-201-disk-0,size=32G\"\n}\n}\n\n2. Delete a VM\nInput: \"Delete VM 105 on prxm01.\"\nOutput:\n{\n \"response_type\": \"DELETE\",\n \"url\": \"/nodes/prxm01/qemu/105\"\n}\n\n3. Start a VM\nInput: \"Start VM 202 on prxm01.\"\nOutput:\n{\n \"response_type\": \"POST\",\n \"url\": \"/nodes/prxm01/qemu/202/status/start\"\n}\n\n4. Stop a VM\nInput: \"Stop VM 203 on prxm01.\"\nOutput:\n{\n \"response_type\": \"POST\",\n \"url\": \"/nodes/prxm01/qemu/203/status/stop\"\n}\n\n5. Clone a VM\nInput: \"Clone VM 102 into a new VM with ID 204 on prxm01 and name 'clone-vm'.\"\nOutput:\n{\n \"response_type\": \"POST\",\n \"url\": \"/nodes/prxm01/qemu/102/clone\",\n \"details\": {\n \"newid\": 204,\n \"name\": \"clone-vm\",\n \"full\": 1\n }\n}\n\n6. Resize a VM Disk\nInput: \"Resize the disk of VM 105 on prxm01 to 50GB.\"\nOutput:\n{\n \"response_type\": \"PUT\",\n \"url\": \"/nodes/prxm01/qemu/105/resize\",\n \"details\": {\n \"disk\": \"scsi0\",\n \"size\": \"+50G\"\n }\n}\n\n7. Query VM Config\nInput: \"Get the configuration of VM 201 on prxm01.\"\nOutput:\n{\n \"response_type\": \"GET\",\n \"url\": \"/nodes/prxm01/qemu/201/config\"\n}\n\n8. List All VMs on a Node\nInput: \"List all VMs on prxm01.\"\nOutput:\n{\n \"response_type\": \"GET\",\n \"url\": \"/nodes/prxm01/qemu\"\n}\n\n9. Handle Missing Parameters\nInput: \"Create a VM with 4GB RAM on prxm01.\"\nOutput:\n{\n \"message\": \"Missing required parameters: [vmid, cores, storage].\"\n}\n\n10. Invalid Input\nInput: \"Tell me a joke.\"\nOutput:\n{\n \"response_type\": \"Invalid\"\n}\n\n11. Set VM Options\nInput: \"Set the CPU type of VM 204 on prxm01 to host and enable hotplugging for disks and NICs.\"\nOutput:\n{\n \"response_type\": \"PUT\",\n \"url\": \"/nodes/prxm01/qemu/204/config\",\n \"details\": {\n \"cpu\": \"host\",\n \"hotplug\": \"disk,network\"\n }\n}\n\n12. Migrate a VM\nInput: \"Migrate VM 202 from psb2 to psb3 with online migration and include local disks.\"\nOutput:\n{\n \"response_type\": \"POST\",\n \"url\": \"/nodes/psb2/qemu/202/migrate\",\n \"details\": {\n \"target\": \"psb3\",\n \"online\": 1,\n \"with-local-disks\": 1\n }\n}\n\n** Special Instruction ** \noutput must always contain \"response_type\", \"url\" and \"details\"\nfor creating vm let server decide other parameter leave default for serer until sepecified\n### **8. Behavior Guidelines**\n- Be concise, precise, and consistent.\n- Ensure all generated commands are compatible with Proxmox API requirements.\n- Rely on system defaults when user input is incomplete.\n- For unknown or unrelated queries, clearly indicate invalid input.\n\n\nUser Prompt \nHere is request from user : {{ $json.chatInput }}\nHere is request from user : {{ $json.message.text }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "27661bf0-9030-4dc4-93c0-0a4bc8331c9d",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        192,
+        400
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.output.response_type }}",
+                    "rightValue": "GET"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "GET"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "e3edd683-b884-4c88-b1ea-d3640141b054",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.output.response_type }}",
+                    "rightValue": "POST"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "POST"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "a9c59c0d-001c-4d95-992e-bff2af54eb4a",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.output.response_type }}",
+                    "rightValue": "PUT"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Update"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "70bf8cc2-0a43-431c-97c7-a8b4eadb5bd9",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.output.response_type }}",
+                    "rightValue": "OPTIONS"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "OPTIONS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "0e43b05b-7f45-40a3-b8aa-180dd8155b08",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.output.response_type }}",
+                    "rightValue": "DELETE"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "DELETE"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "bd03a24c-a233-4302-a576-1bfe0060c367",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.output.response_type }}",
+                    "rightValue": "Invalid"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "INVALID"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5b10cdb2-e137-46c3-9f8d-48261219ff01",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        992,
+        400
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "content": "## Trigger\nYou can use any trigger as input, a chat, telegram, email etc\n\nYou can think of any input, even it could be from your cloud platform, your own Web Applicaiton, etc. \n\nPossibilities are limitless.\n\nChat is shown just as example.",
+        "height": 1262.1316376259997,
+        "width": 261.5261328042567,
+        "color": 7
+      },
+      "id": "21038817-6e19-4dc5-b488-bc36345fcca6",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -288,
+        16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Developed by Amjid Ali\n\nThank you for using this workflow template. It has taken me countless hours of hard work, research, and dedication to develop, and I sincerely hope it adds value to your work.\n\nIf you find this template helpful, I kindly ask you to consider supporting my efforts. Your support will help me continue improving and creating more valuable resources.\n\nYou can contribute via PayPal here:\n\nhttp://paypal.me/pmptraining\n\nAdditionally, when sharing this template, I would greatly appreciate it if you include my original information to ensure proper credit is given.\n\nThank you for your generosity and support!\nEmail : amjid@amjidali.com\nhttps://linkedin.com/in/amjidali\nhttps://syncbricks.com\nhttps://youtube.com/@syncbricks",
+        "height": 515.4734551650874,
+        "width": 475.27306699862953,
+        "color": 4
+      },
+      "id": "66f05984-10b1-4273-9231-443560133dd1",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2656,
+        176
+      ],
+      "id": "493a6b3a-7310-48fe-97d0-598e34292f83",
+      "name": "Send a text message",
+      "webhookId": "9e744c22-c8e6-4c92-a407-aeb17ec6c6be",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=This the request: {{ $('HTTP Request4').item.json.data }}\n\n\nThe result:\n{{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3040,
+        832
+      ],
+      "id": "a932b75d-ab19-4209-bb0e-48afaa2505c2",
+      "name": "Send a text message1",
+      "webhookId": "b9430131-fdd2-4971-b41d-732d1f45c16e",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Assuming the previous node's output is available as $json.output.details\nconst details = $json.output.details;\n\n// Check if disk0 exists and replace it with scsi0\nif (details.disk0) {\n  details.scsi0 = details.disk0;  // Replace disk0 with scsi0\n  delete details.disk0;           // Remove the disk0 field\n}\n\nreturn { json: { output: { details } } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        496
+      ],
+      "id": "2f084646-a505-4a50-8ecd-74319f6c4d44",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the raw scsi0 value (for example, '\"VMs_Storage:vm-130-disk-0\\n\\n')\nconst scsi0Raw = $json.output.details.scsi0; \n\n// Remove any extra quotes and newlines\nconst cleanedScsi0 = scsi0Raw.replace(/[\\n\\r]+/g, '').replace(/^\"|\"$/g, '');\n\n// Now, ensure it has the correct format: \"VMs_Storage:vm-130-disk-0\"\nconst storageName = 'VMs_Storage';  // Storage name\nconst volumeId = cleanedScsi0.split(',')[0];  // Get volume ID from the raw string\n\n// Format the final result\nconst formattedScsi0 = `${storageName}:${volumeId}`;\n\nreturn {\n  json: {\n    formattedScsi0  // This will now have the correct format without extra quotes/newlines\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        320
+      ],
+      "id": "8cadc47a-ea79-47fc-a299-c019fccd5041",
+      "name": "Code in JavaScript1",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Structgure Response from Proxmox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Structgure Response from Proxmox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proxmox": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Proxmox API Wiki": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structure Response": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proxmox API Documentation": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structgure Response from Proxmox": {
+      "main": [
+        [
+          {
+            "node": "Format Response and Hide Sensitive Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response and Hide Sensitive Data": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "4ad66237-dbcf-4b44-8759-3c50fc9fc1db",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-19T17:41:25.974Z",
+      "createdAt": "2025-10-19T17:41:25.974Z",
+      "role": "workflow:owner",
+      "workflowId": "ED2vBpHOPOB6Js57",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
