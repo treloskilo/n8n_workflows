@@ -1,0 +1,129 @@
+{
+  "updatedAt": "2025-10-28T15:13:35.000Z",
+  "createdAt": "2025-10-27T16:21:50.811Z",
+  "id": "Yd10zuVSRtGhFu0q",
+  "name": "Gmail",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "readStatus": "both",
+          "sender": "=from:noreply@glassdoor.com OR from:anodos_edu@yahoo.gr OR from:myschool-info@sch.gr OR from:alert@indeed.com OR from:no-reply@rabota.md"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        -112
+      ],
+      "id": "430e6ebc-4ea7-4dfa-817d-53a71fa98a92",
+      "name": "Gmail Monitor",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot6725468235:AAGzhxy4-0f7GEmNVG2MEXmLEI8w6nnx-zs/getUpdates",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -288,
+        -112
+      ],
+      "id": "1a8665a0-06b8-4217-9964-ee1dba87ede5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "chatId": "=5870531738",
+        "text": "=✉️ *New Email Received!* *From:*{{ $('Gmail Monitor').item.json.From.replaceSpecialChars().removeTags().removeMarkdown().replaceAll('?','').trim() }}  *Subject:* {{ $('Gmail Monitor').item.json.Subject }} 📬 [Open in Gmail] (https://mail.google.com/mail/u/0/#all/{{ $('Gmail Monitor').item.json.id }})",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -80
+      ],
+      "id": "0028f9a6-65cc-47ac-80e0-30b9dc17c83d",
+      "name": "Send a text message",
+      "webhookId": "b4759925-f140-4efa-af0b-d75274bf2afa",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Monitor": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9c6b6926-615d-48a1-9354-7d21d181e35a",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-10-27T16:21:50.815Z",
+      "createdAt": "2025-10-27T16:21:50.815Z",
+      "role": "workflow:owner",
+      "workflowId": "Yd10zuVSRtGhFu0q",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
