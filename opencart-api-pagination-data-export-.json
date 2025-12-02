@@ -1,0 +1,240 @@
+{
+  "updatedAt": "2025-11-07T12:12:50.245Z",
+  "createdAt": "2025-11-07T12:12:50.245Z",
+  "id": "vRvSc2Xi8gEy2vSq",
+  "name": "OpenCart API Pagination Data Export",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 0
+            }
+          ]
+        }
+      },
+      "id": "26161d57-e63f-45bc-a86d-af83775122bb",
+      "name": "Cron (Midnight)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://heartpharmacy.gr/index.php?route=api/product",
+        "options": {}
+      },
+      "id": "46931b4d-f7be-4eb2-a35c-a6116daf76aa",
+      "name": "Get Products - Page 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        112
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FAHlqEg5lm3jb3xH",
+          "name": "heartpharmacy"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://yourstore.com/index.php?route=api/customer",
+        "options": {}
+      },
+      "id": "686581b8-467e-4fc7-a843-07ec62908abd",
+      "name": "Get Customers - Page 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return {\n  productData: items[0].json.products,\n  totalPages: Math.ceil(items[0].json.total / items[0].json.limit),\n  currentPage: 1\n};"
+      },
+      "id": "2e84a7de-b210-49ab-904c-a9e8ffb3de37",
+      "name": "Set Product Pagination Info",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        0,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return {\n  customerData: items[0].json.customers,\n  totalPages: Math.ceil(items[0].json.total / items[0].json.limit),\n  currentPage: 1\n};"
+      },
+      "id": "9d5c6de1-fc7c-48aa-b0f1-a4c135b56af2",
+      "name": "Set Customer Pagination Info",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        0,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery"
+      },
+      "id": "ee6049ee-5a94-49fc-bda9-155b0a580d71",
+      "name": "Products to CSV",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery"
+      },
+      "id": "c9a068ee-5961-4451-a1a1-a72447e84ae3",
+      "name": "Customers to CSV",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1,
+      "position": [
+        224,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "__REPLACE_WITH_YOUR_FROM_EMAIL__",
+        "toEmail": "__REPLACE_WITH_RECIPIENT_EMAIL__",
+        "subject": "OpenCart Daily Data Export",
+        "text": "Attached are the daily product and customer exports from OpenCart.",
+        "options": {}
+      },
+      "id": "94aad0a7-ebff-462b-88f4-cee2604fea68",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        608,
+        144
+      ],
+      "webhookId": "c5eba4dc-58ec-43cf-8c53-8116212f636a"
+    }
+  ],
+  "connections": {
+    "Cron (Midnight)": {
+      "main": [
+        [
+          {
+            "node": "Get Products - Page 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Customers - Page 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Products - Page 1": {
+      "main": [
+        [
+          {
+            "node": "Set Product Pagination Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Customers - Page 1": {
+      "main": [
+        [
+          {
+            "node": "Set Customer Pagination Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Product Pagination Info": {
+      "main": [
+        [
+          {
+            "node": "Products to CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Customer Pagination Info": {
+      "main": [
+        [
+          {
+            "node": "Customers to CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Products to CSV": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customers to CSV": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "74ca9cae-7de3-44fe-99d1-7d3bfe1fd084",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-07T12:12:50.248Z",
+      "createdAt": "2025-11-07T12:12:50.248Z",
+      "role": "workflow:owner",
+      "workflowId": "vRvSc2Xi8gEy2vSq",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
