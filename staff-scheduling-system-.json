@@ -1,0 +1,676 @@
+{
+  "updatedAt": "2025-11-29T18:09:43.000Z",
+  "createdAt": "2025-11-28T20:59:53.565Z",
+  "id": "gi5tZQ9wOFBR08fv",
+  "name": "Staff Scheduling System",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 0"
+            }
+          ]
+        }
+      },
+      "id": "6c77135f-7af5-4d99-999f-e403c792e49f",
+      "name": "Weekly Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        144
+      ],
+      "notes": "Runs every Sunday at 9 AM to collect availability for next week"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_STAFF_DATABASE_SHEET_ID",
+          "mode": "id"
+        }
+      },
+      "id": "77d4be1f-bee2-44b5-87bb-b92511d0deea",
+      "name": "Get Staff List",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        240,
+        144
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      },
+      "notes": "Sheet columns: staff_name, telegram_id, shop_location, role"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_id }}",
+        "text": "=Hi {{ $json.staff_name }}! 👋\n\nIt's time to set your availability for next week at {{ $json.shop_location }}.\n\nPlease reply with your available days and shifts using this format:\n\nMonday: Morning, Evening\nTuesday: Morning\nWednesday: Not available\nThursday: Morning, Afternoon, Evening\nFriday: Afternoon\nSaturday: Morning, Evening\nSunday: Not available\n\nShifts:\n🌅 Morning (6 AM - 2 PM)\n☀️ Afternoon (2 PM - 10 PM)\n🌙 Evening (6 PM - 2 AM)\n\nReply within 24 hours!",
+        "additionalFields": {}
+      },
+      "id": "2fb47e05-1c28-47ed-84d1-cf304575d0fa",
+      "name": "Send Availability Request",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        144
+      ],
+      "webhookId": "ab67045f-0def-469f-a693-b42f3bfd71b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "8c585002-6616-4e74-9a5a-e2cf1793093c",
+      "name": "Telegram Message Received",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        448
+      ],
+      "webhookId": "telegram-staff-bot",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "telegram_id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "number"
+            },
+            {
+              "id": "2",
+              "name": "staff_name",
+              "value": "={{ $json.message.from.first_name }} {{ $json.message.from.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "availability_text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f274111a-f38e-47f4-b1dc-527f656bf190",
+      "name": "Extract Response Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_AVAILABILITY_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "d9603cf4-c2c8-4147-ba99-0613e73d744a",
+      "name": "Save Availability Response",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        464,
+        448
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_id }}",
+        "text": "=✅ Thank you {{ $json.staff_name }}! Your availability has been recorded.\n\nYou'll receive your schedule by Tuesday evening.",
+        "additionalFields": {}
+      },
+      "id": "7406f0c3-b05f-4a83-97b6-4ee3deb83a18",
+      "name": "Confirm Receipt",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        448
+      ],
+      "webhookId": "31658e31-c699-4945-bd5b-e4babcc54343",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 2"
+            }
+          ]
+        }
+      },
+      "id": "d1686607-ea53-49fc-a692-0dbe23a3b857",
+      "name": "Generate Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        752
+      ],
+      "notes": "Runs every Tuesday at 6 PM to generate schedule"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_AVAILABILITY_SHEET_ID",
+          "mode": "id"
+        }
+      },
+      "id": "16061c36-02b3-4f19-a4df-9d3415096778",
+      "name": "Get All Availability",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        240,
+        672
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_STAFF_DATABASE_SHEET_ID",
+          "mode": "id"
+        }
+      },
+      "id": "7744515f-a131-4d37-b3d9-5d0aa09396f2",
+      "name": "Get Staff Details",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        240,
+        864
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "agent": "conversationalAgent",
+        "promptType": "define",
+        "text": "=You are a staff scheduling assistant for fast food restaurants.\n\nGiven the following staff availability data:\n{{ JSON.stringify($('Get All Availability').all()) }}\n\nAnd staff details:\n{{ JSON.stringify($('Get Staff Details').all()) }}\n\nCreate an optimal work schedule for next week ensuring:\n1. Each shift has adequate coverage (minimum 2-3 staff per shift)\n2. Staff preferences are respected\n3. No staff member works more than 5 days per week\n4. Fair distribution of shifts across all staff\n5. Each shop location has proper coverage\n6. Consider staff roles (manager, cook, cashier, etc.)\n\nReturn a JSON schedule in this format:\n{\n  \"schedule\": [\n    {\n      \"shop_location\": \"Shop Name\",\n      \"day\": \"Monday\",\n      \"shift\": \"Morning\",\n      \"staff\": [\n        {\"name\": \"Staff Name\", \"telegram_id\": 123456, \"role\": \"Manager\"},\n        {\"name\": \"Staff Name 2\", \"telegram_id\": 789012, \"role\": \"Cook\"}\n      ]\n    }\n  ]\n}",
+        "options": {
+          "systemMessage": "You are an expert scheduling system. Analyze staff availability and create fair, balanced schedules that meet business needs while respecting worker preferences."
+        }
+      },
+      "id": "946f139d-8d2f-4a79-8b6f-e502cddfa354",
+      "name": "AI Schedule Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        448,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.parse($json.output).schedule }}",
+        "options": {}
+      },
+      "id": "75a69e6d-3a8e-41ac-981e-3d7937c74828",
+      "name": "Parse Schedule",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_FINAL_SCHEDULE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "73b4cc0a-63a6-42fe-b2fd-e89128c6f1b4",
+      "name": "Save Final Schedule",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        896,
+        800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "staff",
+        "options": {}
+      },
+      "id": "4d486041-7ae3-49ad-bbe7-e932e4d07891",
+      "name": "Split Staff Members",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        896,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "telegram_id",
+              "value": "={{ $json.staff.telegram_id }}",
+              "type": "number"
+            },
+            {
+              "id": "2",
+              "name": "staff_name",
+              "value": "={{ $json.staff.name }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "shop",
+              "value": "={{ $json.shop_location }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "day",
+              "value": "={{ $json.day }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "shift",
+              "value": "={{ $json.shift }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "role",
+              "value": "={{ $json.staff.role }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3f20aaa1-0434-4547-994b-7392e5aec581",
+      "name": "Prepare Individual Messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "shifts",
+        "options": {}
+      },
+      "id": "01964fea-fb4d-41ac-a54b-e3461637b61f",
+      "name": "Group by Staff Member",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst result = [];\n\nfor (const item of items) {\n  const telegram_id = item.json.telegram_id;\n  const staff_name = item.json.staff_name;\n  const shifts = item.json.shifts;\n  \n  let scheduleText = `📅 *Your Schedule for Next Week*\\n\\n`;\n  scheduleText += `Hello ${staff_name}! Here's your work schedule:\\n\\n`;\n  \n  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];\n  const shiftsByDay = {};\n  \n  for (const shift of shifts) {\n    if (!shiftsByDay[shift.day]) {\n      shiftsByDay[shift.day] = [];\n    }\n    shiftsByDay[shift.day].push(shift);\n  }\n  \n  for (const day of dayOrder) {\n    if (shiftsByDay[day]) {\n      scheduleText += `*${day}*\\n`;\n      for (const shift of shiftsByDay[day]) {\n        const shiftEmoji = shift.shift === 'Morning' ? '🌅' : shift.shift === 'Afternoon' ? '☀️' : '🌙';\n        scheduleText += `  ${shiftEmoji} ${shift.shift} - ${shift.shop} (${shift.role})\\n`;\n      }\n      scheduleText += `\\n`;\n    }\n  }\n  \n  scheduleText += `\\nTotal shifts this week: ${shifts.length}\\n`;\n  scheduleText += `\\nIf you have any conflicts, please contact your manager immediately.`;\n  \n  result.push({\n    json: {\n      telegram_id,\n      staff_name,\n      message: scheduleText\n    }\n  });\n}\n\nreturn result;"
+      },
+      "id": "14b9e095-a3e6-4f7b-b809-823cf13dc0bf",
+      "name": "Format Schedule Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "dddb1aad-78fe-43b5-9d1a-c0cd02063e99",
+      "name": "Send Schedule to Staff",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1776,
+        944
+      ],
+      "webhookId": "e084bd91-f1b0-40aa-bb25-05b8a0a117ea",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Staff Database Sheet Columns:\n- staff_name\n- telegram_id\n- shop_location\n- role\n- phone_number\n- email",
+        "height": 240,
+        "width": 300
+      },
+      "id": "5e46252e-4fbf-4169-a218-26a9792e8cda",
+      "name": "Note - Staff Database",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        128,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Availability Sheet Columns:\n- telegram_id\n- staff_name\n- availability\n- timestamp\n- week_starting",
+        "height": 240,
+        "width": 300
+      },
+      "id": "51f8dec5-2b84-4202-8054-e3bfc85cacba",
+      "name": "Note - Availability",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Workflow Overview:\nPhase 1: Collect Availability (Every Sunday 9 AM)\n\nWeekly Schedule Trigger - Automatically runs every Sunday\nGet Staff List - Retrieves all staff from your Google Sheet database\nSend Availability Request - Sends Telegram messages to all staff asking for their availability\nStaff reply with their available days and shifts\n\nPhase 2: Receive & Store Responses (Continuous)\n\nTelegram Message Received - Listens for staff responses 24/7\nExtract Response Data - Processes the incoming availability\nSave Availability Response - Stores in Google Sheets\nConfirm Receipt - Sends confirmation message to staff\n\nPhase 3: Generate & Distribute Schedule (Every Tuesday 6 PM)\n\nGenerate Schedule Trigger - Runs every Tuesday evening\nGet All Availability - Retrieves all staff availability responses\nGet Staff Details - Gets complete staff information\nAI Schedule Generator - Uses AI to create optimal schedule considering:\n\n\nStaff availability\nFair distribution\nAdequate coverage per shift\nMaximum 5 days per week per staff\nRole requirements (manager, cook, cashier)\nShop locations\n\n\nParse Schedule - Formats the AI output\nSave Final Schedule - Stores in Google Sheets\nSplit & Group - Organizes schedule by individual staff members\nFormat Schedule Message - Creates personalized messages\nSend Schedule to Staff - Delivers schedule via Telegram\n\nRequired Google Sheets:\n\nStaff Database - Columns: staff_name, telegram_id, shop_location, role, phone_number, email\nAvailability Responses - Columns: telegram_id, staff_name, availability, timestamp\nFinal Schedule - Columns: shop_location, day, shift, staff_name, telegram_id, role\n\nSetup Steps:\n\nCreate a Telegram Bot using @BotFather\nCreate the three Google Sheets mentioned above\nAdd staff members to your Staff Database with their Telegram IDs\nReplace the placeholder Sheet IDs in the workflow\nSet up credentials for Telegram Bot and Google Sheets\nActivate the workflow\n\nThe system automatically handles everything from collection to distribution!Claude can make mistakes. Please double-check responses.",
+        "height": 592,
+        "width": 1152
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        880,
+        192
+      ],
+      "id": "462c51d2-1993-47b7-84fc-605f96beea54",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Weekly Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Staff List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Staff List": {
+      "main": [
+        [
+          {
+            "node": "Send Availability Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Message Received": {
+      "main": [
+        [
+          {
+            "node": "Extract Response Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Response Data": {
+      "main": [
+        [
+          {
+            "node": "Save Availability Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Availability Response": {
+      "main": [
+        [
+          {
+            "node": "Confirm Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get All Availability",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Staff Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Availability": {
+      "main": [
+        [
+          {
+            "node": "AI Schedule Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Staff Details": {
+      "main": [
+        [
+          {
+            "node": "AI Schedule Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Schedule Generator": {
+      "main": [
+        [
+          {
+            "node": "Parse Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Schedule": {
+      "main": [
+        [
+          {
+            "node": "Save Final Schedule",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Staff Members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Staff Members": {
+      "main": [
+        [
+          {
+            "node": "Prepare Individual Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Individual Messages": {
+      "main": [
+        [
+          {
+            "node": "Group by Staff Member",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by Staff Member": {
+      "main": [
+        [
+          {
+            "node": "Format Schedule Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Schedule Message": {
+      "main": [
+        [
+          {
+            "node": "Send Schedule to Staff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8d628ffa-c4d8-4b9c-867c-f326f722c1b7",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-28T20:59:53.567Z",
+      "createdAt": "2025-11-28T20:59:53.567Z",
+      "role": "workflow:owner",
+      "workflowId": "gi5tZQ9wOFBR08fv",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
