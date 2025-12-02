@@ -1,0 +1,248 @@
+{
+  "updatedAt": "2025-11-13T17:13:32.000Z",
+  "createdAt": "2025-11-13T16:28:23.782Z",
+  "id": "yuknTqxd1Cu7AvA2",
+  "name": "Telegram → Ollama → Google Sheets (Greek Invoice OCR)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "2e5df78e-8ef8-4732-9616-084dba61715b",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -64
+      ],
+      "webhookId": "34d65517-8204-4ff5-93ad-0a11357a02f1",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[0].file_id }}",
+        "additionalFields": {}
+      },
+      "id": "5477970d-1fd1-4f67-86aa-c7e0a3283baf",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        -32
+      ],
+      "webhookId": "13020a66-2bfe-491e-b4fc-f0db5f4b1dbc",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "let data;\ntry {\n  data = JSON.parse(items[0].json.response || items[0].json.text || '{}');\n} catch (e) {\n  data = {};\n}\n\nreturn [{\n  json: {\n    Vendor: data.vendor || '',\n    Description: data.description || '',\n    Date: data.date || '',\n    Total: data.total || '',\n    VAT: data.vat || ''\n  }\n}];"
+      },
+      "id": "4908d9cc-b679-4839-b932-61450794273b",
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "41bff9c2-fe16-4a02-9488-6f717c2efaaf",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [
+        496,
+        208
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json[\"message\"][\"chat\"][\"id\"] || $json[\"chat_id\"] }}",
+        "text": "=✅ Processed successfully\\nVendor: {{$json[\"Vendor\"]}}\\nTotal: {{$json[\"Total\"]}} €",
+        "additionalFields": {}
+      },
+      "id": "2f79488f-c4a0-4304-9470-b0de38b8f46e",
+      "name": "Telegram (Send Confirmation)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        304,
+        288
+      ],
+      "webhookId": "79791081-0f1f-4ff5-909c-bc3ce9770102",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "llama3.2-vision:latest",
+          "mode": "list",
+          "cachedResultName": "llama3.2-vision:latest"
+        },
+        "text": "This is an image with receipt or invoice written in Greek.\nExtract from this image the following fields: Vendor, Description, Date, Total, VAT. Return JSON with keys: vendor, description, date, total, vat.\n          ",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -64
+      ],
+      "id": "93b2d650-80c0-4641-b72d-cd97258897e1",
+      "name": "Analyze image",
+      "credentials": {
+        "ollamaApi": {
+          "id": "0ETxcr9uFCQDEfJV",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram (Send Confirmation)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 756200195,
+          "message": {
+            "message_id": 2512,
+            "from": {
+              "id": 5870531738,
+              "is_bot": false,
+              "first_name": "bill",
+              "username": "treloskilo",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 5870531738,
+              "first_name": "bill",
+              "username": "treloskilo",
+              "type": "private"
+            },
+            "date": 1763052474,
+            "photo": [
+              {
+                "file_id": "AgACAgQAAxkBAAIJzWkWB0PHLtqIKO5TUiVbd_VteZJKAAL4C2sbD7KwUE0AAV4bNM8IbAEAAwIAA3MAAzYE",
+                "file_unique_id": "AQAD-AtrGw-ysFB4",
+                "file_size": 853,
+                "width": 67,
+                "height": 90
+              },
+              {
+                "file_id": "AgACAgQAAxkBAAIJzWkWB0PHLtqIKO5TUiVbd_VteZJKAAL4C2sbD7KwUE0AAV4bNM8IbAEAAwIAA20AAzYE",
+                "file_unique_id": "AQAD-AtrGw-ysFBy",
+                "file_size": 15411,
+                "width": 239,
+                "height": 320
+              },
+              {
+                "file_id": "AgACAgQAAxkBAAIJzWkWB0PHLtqIKO5TUiVbd_VteZJKAAL4C2sbD7KwUE0AAV4bNM8IbAEAAwIAA3gAAzYE",
+                "file_unique_id": "AQAD-AtrGw-ysFB9",
+                "file_size": 67789,
+                "width": 598,
+                "height": 800
+              },
+              {
+                "file_id": "AgACAgQAAxkBAAIJzWkWB0PHLtqIKO5TUiVbd_VteZJKAAL4C2sbD7KwUE0AAV4bNM8IbAEAAwIAA3kAAzYE",
+                "file_unique_id": "AQAD-AtrGw-ysFB-",
+                "file_size": 121769,
+                "width": 957,
+                "height": 1280
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "771a5a29-e41e-45b3-b5c7-f3736f910f36",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-13T16:28:23.785Z",
+      "createdAt": "2025-11-13T16:28:23.785Z",
+      "role": "workflow:owner",
+      "workflowId": "yuknTqxd1Cu7AvA2",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
