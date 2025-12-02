@@ -1,0 +1,277 @@
+{
+  "updatedAt": "2025-11-10T17:08:48.000Z",
+  "createdAt": "2025-11-09T10:13:05.859Z",
+  "id": "b9lviEUwkxoh4omC",
+  "name": "Telegram Receipts OCR to Google Sheets",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "YOUR_GOOGLE_SHEET_ID",
+        "range": "Sheet1!A:E",
+        "options": {
+          "valueInputMode": "RAW"
+        }
+      },
+      "name": "Google Sheets Append",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        528,
+        96
+      ],
+      "id": "211a1fd9-1654-45ca-b76a-351808ebb465",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=YOUR_GEMINI_API_KEY",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Google Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        304,
+        96
+      ],
+      "id": "02ee1d00-b22d-42dc-8373-05ce88cccac0",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "binaryData": true,
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {}
+            ]
+          }
+        }
+      },
+      "name": "Google Drive Upload",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -112
+      ],
+      "id": "6c2eafd8-396b-4fc7-a9b2-eae7f1655c46",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[0].file_id }}",
+        "additionalFields": {}
+      },
+      "name": "Telegram Download",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "a6a52f1d-78b5-43ac-be8e-f7ea142c55f0",
+      "webhookId": "a31c60e9-5cb3-4bc5-b327-da3e72b0de82",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        0
+      ],
+      "id": "a7152761-16d3-4117-a1ab-ce390a99c578",
+      "webhookId": "f5469da6-0477-49a2-a962-11db2e1c882b",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ocr.space/parse/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "ApiKey",
+              "value": "K82872853788957"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "language",
+              "value": "gre"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        80,
+        112
+      ],
+      "id": "b0d0e74c-2070-463d-a917-cd55e984b8d0",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vCjjjYWSAjBlKIOs",
+          "name": "OcrSpace"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "gre",
+        "OCREngine": "1",
+        "additionalOptions": {}
+      },
+      "type": "n8n-nodes-ocrspace.ocrSpace",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -160
+      ],
+      "id": "c717c6ed-a850-4d08-978d-9fd37899a00d",
+      "name": "OCR.space",
+      "credentials": {
+        "ocrSpaceApi": {
+          "id": "2R51WS84VOQGmVcn",
+          "name": "OCR.space account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-tesseractjs.tesseractNode",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -160
+      ],
+      "id": "6e8540e0-0e93-49ed-a222-a41e778a8ed8",
+      "name": "Tesseract"
+    }
+  ],
+  "connections": {
+    "Google Gemini": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets Append",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Download": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OCR.space",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Telegram Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "OCR.space": {
+      "main": [
+        [
+          {
+            "node": "Tesseract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d4a55306-c0c8-4b50-b512-3b53eb3e2e23",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-09T10:13:05.863Z",
+      "createdAt": "2025-11-09T10:13:05.863Z",
+      "role": "workflow:owner",
+      "workflowId": "b9lviEUwkxoh4omC",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
