@@ -1,0 +1,776 @@
+{
+  "updatedAt": "2025-12-01T19:59:14.761Z",
+  "createdAt": "2025-12-01T19:59:14.761Z",
+  "id": "Ie1hezYIctDpFEIY",
+  "name": "VAPI Roofing Receptionist - FIXED",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"results\": [\n    {\n      \"toolCallId\": \"{{ $json.toolCallId }}\",\n      \"result\": \"{{ $json.message }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "742f2e38-ef03-43c5-8ffc-8e33463775f7",
+      "name": "Return Availability",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"results\": [\n    {\n      \"toolCallId\": \"{{ $('Parse Booking Request').item.json.toolCallId }}\",\n      \"result\": \"I have successfully booked the appointment for {{ $('Parse Booking Request').item.json.customerName }} on {{ $('Parse Booking Request').item.json.startDateTime }}.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "56c2c2b7-0418-4cf1-836e-b6eea574a864",
+      "name": "Return Booking Confirmation",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "723fa2f4311a490cad5a5ef16d9c24abb307fa61cd1ee90bb2d1c9b34264af1d@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Roofing Appointments"
+        },
+        "eventId": "={{ $json.eventId }}",
+        "updateFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        336
+      ],
+      "id": "de660000-86c3-4fc9-b1ff-cec2ff202191",
+      "name": "Update an event"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"results\": [\n    {\n      \"toolCallId\": \"{{ $('Parse Reschedule Request').item.json.toolCallId }}\",\n      \"result\": \"The appointment has been successfully rescheduled.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "a55c5911-c67e-480a-be7e-be3dea5ca619",
+      "name": "Return Reschedule Confirmation",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"results\": [\n    {\n      \"toolCallId\": \"{{ $('Parse Cancel Request').item.json.toolCallId }}\",\n      \"result\": \"The appointment has been successfully cancelled.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "28499b02-a1ff-4eee-b81a-d2288cbcbd93",
+      "name": "Return Cancel Confirmation",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-receptionist",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c614d819-ec3e-40ec-9caf-f265766a5a61",
+      "name": "VAPI Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -608,
+        320
+      ],
+      "webhookId": "vapi-receptionist-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the tool call arguments\nconst toolCall = $input.item.json.message.toolCallList[0];\nconst args = toolCall.arguments;\n\nreturn {\n  toolCallId: toolCall.id,\n  service: args.service,\n  date: args.date\n};"
+      },
+      "id": "a2251b81-1d59-4206-bc37-c168954b07cc",
+      "name": "Parse Check Availability",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const serviceDurations = {\n  \"Roof Inspection\": 1,\n  \"Roof Repair\": 2.5,\n  \"Full Roof Replacement\": 8,\n  \"Emergency Roof Repair\": 2,\n  \"Gutter Installation/Repair\": 2.5,\n  \"Free Roof Consultation\": 0.5\n};\n\nconst date = $('Parse Check Availability').item.json.date;\nconst service = $('Parse Check Availability').item.json.service;\nconst duration = serviceDurations[service] || 1;\nconst events = $input.all();\n\n// Define business hours\nconst dateObj = new Date(date + 'T00:00:00');\nconst dayOfWeek = dateObj.getDay();\nlet businessStart, businessEnd;\n\nif (dayOfWeek >= 1 && dayOfWeek <= 5) {\n  businessStart = 8;\n  businessEnd = 18;\n} else if (dayOfWeek === 6) {\n  businessStart = 9;\n  businessEnd = 16;\n} else {\n  return [{\n    json: {\n      available: false,\n      slots: [],\n      date: date,\n      service: service,\n      message: \"We are closed on Sundays. Please choose another date.\"\n    }\n  }];\n}\n\n// Get booked slots\nconst bookedSlots = events\n  .filter(event => event.json.start && event.json.start.dateTime)\n  .map(event => {\n    const startDate = new Date(event.json.start.dateTime);\n    const endDate = new Date(event.json.end.dateTime);\n    return {\n      start: startDate.getHours() + startDate.getMinutes() / 60,\n      end: endDate.getHours() + endDate.getMinutes() / 60\n    };\n  });\n\n// Calculate available slots\nconst availableSlots = [];\nfor (let hour = businessStart; hour < businessEnd - duration; hour += 0.5) {\n  const slotEnd = hour + duration;\n  const isAvailable = !bookedSlots.some(booked => \n    (hour < booked.end && slotEnd > booked.start)\n  );\n  \n  if (isAvailable && availableSlots.length < 5) {\n    const hours = Math.floor(hour);\n    const minutes = Math.round((hour % 1) * 60);\n    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;\n    \n    const displayHour = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);\n    const period = hours >= 12 ? 'PM' : 'AM';\n    const displayTime = `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;\n    \n    availableSlots.push({\n      time: timeString,\n      displayTime: displayTime\n    });\n  }\n}\n\nreturn [{\n  json: {\n    toolCallId: $('Parse Check Availability').item.json.toolCallId,\n    available: availableSlots.length > 0,\n    date: date,\n    service: service,\n    slots: availableSlots,\n    message: availableSlots.length > 0 \n      ? `We have availability for ${service} on ${date}. Available times: ${availableSlots.map(s => s.displayTime).join(', ')}` \n      : \"No availability on this date. Please try another date.\"\n  }\n}];"
+      },
+      "id": "5310921d-1534-487f-ade9-125672759ea4",
+      "name": "Calculate New Time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "723fa2f4311a490cad5a5ef16d9c24abb307fa61cd1ee90bb2d1c9b34264af1d@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Roofing Appointments"
+        },
+        "eventId": "={{ $('Parse Cancel Request').item.json.appointmentId }}{{ $json.appointmentId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        512
+      ],
+      "id": "f9c56ba4-976d-4b22-b7c9-05a01d1dee5e",
+      "name": "Delete an event"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "value": "723fa2f4311a490cad5a5ef16d9c24abb307fa61cd1ee90bb2d1c9b34264af1d@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Roofing Appointments"
+        },
+        "eventId": "={{ $json.appointmentId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        336
+      ],
+      "id": "ce99b62c-173a-4f96-a720-49a65f7f8204",
+      "name": "Reschedule Appointment"
+    },
+    {
+      "parameters": {
+        "sendTo": "{{ $('Parse Booking Request').item.json.customer.email }}",
+        "subject": "Appointment Confirmed - {{ $('Parse Booking Request').item.json.service }}",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" style=\"width: 100%; border-collapse: collapse;\">\n        <tr>\n            <td align=\"center\" style=\"padding: 40px 0;\">\n                <table role=\"presentation\" style=\"width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden;\">\n                    <tr>\n                        <td style=\"background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); padding: 40px 30px; text-align: center;\">\n                            <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;\">✓ Appointment Confirmed</h1>\n                            <p style=\"margin: 10px 0 0 0; color: #ecf0f1; font-size: 16px;\">Summit Roofing Solutions</p>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 30px 30px 20px 30px;\">\n                            <div style=\"background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin-bottom: 25px;\">\n                                <p style=\"margin: 0; color: #155724; font-size: 16px;\"><strong>Great news, {{ $('Parse Booking Request').item.json.customer.name }}!</strong><br>Your roofing appointment has been successfully scheduled.</p>\n                            </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        160
+      ],
+      "id": "195bc1cc-48c3-4c9a-ad5b-48a2d6f0a6e3",
+      "name": "Send a message",
+      "webhookId": "eef44ca3-16e8-4447-b48c-3bb90b316786"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract tool call data from NEW schema\nconst toolCall = $input.item.json.message.toolCallList[0];\nconst args = toolCall.arguments;\n\n// Service duration mapping\nconst serviceDurations = {\n  \"Roof Inspection\": 1,\n  \"Roof Repair\": 1,\n  \"Full Roof Replacement\": 8,\n  \"Emergency Roof Repair\": 2,\n  \"Gutter Installation/Repair\": 2.5,\n  \"Free Roof Consultation\": 0.5\n};\n\nconst duration = serviceDurations[args.serviceType] || 1;\n\n// Parse start time and calculate end time\nconst startDateTime = new Date(args.startDateTime);\nconst endDateTime = new Date(startDateTime.getTime() + (duration * 60 * 60 * 1000));\n\n// Format times for Google Calendar (ISO 8601)\nconst formatDateTime = (date) => {\n  return date.toISOString().slice(0, 19);\n};\n\nreturn {\n  toolCallId: toolCall.id,\n  summary: args.summary,\n  startDateTime: formatDateTime(startDateTime),\n  endDateTime: formatDateTime(endDateTime),\n  attendees: args.attendees || [],\n  timeZone: args.timeZone || \"America/New_York\",\n  customerName: args.customerName,\n  customerPhone: args.customerPhone,\n  customerAddress: args.customerAddress || \"\",\n  serviceType: args.serviceType,\n  notes: args.notes || \"\",\n  calendarId: args.calendarId || \"723fa2f4311a490cad5a5ef16d9c24abb307fa61cd1ee90bb2d1c9b34264af1d@group.calendar.google.com\n\"\n};"
+      },
+      "id": "017d2484-898d-4d22-aebd-0394b076602a",
+      "name": "Parse Booking Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the tool call\nconst toolCall = $input.item.json.message.toolCallList[0];\nconst args = toolCall.arguments;\n\nreturn {\n  toolCallId: toolCall.id, // <--- ADD THIS LINE\n  appointmentId: args.appointmentId,\n  newDate: args.time.date,\n  newStartTime: args.time.startTime,\n  reason: args.reason || \"\"\n};"
+      },
+      "id": "e1f7f10a-00b9-4f1b-90c3-ddb64ba387fb",
+      "name": "Parse Reschedule Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the tool call\nconst toolCall = $input.item.json.message.toolCallList[0];\nconst args = toolCall.arguments;\n\nreturn {\n  toolCallId: toolCall.id, // <--- ADD THIS LINE\n  appointmentId: args.appointmentId,\n  reason: args.reason || \"\"\n};"
+      },
+      "id": "b5775411-a6f5-4db8-9c72-83310e1b4d99",
+      "name": "Parse Cancel Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $input.item.json.message;\nconst call = message.call || {};\nconst transcript = message.transcript || 'No transcript available';\n\nlet duration = 0;\nif (message.call && message.call.startedAt && message.call.endedAt) {\n  const start = new Date(message.call.startedAt);\n  const end = new Date(message.call.endedAt);\n  duration = Math.round((end - start) / 1000);\n}\n\nconst formatDate = (dateString) => {\n  if (!dateString) return 'N/A';\n  const date = new Date(dateString);\n  return date.toLocaleString('en-US', { \n    month: 'long', \n    day: 'numeric', \n    year: 'numeric',\n    hour: 'numeric',\n    minute: '2-digit',\n    hour12: true\n  });\n};\n\nreturn {\n  json: {\n    callId: call.id || 'N/A',\n    phoneNumber: call.customer?.number || 'N/A',\n    duration: duration,\n    transcript: transcript,\n    startedAt: formatDate(call.startedAt),\n    endedAt: formatDate(call.endedAt),\n    endedReason: message.endedReason || 'Unknown',\n    recordingUrl: message.recordingUrl || '',\n    summary: message.summary || 'No summary available',\n    cost: message.cost || 0,\n    currentDate: new Date().toLocaleDateString('en-US', { \n      month: 'long', \n      day: 'numeric', \n      year: 'numeric' \n    }),\n    currentTime: new Date().toLocaleTimeString('en-US', { \n      hour: 'numeric', \n      minute: '2-digit',\n      hour12: true \n    })\n  }\n};"
+      },
+      "id": "aa0d2b38-872e-48f0-b642-ef570ae4870b",
+      "name": "Parse Call Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition2",
+              "leftValue": "={{ $json.message.type }}",
+              "rightValue": "end-of-call-report",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "73bfbade-6bad-488a-b203-ca6d9472fc1b",
+      "name": "Is Call Ended?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ $json.message.type }}",
+              "rightValue": "function-call",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ef0376eb-d6cd-4140-8939-40f06a105149",
+              "leftValue": "={{ $json.message.type }}",
+              "rightValue": "tool-calls",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "989568f6-0470-41c0-9a2f-0fe6910ac5c2",
+      "name": "Is Function Call?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "16962f0f-7623-4f9a-8d8d-ee0d0aa958e9",
+      "name": "No Operation",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        208,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "723fa2f4311a490cad5a5ef16d9c24abb307fa61cd1ee90bb2d1c9b34264af1d@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Roofing Appointments"
+        },
+        "timeMin": "={{ $json.date }}T00:00:00",
+        "timeMax": "={{ $json.date }}T23:59:59",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "035c7b47-ff97-4c93-8d9d-3f644be59252",
+      "name": "Get many events",
+      "retryOnFail": false,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// SIMPLIFIED & ROBUST AVAILABILITY CHECKER\n\n// 1. Get Inputs\nconst dateStr = $('Parse Check Availability').item.json.date; // \"2025-12-02\"\nconst service = $('Parse Check Availability').item.json.service;\n\n// 2. Define Services & Durations\nconst serviceDurations = {\n  \"Roof Inspection\": 1,\n  \"Roof Repair\": 2.5,\n  \"Full Roof Replacement\": 8,\n  \"Emergency Roof Repair\": 2,\n  \"Gutter Installation/Repair\": 2.5,\n  \"Free Roof Consultation\": 0.5\n};\nconst duration = serviceDurations[service] || 1;\n\n// 3. Get Existing Events from Google\nconst events = $input.all().map(item => item.json);\n\n// 4. Force Florida Time Logic (Crucial for Receptionist)\n// We create a date object for the requested day at 12:00 PM EST to avoid timezone shifting\nconst timeZone = \"America/New_York\";\nconst requestedDate = new Date(dateStr + 'T12:00:00-05:00'); \nconst dayOfWeek = requestedDate.getDay(); // 0=Sun, 1=Mon, etc.\n\n// 5. Define Business Hours (Orlando Time)\nlet startHour = 8; // 8 AM\nlet endHour = 18;  // 6 PM\n\n// Closed on Sundays\nif (dayOfWeek === 0) {\n    return [{\n        json: {\n            toolCallId: $('Parse Check Availability').item.json.toolCallId,\n            message: \"We are closed on Sundays. Please choose another date.\"\n        }\n    }];\n}\n// Saturdays: 9 AM - 4 PM\nif (dayOfWeek === 6) {\n    startHour = 9;\n    endHour = 16;\n}\n\n// 6. Process Booked Slots\nconst bookedSlots = events\n  .filter(event => event.start && event.start.dateTime)\n  .map(event => {\n    const start = new Date(event.start.dateTime);\n    const end = new Date(event.end.dateTime);\n    // Convert to decimal hours (e.g., 9:30 = 9.5)\n    return {\n      start: start.getHours() + (start.getMinutes() / 60),\n      end: end.getHours() + (end.getMinutes() / 60)\n    };\n  });\n\n// 7. Find Free Slots\nconst availableSlots = [];\n// Scan every 30 minutes\nfor (let time = startHour; time <= (endHour - duration); time += 0.5) {\n  const slotStart = time;\n  const slotEnd = time + duration;\n  \n  // Check if this slot overlaps with ANY booked slot\n  const isOverlap = bookedSlots.some(booked => {\n    return (slotStart < booked.end && slotEnd > booked.start);\n  });\n\n  if (!isOverlap) {\n    // Convert decimal time back to \"9:30 AM\" format\n    const hour = Math.floor(slotStart);\n    const minute = (slotStart % 1) * 60;\n    const period = hour >= 12 ? 'PM' : 'AM';\n    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);\n    const minuteStr = minute === 0 ? '00' : '30';\n    \n    availableSlots.push(`${displayHour}:${minuteStr} ${period}`);\n  }\n}\n\n// 8. Limit to 5 options for the Voice AI (don't overwhelm the caller)\nconst topSlots = availableSlots.slice(0, 5);\n\n// 9. Generate Response Message\nlet finalMessage = \"\";\nif (topSlots.length > 0) {\n    finalMessage = `We have openings on ${dateStr} at: ${topSlots.join(', ')}. Which works for you?`;\n} else {\n    finalMessage = `I checked ${dateStr}, but we are fully booked that day.`;\n}\n\nreturn [{\n  json: {\n    toolCallId: $('Parse Check Availability').item.json.toolCallId,\n    availableSlots: topSlots,\n    message: finalMessage\n  }\n}];"
+      },
+      "id": "16c850c2-3c12-4660-93c3-e07e076a9e12",
+      "name": "Calculate Available Slots",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "723fa2f4311a490cad5a5ef16d9c24abb307fa61cd1ee90bb2d1c9b34264af1d@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Roofing Appointments"
+        },
+        "start": "={{ $json.startDateTime }}",
+        "end": "={{ $json.endDateTime }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ $json.attendees.join(',') }}"
+          ],
+          "description": "=Customer: {{ $json.summary }}\\nPhone: {{ $json.customerPhone }}\\nEmail: {{ $json.attendees[0] }}\\nAddress: {{ $json.customerAddress }}\\nService: {{ $json.serviceType }}\\nNotes: {{ $json.notes }}\\n\\nBooked via VAPI Voice AI",
+          "summary": "={{ $json.summary }}"
+        }
+      },
+      "id": "7e87196b-55f7-424b-82df-b7119d1f411c",
+      "name": "Book Appointment in Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "position": [
+        208,
+        160
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1.3,
+      "notes": "1. Select your Google Account from the 'Credential' dropdown.\n\n2. Select the **SAME** calendar you chose in the previous node to book the new appointment."
+    },
+    {
+      "parameters": {
+        "sendTo": "ang_el2005@yahoo.com",
+        "subject": "hi there",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;\">\n    <table role=\"presentation\" style=\"width: 100%; border-collapse: collapse;\">\n        <tr>\n            <td align=\"center\" style=\"padding: 40px 0;\">\n                <table role=\"presentation\" style=\"width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px; overflow: hidden;\">\n                    <tr>\n                        <td style=\"background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%); padding: 40px 30px; text-align: center;\">\n                            <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;\">✓ Appointment Confirmed</h1>\n                            <p style=\"margin: 10px 0 0 0; color: #ecf0f1; font-size: 16px;\">Summit Roofing Solutions</p>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 30px 30px 20px 30px;\">\n                            <div style=\"background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin-bottom: 25px;\">\n                                <p style=\"margin: 0; color: #155724; font-size: 16px;\"><strong>Great news, {{ $('Parse Booking Request').item.json.customer.name }}!</strong><br>Your roofing appointment has been successfully scheduled.</p>\n                            </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        672
+      ],
+      "id": "6dd8e466-c63f-41f3-a102-ee2e64ad9490",
+      "name": "Send a message1",
+      "webhookId": "eef44ca3-16e8-4447-b48c-3bb90b316786"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.toolCallList[0].name }}",
+                    "rightValue": "check_availability",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "23a97c05-eb36-4551-b152-2907f3a9ef45"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "check_availability"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.toolCallList[0].name }}",
+                    "rightValue": "book_appointment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e9233ad8-9593-4ed9-ba9e-d8d9a6b71e1a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "book_appointment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.toolCallList[0].name }}",
+                    "rightValue": "reschedule_appointment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "6d0db587-16e6-48e1-9b98-b36832f3d139"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reschedule_appointment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.toolCallList[0].name }}",
+                    "rightValue": "cancel_appointment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c5818c75-be4d-4f36-8ff3-88cf0ed0fd85"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancel_appointment"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "90f309ce-9ac9-402f-862e-46f8a0534e6f",
+      "name": "Route Function Call",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        176
+      ]
+    }
+  ],
+  "connections": {
+    "Update an event": {
+      "main": [
+        [
+          {
+            "node": "Return Reschedule Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VAPI Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Function Call?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Call Ended?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Check Availability": {
+      "main": [
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate New Time": {
+      "main": [
+        [
+          {
+            "node": "Update an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event": {
+      "main": [
+        [
+          {
+            "node": "Return Cancel Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reschedule Appointment": {
+      "main": [
+        [
+          {
+            "node": "Calculate New Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Return Booking Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Booking Request": {
+      "main": [
+        [
+          {
+            "node": "Book Appointment in Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Reschedule Request": {
+      "main": [
+        [
+          {
+            "node": "Reschedule Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Cancel Request": {
+      "main": [
+        [
+          {
+            "node": "Delete an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Call Summary": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Call Ended?": {
+      "main": [
+        [
+          {
+            "node": "Parse Call Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Function Call?": {
+      "main": [
+        [
+          {
+            "node": "Route Function Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Calculate Available Slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Available Slots": {
+      "main": [
+        [
+          {
+            "node": "Return Availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Appointment in Calendar": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "No Operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Function Call": {
+      "main": [
+        [
+          {
+            "node": "Parse Check Availability",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Booking Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Reschedule Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Cancel Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "8c76fafd-bc60-4d9d-a80d-f4a48ff8aeb7",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-01T19:59:14.765Z",
+      "createdAt": "2025-12-01T19:59:14.765Z",
+      "role": "workflow:owner",
+      "workflowId": "Ie1hezYIctDpFEIY",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
