@@ -1,0 +1,258 @@
+{
+  "updatedAt": "2025-11-04T12:05:54.000Z",
+  "createdAt": "2025-11-04T10:27:24.043Z",
+  "id": "297vKhnNRjDjoeXv",
+  "name": "MsSQL",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "USE datawarehouse;\n\nSELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE\nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_SCHEMA = 'dbo'\nORDER BY TABLE_NAME, ORDINAL_POSITION;\n"
+      },
+      "id": "ea12627a-b9ab-4377-bf9b-6ec6543ff634",
+      "name": "Get DB Schema",
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -128
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all(); // Alle Zeilen aus dem vorherigen Node\nconst tableMap = {}; // Objekt zur Gruppierung der Spalten pro Tabelle\n\nfor (const item of inputItems) {\n  const { TABLE_NAME, COLUMN_NAME, DATA_TYPE } = item.json;\n\n  if (!tableMap[TABLE_NAME]) {\n    tableMap[TABLE_NAME] = [];\n  }\n\n  tableMap[TABLE_NAME].push(`- ${COLUMN_NAME}: ${DATA_TYPE}`);\n}\n\n// Formatiertes Schema erstellen\nlet promptSchema = 'Die Datenbank `datawarehouse` enthält folgende Tabellen:\\n\\n';\nfor (const [table, columns] of Object.entries(tableMap)) {\n  promptSchema += `Tabelle: ${table}\\n${columns.join('\\n')}\\n\\n`;\n}\n\n// Prompt als neues JSON zurückgeben\nreturn [\n  {\n    json: {\n      promptSchema\n    }\n  }\n];\n"
+      },
+      "id": "84fc66d7-a757-447a-8cfd-18d2ef5c25ad",
+      "name": "Format Schema Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9de82cd9-09b2-4ee2-b632-3c04c860998a",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -176
+      ],
+      "webhookId": "dynamic-sql-agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "id": "e918a5d5-d37e-4c0c-b215-8dd8b6062421",
+      "name": "Ollama Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        32,
+        96
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "0ETxcr9uFCQDEfJV",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "3f464b2b-a848-4f27-93a4-ecf2760a629c",
+      "name": "Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1,
+      "position": [
+        240,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the database schema of the `datawarehouse` database:\n\n{{ $json.promptSchema }}\n\nBased on the following user question:\n\"{{ $json.userMessage }}\"\n\nFind the best matching table and generate an SQL query to answer the question.\n\n- Use COUNT(*) when asking for number\n- Return only the SQL query, without explanation\n- Use table names and column names exactly as in the schema\n\nWhen the \"Orders\" table is mentioned, it is probably the \"orders\" table that is meant - use your best understanding of the language to match appropriate tables.",
+        "options": {}
+      },
+      "id": "f5b74830-9ab6-41e0-8f81-4541c0b63716",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        64,
+        -128
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "antwort",
+              "value": "Ergebnis: {{ $json[0] || 'Keine Daten zurückgegeben' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8f6ec599-3c7d-420a-82d9-dbea9ab2c0f3",
+      "name": "Antwort formatieren",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        784,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        -128
+      ],
+      "id": "3fb40a62-a8f7-430d-a6b4-759f11dc87a5",
+      "name": "Microsoft SQL"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -128
+      ],
+      "id": "f8150b30-76f0-4773-bdba-7efa6861b116",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "Get DB Schema": {
+      "main": [
+        [
+          {
+            "node": "Format Schema Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Schema Text": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get DB Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Antwort formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "7e2dfacb-2e5a-46d4-9f33-5e1210e1d62d",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-04T10:27:24.047Z",
+      "createdAt": "2025-11-04T10:27:24.047Z",
+      "role": "workflow:owner",
+      "workflowId": "297vKhnNRjDjoeXv",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
