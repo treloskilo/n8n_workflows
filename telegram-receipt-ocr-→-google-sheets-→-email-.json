@@ -1,0 +1,204 @@
+{
+  "updatedAt": "2025-11-13T08:34:51.393Z",
+  "createdAt": "2025-11-13T08:34:51.393Z",
+  "id": "jwsbUxHy8BJdRz88",
+  "name": "Telegram Receipt OCR → Google Sheets → Email",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          {
+            "update": "message"
+          },
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "6a7bb9c5-d4be-41de-96f0-6d2c6f569cc1",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -48
+      ],
+      "webhookId": "d83c3975-0b20-4d56-bc32-92f4adc250a7",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download"
+      },
+      "id": "12554ac8-497f-4932-aac5-0fc75cc36add",
+      "name": "Get File",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -48
+      ],
+      "webhookId": "63e1b197-2124-45a5-8360-d6a50fb5aad4",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "url": "https://vision.googleapis.com/v1/images:annotate",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "id": "e7c649c9-2e4f-43b0-a54f-3f6219465801",
+      "name": "Google Vision OCR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -48
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "5mNwUpjUCojhoMIF",
+          "name": "Rabota_md"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const annotation = $json.responses?.[0]?.fullTextAnnotation;\nconst fullText = annotation ? annotation.text : 'No text detected';\nreturn [{\n  fullText,\n  date: new Date().toISOString(),\n  amount: fullText.match(/(\\d+[.,]\\d{2}) ?€/)?.[1] || '',\n  afm: fullText.match(/ΑΦΜ[:\\s]*(\\d+)/)?.[1] || '',\n}];"
+      },
+      "id": "1347338a-9fbb-4abd-8040-ab6e772e1c18",
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "YOUR_GOOGLE_SHEET_ID",
+        "range": "Receipts!A:D",
+        "options": {}
+      },
+      "id": "2690d6eb-cc2c-46a9-94e0-768e76b4a7d8",
+      "name": "Google Sheets - Add Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "Νέα Απόδειξη Ελήφθη",
+        "message": "Ακολουθεί το περιεχόμενο της απόδειξης:\n\n{{ $json.fullText }}",
+        "toList": [
+          "seremvas76@gmail.com"
+        ],
+        "additionalFields": {}
+      },
+      "id": "71a3455a-c893-4d04-96c9-d34600edd557",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        336,
+        48
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File": {
+      "main": [
+        [
+          {
+            "node": "Google Vision OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vision OCR": {
+      "main": [
+        [
+          {
+            "node": "Extract Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Add Row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "a5500c64-06b8-4c30-9e53-91896d124e46",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-13T08:34:51.397Z",
+      "createdAt": "2025-11-13T08:34:51.397Z",
+      "role": "workflow:owner",
+      "workflowId": "jwsbUxHy8BJdRz88",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
