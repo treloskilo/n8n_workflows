@@ -1,0 +1,1086 @@
+{
+  "updatedAt": "2025-10-25T15:34:25.000Z",
+  "createdAt": "2025-10-23T13:37:08.792Z",
+  "id": "se9iCfkJTlMpF986",
+  "name": "Working_Google Calendar (TELEGRAM_GEMINI)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1904,
+        -272
+      ],
+      "id": "e683e463-e104-45ca-a191-f80690871463",
+      "name": "Telegram Trigger",
+      "webhookId": "009da5ac-497f-4116-9bb0-ae72bf33ccc6",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=You are James, a business virtual assistant helping ceo's. You interact like a proffesional virtual assistant with formal gentle and polite language.\n\nYou must help your ceo's generate,update,delete or retrieve events from Google Calendar.\n\nKeep in mind that this is the time and date: {{ $now }}\n\n#Instructions\n- I want you to include the link to the generated event when you respond to the user.\n- All events, tasks, and reminders, unless I tell you the date, will be added during business hours.\n- If you are not informed of a day, assume today.\n- If you are not informed of a specific time, use the first available time.\n- If there are no more available times today, we continue with the first available time the following day.\n- If the Villain needs to generate a reminder, do so in the first available block and make it only 15 minutes long.\n- If the user wants to generate a task, the default is 45 minutes.\n- If the user wants to delete a specific event find first the specific event id from the event the user wants to delete from get_many event. Select that specific event id and then delete the event by using that specific event id\n- If the user wants to update a specific event find first the specific event id from the event the user wants to update from get_many event. Then ask the user what would like to update for example time, date, location or subject. After the user has updated time, date, location or subject then select that specific event id and update the event by using that specific event id\n- Both tasks and reminders are personal and do not require us to invite anyone.\n- By default, meetings are 45 minutes long.\n#Tools\n- create_event: Generates an event in Google Calendar. When creating a new event please consider current date, time and timezone:\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}\n  - Current timezone: {{ $now.zone.zoneName }} \n  - Before creating a new event, always call the tool \"Get availability in a calendar in Google Calendar\" to confirm the requested time is free.\n- If the requested time slot is busy, find the next available 45-minute slot within business hours (09:00–17:00) and suggest it instead.\n\n- delete_event: Deletes an event in Google Calendar. When deleting a new event please consider current date, time and timezone:\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}\n  - Current timezone: {{ $now.zone.zoneName }} \n\n- update_event: Updates an event in Google Calendar. When upfating a new event please consider current date, time and timezone:\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}\n  - Current timezone: {{ $now.zone.zoneName }} \n\n- get_many_events : Gets a list of events from Google Calendar.\n\n- get_contact_information : Gets one or more contact emails from Google Contacts.\n\n- Get availability in a calendar in Google Calendar : Checks the availability of time and dates in Google Calendar. Also checks if in a specific time and in a specific date there is already an event scheduled.\n\nUser text: \"{{$json.message.text}}\"\n\nNotice the fundamental change: we're no longer asking the AI ​​to just extract data. We're now asking it to calculate the date and duration based on business rules, making our assistant infinitely more useful."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -816,
+        -256
+      ],
+      "id": "aac70ed2-0e18-48c0-ac03-f9a214477462",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        -48
+      ],
+      "id": "76bd4bf5-3178-45e9-af1b-c446dd3f989e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -896,
+        -464
+      ],
+      "id": "1d636403-a871-4759-bca6-dc8177eb8f1e",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        -416
+      ],
+      "id": "9ad994b4-3a0c-417d-856f-42877ce96de1",
+      "name": "Send a text message",
+      "webhookId": "6812bb4e-260c-41bb-9b48-820679df1076",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.text }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -720,
+        -48
+      ],
+      "id": "857caafa-6c97-470b-b5e0-bb52200fa1cd",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c4047a29-de36-4165-9be3-b3cce8733c2a",
+              "name": "sessionId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1408,
+        -592
+      ],
+      "id": "c605c067-a74c-4f9a-ba73-0af076c51f55",
+      "name": "chat_id to session_id",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "b6f0c891-044e-4027-b770-ddb74be9a51b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e9b8ed5d-4d2b-4811-bed8-434bb5239e5b",
+                    "leftValue": "={{ $json.message.voice.mime_type }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1680,
+        -192
+      ],
+      "id": "de7ab1b4-e715-4bb8-989c-f1084307d12f",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1504,
+        16
+      ],
+      "id": "19f52511-271c-497f-883d-a41ac033cad5",
+      "name": "Get a file",
+      "webhookId": "1717eed0-3e0a-4cd3-b2e2-b95ba5b6e97e",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "inputType": "binary",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1328,
+        16
+      ],
+      "id": "3d12f016-f08f-47d5-a5a0-46eb108fa6d9",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f609f1dd-7b0c-4886-81b4-9961d1b9b96b",
+              "name": "=text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1520,
+        -336
+      ],
+      "id": "a5097f02-110d-400d-8479-a45038ccb075",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3fd0aee8-c453-4577-bb28-3e7704ace416",
+              "name": "text",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        16
+      ],
+      "id": "b198935e-2b56-4704-95ca-5596af677cf2",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: Assume the message text is in items[0].json.message\nconst message = $json.output || \"\";\n\n// Regex to match all possible Google Calendar event URLs and extract their `eid` parameter\nconst regex = /https:\\/\\/www\\.google\\.com\\/calendar\\/event\\?[^ \\n]*?eid=([\\w-]+)/g;\n\n// Extract all matches\nconst eventIds = [];\nlet match;\nwhile ((match = regex.exec(message)) !== null) {\n  eventIds.push(match[1]);\n}\n\n// Return results\nif (eventIds.length > 0) {\n  return [{ json: { eventIds } }];\n} else {\n  return [{ json: { error: \"No Google Calendar event IDs found in message.\" } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1648,
+        -608
+      ],
+      "id": "2e0f5b7b-2591-4d91-a69f-62a52200d702",
+      "name": "Find event id from event creation",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1920,
+        -608
+      ],
+      "id": "a5f7dced-c160-44e3-8ff5-e3352e4389a6",
+      "name": "Edit Fields2",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -992,
+        -240
+      ],
+      "id": "6e6becc9-1843-45cc-ada1-ec91fc8ae134",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "returnAll": true,
+        "timeMax": "={{ $now.plus({ week: 65 }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        -256
+      ],
+      "id": "432b3e44-0a87-473a-80bc-fd7574da0635",
+      "name": "SearchEvents",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Example Code node\nconst userQuery = $json.text?.toLowerCase() || ''; // e.g. \"delete meeting with James\"\nconst events = $items(\"SearchEvents\", 0).map(i => i.json);\nconst match = events.find(e =>\n  e.summary?.toLowerCase().includes(\"james\")\n);\n\nif (match) {\n  return [{ json: { eventId: match.id, summary: match.summary } }];\n} else {\n  return [{ json: { error: \"No matching event found.\" } }];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -272
+      ],
+      "id": "4e0e66c3-2d37-43e2-9267-772f10405433",
+      "name": "Extract Event ID"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "eventId": "=={{ $json.eventId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        -272
+      ],
+      "id": "9978b4ba-69cd-4677-befd-e7bdeed50116",
+      "name": "Delete an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "returnAll": true,
+        "timeMax": "={{ $now.plus({ week: 65 }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -704,
+        -512
+      ],
+      "id": "bd847b74-c0c0-4577-b3eb-f5e0003fe8c7",
+      "name": "SearchEvents1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.success }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        -256
+      ],
+      "id": "78277b62-f930-44b4-82f9-e536497015ce",
+      "name": "Send a text message2",
+      "webhookId": "7d2aaae7-9215-48cb-81f7-c222b1e0f84f",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "has been successfully created",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "454e2f82-f460-4a6a-bbe7-52c2d9e64c7a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Event Created"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "eb4519c6-3921-4daf-8e60-8532d005f88c",
+                    "leftValue": "delete",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Delete Event"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "22cdb68c-a3ff-4025-a430-6e2fe061c6cf",
+                    "leftValue": "availiability",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -384,
+        -240
+      ],
+      "id": "670919f3-d9c5-4d75-97cc-8c6928432a6a",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        -576
+      ],
+      "id": "c267fd3a-66ab-44fb-8f1f-ffa693206bbc",
+      "name": "Delete an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "timeMin": "={{ $fromAI('Start_Time', ``, 'string') }}",
+        "timeMax": "={{ $fromAI('End_Time', ``, 'string') }}",
+        "options": {
+          "timezone": {
+            "__rl": true,
+            "value": "Europe/Athens",
+            "mode": "list",
+            "cachedResultName": "Europe/Athens"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        -80
+      ],
+      "id": "968911ff-1c5e-487e-8518-84626f530d48",
+      "name": "Get availability in a calendar in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "timeMin": "={{ $json.timeMin }}",
+        "timeMax": "={{ $json.timeMax }}",
+        "options": {
+          "timezone": {
+            "__rl": true,
+            "value": "Europe/Athens",
+            "mode": "list",
+            "cachedResultName": "Europe/Athens"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        160
+      ],
+      "id": "d3c7b1fc-44d6-4b8e-95f4-cf4f1fda41e2",
+      "name": "Get availability in a calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get current date in Athens timezone (UTC+2 or UTC+3 depending on DST)\nconst today = new Date();\nconst offsetHours = 2; // Athens timezone offset (adjust for DST if needed)\n\n// Create start and end Date objects\nconst startDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), offsetHours, 0, 0));\nconst endDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), offsetHours + 12, 0, 0)); // 12 hours later\n\nreturn {\n  json: {\n    timeMin: startDate.toISOString(),\n    timeMax: endDate.toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        192
+      ],
+      "id": "605b37b6-25e3-4a66-9f1e-dcb8ce5a88a0",
+      "name": "Generate Time Range",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "returnAll": true,
+        "timeMax": "={{ $now.plus({ week: 65 }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        -64
+      ],
+      "id": "e3b537c4-9665-4f37-afbf-13d7c02fee55",
+      "name": "SearchEvents2",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get current date in Athens timezone (UTC+2 or UTC+3 depending on DST)\nconst today = new Date();\nconst offsetHours = 2; // Athens timezone offset (adjust for DST if needed)\n\n// Create start and end Date objects\nconst startDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), offsetHours, 0, 0));\nconst endDate = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), offsetHours + 12, 0, 0)); // 12 hours later\n\nreturn {\n  json: {\n    timeMin: startDate.toISOString(),\n    timeMax: endDate.toISOString()\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -64
+      ],
+      "id": "92825fa3-c750-4fa8-b04a-d9328898036f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1394cc6e-62ca-4264-bd8c-f061ab806d09",
+              "leftValue": false,
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        -64
+      ],
+      "id": "21cc9875-cabe-4a13-925e-4e4228bd2513",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "treloskilo@gmail.com",
+          "mode": "list",
+          "cachedResultName": "treloskilo@gmail.com"
+        },
+        "end": "={{ $now.plus(12, 'hour') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        128
+      ],
+      "id": "86daf8b5-50fb-4101-a2d3-9ccb4b1b6d74",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "938ReI4hkERld9CH",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat_id to session_id": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Find event id from event creation": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearchEvents": {
+      "main": [
+        [
+          {
+            "node": "Extract Event ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Event ID": {
+      "main": [
+        [
+          {
+            "node": "Delete an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearchEvents1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event": {
+      "main": [
+        []
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SearchEvents",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SearchEvents2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get availability in a calendar in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get availability in a calendar": {
+      "main": [
+        []
+      ]
+    },
+    "Generate Time Range": {
+      "main": [
+        [
+          {
+            "node": "Get availability in a calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearchEvents2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f0a332be-0c01-4ff9-9b56-987ae2d2a2eb",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-23T13:37:08.794Z",
+      "createdAt": "2025-10-23T13:37:08.794Z",
+      "role": "workflow:owner",
+      "workflowId": "se9iCfkJTlMpF986",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
