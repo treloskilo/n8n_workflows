@@ -1,0 +1,361 @@
+{
+  "updatedAt": "2025-11-28T20:53:47.000Z",
+  "createdAt": "2025-11-28T20:52:32.259Z",
+  "id": "TaPTkbCSO5jOWNxA",
+  "name": "food shop scheduling bot",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "c8981c64-1feb-4d07-87f6-3a7cbb5f0016",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1520,
+        -416
+      ],
+      "webhookId": "staff-bot-webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f9884c8c-f782-425b-88c2-f05c6964b175",
+      "name": "Availability Parser",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        -1296,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "5cd24ca9-1eba-4a9d-8965-6eed5240a218",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -192
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "6a386a52-45ff-42fe-8fbc-86086e5df501",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -1520,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Availability"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Staff Name": "={{ $json.staff_name }}",
+            "Telegram ID": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "Date": "={{ $json.date }}",
+            "Shift": "={{ $json.shift }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "0c8639e3-5071-4f13-9c1c-98e42135b1b7",
+      "name": "Save Availability",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -944,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Thanks {{ $json[\"Staff Name\"] }}! I have logged you in for {{ $json[\"Date\"] }} ({{ $json[\"Shift\"] }}).",
+        "additionalFields": {}
+      },
+      "id": "f9aecdbc-f407-4a61-a627-a1888de36666",
+      "name": "Confirm to Staff",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -672,
+        -400
+      ],
+      "webhookId": "6b7865d1-c9fb-4a0f-ae8e-7dd2dd2256a4"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "id": "05b1b3c7-0495-45e3-a0f5-7db75d619511",
+      "name": "Weekly Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -800,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Availability"
+        },
+        "options": {}
+      },
+      "id": "288c8bed-5251-47ad-a68a-1e713ba1264a",
+      "name": "Get Availability",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -592,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Shift_Requirements"
+        },
+        "options": {}
+      },
+      "id": "e8dfe748-c5d1-49e8-8462-f396263a88a2",
+      "name": "Get Requirements",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -528,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple First-Come-First-Serve Matcher\nconst availability = $('Get Availability').all().map(i => i.json);\nconst requirements = $('Get Requirements').all().map(i => i.json);\n\nconst matches = [];\n\nfor (let req of requirements) {\n  // Find a staff member who matches Date, Shift, and is not yet assigned\n  const staffMatch = availability.find(staff => \n    staff.Date === req.Date && \n    staff.Shift === req.Shift &&\n    !staff.Assigned // Prevent double booking logic needed here in robust systems\n  );\n\n  if (staffMatch) {\n    matches.push({\n      row_number: req.id, // You need a row ID in sheets ideally, or use logic to find row\n      Date: req.Date,\n      Shift: req.Shift,\n      Assigned_Staff: staffMatch['Staff Name'],\n      Telegram_ID: staffMatch['Telegram ID'],\n      Shop: req['Shop Location']\n    });\n    // Mark staff as taken in this memory loop\n    staffMatch.Assigned = true;\n  }\n}\n\nreturn matches;"
+      },
+      "id": "ae117ed3-e577-43b8-9986-1013ad95379a",
+      "name": "Match Staff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Shift_Requirements"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Assigned Staff": "={{ $json.Assigned_Staff }}"
+          },
+          "matchingColumns": [
+            "Date",
+            "Shift",
+            "Shop Location"
+          ]
+        },
+        "options": {}
+      },
+      "id": "55e7de02-d929-4918-8d88-63f2ad503945",
+      "name": "Update Roster",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -128,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.Telegram_ID }}",
+        "text": "=Hey {{ $json.Assigned_Staff }}, you have been assigned a shift!\n\n📍 {{ $json.Shop }}\n📅 {{ $json.Date }}\n⏰ {{ $json.Shift }}\n\nPlease reply to confirm.",
+        "additionalFields": {}
+      },
+      "id": "161079e4-e029-485e-b47c-7bf623753cbe",
+      "name": "Notify Staff",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        -64
+      ],
+      "webhookId": "3d41a398-c03d-4834-b506-18ad07d39791"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Availability Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Availability Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Availability Parser": {
+      "main": [
+        [
+          {
+            "node": "Save Availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Availability": {
+      "main": [
+        [
+          {
+            "node": "Confirm to Staff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Availability",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Requirements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Availability": {
+      "main": [
+        [
+          {
+            "node": "Match Staff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Staff": {
+      "main": [
+        [
+          {
+            "node": "Update Roster",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Roster": {
+      "main": [
+        [
+          {
+            "node": "Notify Staff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "19e545aa-9069-4e65-8530-f319a5513303",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-28T20:52:32.261Z",
+      "createdAt": "2025-11-28T20:52:32.261Z",
+      "role": "workflow:owner",
+      "workflowId": "TaPTkbCSO5jOWNxA",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
