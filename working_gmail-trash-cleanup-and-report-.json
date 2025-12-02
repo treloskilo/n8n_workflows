@@ -1,0 +1,470 @@
+{
+  "updatedAt": "2025-11-12T09:30:53.000Z",
+  "createdAt": "2025-10-30T13:25:43.278Z",
+  "id": "sqdxLLXbE12ijy5h",
+  "name": "Working_Gmail Trash Cleanup and Report",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "getAll",
+        "returnAll": true,
+        "additionalFields": {
+          "labelIds": [
+            "TRASH"
+          ]
+        }
+      },
+      "id": "7ff485ff-2c08-4253-80c6-f25f5088b191",
+      "name": "Gmail - List Messages",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        224
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "delete",
+        "messageId": "={{$json[\"id\"]}}"
+      },
+      "id": "84d5d715-0006-48cf-8fca-209a6caa3a26",
+      "name": "Gmail - Delete Message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        224
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -832,
+        224
+      ],
+      "id": "0872c9bb-1108-4605-b2c5-502a41a0a4c5",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "functionCode": "const deletedCount = items.length;\nreturn [{ json: { deletedCount } }];"
+      },
+      "id": "962ee289-ccbe-4a39-823e-9d601a8bedd7",
+      "name": "Count Deleted",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.deletedCount}}",
+              "operation": "larger"
+            }
+          ]
+        }
+      },
+      "id": "de1e16cd-0238-43bb-93bd-737ebb691c3d",
+      "name": "Prepare Email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        0,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "Gmail Trash Cleanup Report",
+        "message": "=Deleted {{$json.deletedCount}} messages from Trash.\n\n- Current date: {{ $now.format('dd-MM-yyyy') }}\n- Current time: {{ $now.format('hh:mm a') }}",
+        "options": {}
+      },
+      "id": "b3fb54e6-fc83-476b-9db3-b939e1488898",
+      "name": "Send Report (Some Deleted)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        272,
+        32
+      ],
+      "webhookId": "ddda4fc0-ece8-42a0-8536-e3996b5ea095",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "Gmail Trash Cleanup Report",
+        "message": "No messages were deleted from Trash.",
+        "options": {}
+      },
+      "id": "3021556b-09b6-46eb-baa9-1daed944ebc1",
+      "name": "Send Report (None Deleted)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        272,
+        288
+      ],
+      "webhookId": "dd4f3148-61bd-4e50-852a-2ef11c316ca8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail - List Messages": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Delete Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gmail - List Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Delete Message": {
+      "main": [
+        [
+          {
+            "node": "Count Deleted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Deleted": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email": {
+      "main": [
+        [
+          {
+            "node": "Send Report (Some Deleted)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Report (None Deleted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "724cc071-cbf1-4038-95a6-d4cff39d0f97",
+  "activeVersionId": "724cc071-cbf1-4038-95a6-d4cff39d0f97",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-30T13:25:43.281Z",
+      "createdAt": "2025-10-30T13:25:43.281Z",
+      "role": "workflow:owner",
+      "workflowId": "sqdxLLXbE12ijy5h",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-11-28T13:36:06.316Z",
+    "createdAt": "2025-11-28T13:36:06.316Z",
+    "versionId": "724cc071-cbf1-4038-95a6-d4cff39d0f97",
+    "workflowId": "sqdxLLXbE12ijy5h",
+    "nodes": [
+      {
+        "parameters": {
+          "resource": "message",
+          "operation": "getAll",
+          "returnAll": true,
+          "additionalFields": {
+            "labelIds": [
+              "TRASH"
+            ]
+          }
+        },
+        "id": "7ff485ff-2c08-4253-80c6-f25f5088b191",
+        "name": "Gmail - List Messages",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 1,
+        "position": [
+          -608,
+          224
+        ],
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "WBaGzd89qjgz8bxH",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "message",
+          "operation": "delete",
+          "messageId": "={{$json[\"id\"]}}"
+        },
+        "id": "84d5d715-0006-48cf-8fca-209a6caa3a26",
+        "name": "Gmail - Delete Message",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 1,
+        "position": [
+          -384,
+          224
+        ],
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "WBaGzd89qjgz8bxH",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 9,
+                "triggerAtMinute": 5
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -832,
+          224
+        ],
+        "id": "0872c9bb-1108-4605-b2c5-502a41a0a4c5",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "functionCode": "const deletedCount = items.length;\nreturn [{ json: { deletedCount } }];"
+        },
+        "id": "962ee289-ccbe-4a39-823e-9d601a8bedd7",
+        "name": "Count Deleted",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [
+          -176,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "number": [
+              {
+                "value1": "={{$json.deletedCount}}",
+                "operation": "larger"
+              }
+            ]
+          }
+        },
+        "id": "de1e16cd-0238-43bb-93bd-737ebb691c3d",
+        "name": "Prepare Email",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          0,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "sendTo": "seremvas76@gmail.com",
+          "subject": "Gmail Trash Cleanup Report",
+          "message": "=Deleted {{$json.deletedCount}} messages from Trash.\n\n- Current date: {{ $now.format('dd-MM-yyyy') }}\n- Current time: {{ $now.format('hh:mm a') }}",
+          "options": {}
+        },
+        "id": "b3fb54e6-fc83-476b-9db3-b939e1488898",
+        "name": "Send Report (Some Deleted)",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          272,
+          32
+        ],
+        "webhookId": "ddda4fc0-ece8-42a0-8536-e3996b5ea095",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "WBaGzd89qjgz8bxH",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "seremvas76@gmail.com",
+          "subject": "Gmail Trash Cleanup Report",
+          "message": "No messages were deleted from Trash.",
+          "options": {}
+        },
+        "id": "3021556b-09b6-46eb-baa9-1daed944ebc1",
+        "name": "Send Report (None Deleted)",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          272,
+          288
+        ],
+        "webhookId": "dd4f3148-61bd-4e50-852a-2ef11c316ca8",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "WBaGzd89qjgz8bxH",
+            "name": "Gmail account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Gmail - List Messages": {
+        "main": [
+          [
+            {
+              "node": "Gmail - Delete Message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Gmail - List Messages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gmail - Delete Message": {
+        "main": [
+          [
+            {
+              "node": "Count Deleted",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Count Deleted": {
+        "main": [
+          [
+            {
+              "node": "Prepare Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Email": {
+        "main": [
+          [
+            {
+              "node": "Send Report (Some Deleted)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send Report (None Deleted)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "system migration",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
