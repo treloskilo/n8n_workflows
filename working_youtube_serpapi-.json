@@ -1,0 +1,286 @@
+{
+  "updatedAt": "2025-11-29T18:36:01.000Z",
+  "createdAt": "2025-11-28T17:15:14.506Z",
+  "id": "yQvRjxkfdW6je6DI",
+  "name": "Working_Youtube_SerpApi",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        -112
+      ],
+      "id": "56b5ee87-e3ac-4c75-8c09-b517a7ac1d0f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "54e15a3e-d400-4b7f-a19d-099046eaf5c7",
+              "name": "search",
+              "value": "Knight Rider Movie",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -336,
+        -80
+      ],
+      "id": "6e88ddd1-6362-40e5-94c2-70bab019127a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "youtube",
+        "search_query": "={{ $json.search }}",
+        "additionalFields": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -80
+      ],
+      "id": "a94fb9b7-e4f8-4357-aad5-d0d6eea1888c",
+      "name": "Youtube search",
+      "retryOnFail": true,
+      "credentials": {
+        "serpApi": {
+          "id": "cbeg6B9GGeKg2E6D",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nif (!input.video_results || input.video_results.length === 0) {\n  console.log('ERROR: No video_results found!');\n  return [];\n}\n\n// Convert \"3 days ago\" → timestamp\nfunction convertToTimestamp(relativeStr) {\n  if (!relativeStr) return 0; // treat unknown as VERY OLD\n\n  const parts = relativeStr.toLowerCase().split(\" \");\n  const num = parseInt(parts[0], 10);\n  const unit = parts[1];\n\n  if (isNaN(num)) return 0; // treat invalid as very old\n\n  const now = Date.now();\n  let ms = 0;\n\n  if (unit.startsWith(\"minute\")) ms = num * 60 * 1000;\n  else if (unit.startsWith(\"hour\")) ms = num * 60 * 60 * 1000;\n  else if (unit.startsWith(\"day\")) ms = num * 24 * 60 * 60 * 1000;\n  else if (unit.startsWith(\"week\")) ms = num * 7 * 24 * 60 * 60 * 1000;\n  else if (unit.startsWith(\"month\")) ms = num * 30 * 24 * 60 * 60 * 1000;\n  else if (unit.startsWith(\"year\")) ms = num * 365 * 24 * 60 * 60 * 1000;\n  else return 0; // unexpected format → treat as old\n\n  return now - ms;\n}\n\nlet videos = input.video_results.map(v => ({\n  title: v.title || \"\",\n  link: v.link || \"\",\n  channel: v.channel?.name || \"\",\n  publishedDate: v.published_date || \"\",\n  timestamp: convertToTimestamp(v.published_date)\n}));\n\n// Sort so LARGER timestamp (NEWEST) comes first\nvideos = videos.sort((a, b) => b.timestamp - a.timestamp);\n\nconsole.log(`Extracted and sorted ${videos.length} videos`);\n\nreturn videos.map(v => ({ json: v }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -80
+      ],
+      "id": "28e91131-23ff-47c5-808e-0aaeb21370f3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c46c0a74-c7a0-4570-aa9d-23fe9e0ec118",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "b2a1a49b-5975-4e23-b084-21839130d89c",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "e41b8945-e760-47fd-bf54-ab4f3fa38533",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "17a41952-1d85-4e4e-b8b1-e0cfa5c1b3d1",
+              "name": "publishedDate",
+              "value": "={{ $json.publishedDate }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        -80
+      ],
+      "id": "2bbb3d28-1860-4d60-b127-6f6cf1c20488",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERqW3kW8ZvBWXTkS-a7SUSyct01CRhJp2lm6jHR_zLo",
+          "mode": "list",
+          "cachedResultName": "Youtube_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERqW3kW8ZvBWXTkS-a7SUSyct01CRhJp2lm6jHR_zLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERqW3kW8ZvBWXTkS-a7SUSyct01CRhJp2lm6jHR_zLo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "channel",
+              "displayName": "channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "publishedDate",
+              "displayName": "publishedDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        496,
+        -80
+      ],
+      "id": "d4ec2ade-675f-4b06-a4ff-f924e437e42b",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Youtube search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtube search": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c6510f24-8bfe-44ac-8f41-74b4d948c616",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-28T17:15:14.509Z",
+      "createdAt": "2025-11-28T17:15:14.509Z",
+      "role": "workflow:owner",
+      "workflowId": "yQvRjxkfdW6je6DI",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
