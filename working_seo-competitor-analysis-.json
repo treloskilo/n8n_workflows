@@ -1,0 +1,573 @@
+{
+  "updatedAt": "2025-11-28T17:25:04.000Z",
+  "createdAt": "2025-11-28T16:54:54.872Z",
+  "id": "5qjnENoAgsce5feI",
+  "name": "Working_SEO Competitor Analysis",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1O1A89cZKmjS2ep44NXGMS0oumze7SuYkY0WWJ-mRk4I",
+          "mode": "list",
+          "cachedResultName": "SEO Competitor Analysis",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1O1A89cZKmjS2ep44NXGMS0oumze7SuYkY0WWJ-mRk4I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1O1A89cZKmjS2ep44NXGMS0oumze7SuYkY0WWJ-mRk4I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Τομέας (Domain)",
+              "displayName": "Τομέας (Domain)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Αρχική Θέση",
+              "displayName": "Αρχική Θέση",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Τίτλος",
+              "displayName": "Τίτλος",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Περιγραφή",
+              "displayName": "Περιγραφή",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Σελίδες στο Index",
+              "displayName": "Σελίδες στο Index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Λέξεις Κλειδιά",
+              "displayName": "Λέξεις Κλειδιά",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Αριθμός Λέξεων Κλειδιών",
+              "displayName": "Αριθμός Λέξεων Κλειδιών",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Αριθμός Top Σελίδων",
+              "displayName": "Αριθμός Top Σελίδων",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Top Σελίδες URLs",
+              "displayName": "Top Σελίδες URLs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Top Σελίδες Τίτλοι",
+              "displayName": "Top Σελίδες Τίτλοι",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SEO Score",
+              "displayName": "SEO Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ανταγωνιστικότητα",
+              "displayName": "Ανταγωνιστικότητα",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Θέμα Αναζήτησης",
+              "displayName": "Θέμα Αναζήτησης",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ημερομηνία Ανάλυσης",
+              "displayName": "Ημερομηνία Ανάλυσης",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f00620e4-e3ab-4916-a1b5-32104796e6f3",
+      "name": "Append to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        -96,
+        16
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconsole.log(`\\n========================================`);\nconsole.log(`FORMATTING ${allItems.length} TOTAL COMPETITORS`);\nconsole.log(`========================================\\n`);\n\nconst csvData = [];\nconst seenDomains = new Set();\n\nfor (const item of allItems) {\n  const data = item.json;\n  \n  if (seenDomains.has(data.domain)) {\n    console.log(`⚠️ DUPLICATE DETECTED: ${data.domain} - SKIPPING`);\n    continue;\n  }\n  \n  seenDomains.add(data.domain);\n  console.log(`✓ Adding: ${data.domain}`);\n  \n  const topPagesUrls = (data.top_pages || []).map(p => p.url).join(' | ');\n  const topPagesTitles = (data.top_pages || []).map(p => p.title).join(' | ');\n  \n  csvData.push({\n    'Τομέας (Domain)': data.domain || '',\n    'URL': data.url || '',\n    'Αρχική Θέση': data.initial_position || '',\n    'Τίτλος': data.title || '',\n    'Περιγραφή': data.snippet || '',\n    'Σελίδες στο Index': data.indexed_pages || 0,\n    'Λέξεις Κλειδιά': data.related_keywords || '',\n    'Αριθμός Λέξεων Κλειδιών': data.keyword_count || 0,\n    'Αριθμός Top Σελίδων': data.top_pages_count || 0,\n    'Top Σελίδες URLs': topPagesUrls,\n    'Top Σελίδες Τίτλοι': topPagesTitles,\n    'SEO Score': data.seo_score || 0,\n    'Ανταγωνιστικότητα': data.competitiveness || 0,\n    'Θέμα Αναζήτησης': data.topic || '',\n    'Ημερομηνία Ανάλυσης': data.analyzed_at || new Date().toISOString()\n  });\n}\n\nconsole.log(`\\n✅ FINAL COUNT: ${csvData.length} unique rows`);\nreturn csvData.map(row => ({ json: row }));"
+      },
+      "id": "27f14d81-08a7-4460-9eea-62f2a0372b5d",
+      "name": "Format for Google Sheets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const competitor = $('Loop Over Items').first().json;\nconst domainAuthority = $input.all()[0]?.json || {};\nconst relatedKeywords = $input.all()[1]?.json || {};\nconst topPages = $input.all()[2]?.json || {};\n\nconsole.log(`\\n=== PROCESSING: ${competitor.domain} ===`);\n\nconst indexedPages = domainAuthority.search_information?.total_results || 0;\nconst relatedSearches = relatedKeywords.related_searches || [];\nconst keywords = relatedSearches.map(k => k.query || '').filter(k => k).join('; ');\n\nconst organicResults = topPages.organic_results || [];\nconst topPagesList = organicResults.slice(0, 10).map(p => ({\n  url: p.link || '',\n  title: p.title || '',\n  position: p.position || 0,\n  snippet: p.snippet || ''\n}));\n\nconst seoScore = Math.min(100, Math.round((indexedPages / 100) + (topPagesList.length * 5)));\nconst keywordCount = keywords.split('; ').filter(k => k).length;\nconst competitiveness = competitor.position <= 3 ? 10 : \n                       competitor.position <= 10 ? 7 : \n                       competitor.position <= 20 ? 4 : 2;\n\nconsole.log(`Indexed: ${indexedPages}, Keywords: ${keywordCount}, Pages: ${topPagesList.length}`);\n\nreturn [{\n  json: {\n    domain: competitor.domain,\n    url: competitor.url,\n    initial_position: competitor.position,\n    title: competitor.title,\n    snippet: competitor.snippet,\n    indexed_pages: indexedPages,\n    related_keywords: keywords,\n    keyword_count: keywordCount,\n    top_pages_count: topPagesList.length,\n    top_pages: topPagesList,\n    seo_score: seoScore,\n    competitiveness: competitiveness,\n    analyzed_at: new Date().toISOString(),\n    topic: competitor.topic\n  }\n}];"
+      },
+      "id": "a149cdb3-face-4557-b5d7-12ac4953cb3d",
+      "name": "Aggregate Competitor Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        576
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "q": "=site:{{ $json.domain }} {{ $json.topic }}",
+        "additionalFields": {
+          "gl": "gr",
+          "hl": "el",
+          "num": "50"
+        },
+        "requestOptions": {}
+      },
+      "id": "50332bbc-ddc2-4649-8c71-94603c00bad6",
+      "name": "Get Top Pages",
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        592
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "cbeg6B9GGeKg2E6D",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "q": "=related:{{ $json.domain }}",
+        "additionalFields": {
+          "gl": "gr",
+          "hl": "el",
+          "num": "20"
+        },
+        "requestOptions": {}
+      },
+      "id": "010fd8dc-03b0-4ab7-bde3-dd1ac1884c5f",
+      "name": "Get Related Keywords",
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        400
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "cbeg6B9GGeKg2E6D",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "q": "=site:{{ $json.domain }}",
+        "additionalFields": {
+          "gl": "gr",
+          "hl": "el",
+          "num": "100"
+        },
+        "requestOptions": {}
+      },
+      "id": "cd2adc3a-fbc3-40e6-89c8-a8177c1339e0",
+      "name": "Get Domain Authority",
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        208
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "cbeg6B9GGeKg2E6D",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst topic = $('Set Topic & Domain').first().json.topic;\nconst myDomain = $('Set Topic & Domain').first().json.myDomain;\n\nif (!input.organic_results || input.organic_results.length === 0) {\n  console.log('ERROR: No organic_results found!');\n  return [];\n}\n\nconst competitors = [];\nconst seenDomains = new Set();\n\nfor (const result of input.organic_results) {\n  try {\n    const link = result.link || '';\n    const domainMatch = link.match(/^(?:https?:\\/\\/)?(?:www\\.)?([^\\/]+)/);\n    const domain = domainMatch ? domainMatch[1] : '';\n    \n    if (!domain) continue;\n    if (myDomain && domain.includes(myDomain.replace('www.', ''))) continue;\n    if (seenDomains.has(domain)) {\n      console.log(`Skipping duplicate: ${domain}`);\n      continue;\n    }\n    \n    seenDomains.add(domain);\n    competitors.push({\n      domain: domain,\n      url: link,\n      title: result.title || '',\n      snippet: result.snippet || '',\n      position: result.position || competitors.length + 1,\n      topic: topic,\n      myDomain: myDomain\n    });\n    \n    if (competitors.length >= 10) break;\n  } catch (error) {\n    console.log('Error:', error.message);\n  }\n}\n\nconsole.log(`Found ${competitors.length} unique competitors`);\nreturn competitors.map(c => ({ json: c }));"
+      },
+      "id": "6d1b770c-631e-407b-976d-c4c312ad0ce9",
+      "name": "Extract Competitor URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        400
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "q": "={{ $json.topic }} -site:{{ $json.myDomain }}",
+        "additionalFields": {
+          "gl": "gr",
+          "hl": "el",
+          "num": "20"
+        },
+        "requestOptions": {}
+      },
+      "id": "1eaba774-f849-4d68-be0e-8c565f37a4ba",
+      "name": "SerpAPI - Find Competitors",
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        -992,
+        400
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "cbeg6B9GGeKg2E6D",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "topic-field",
+              "name": "topic",
+              "type": "string",
+              "value": "ηλεκτρονικό κατάστημα"
+            },
+            {
+              "id": "domain-field",
+              "name": "myDomain",
+              "type": "string",
+              "value": "https://cosmodata.gr"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4bc00656-a979-4a32-bc97-35848a2033e5",
+      "name": "Set Topic & Domain",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1216,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "3b899dc2-32f6-4009-8df9-3347ace34f9c",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -544,
+        400
+      ],
+      "id": "045d5930-2d02-4eb6-8665-cbdaa83f372f",
+      "name": "Loop Over Items",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        384
+      ],
+      "id": "9746edb5-e7f1-466e-b260-8a1b279adb02",
+      "name": "Merge"
+    }
+  ],
+  "connections": {
+    "Format for Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Competitor Data": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Top Pages": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get Related Keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Domain Authority": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Competitor URLs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI - Find Competitors": {
+      "main": [
+        [
+          {
+            "node": "Extract Competitor URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Topic & Domain": {
+      "main": [
+        [
+          {
+            "node": "SerpAPI - Find Competitors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Topic & Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Format for Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Top Pages",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Related Keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Domain Authority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Competitor Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ba7f9c8c-49f8-40ba-b501-57aa727a6359",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-28T16:54:54.875Z",
+      "createdAt": "2025-11-28T16:54:54.875Z",
+      "role": "workflow:owner",
+      "workflowId": "5qjnENoAgsce5feI",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
