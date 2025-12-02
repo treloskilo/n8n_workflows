@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-29T20:50:52.000Z",
+  "updatedAt": "2025-12-02T15:45:55.000Z",
   "createdAt": "2025-11-29T19:20:31.951Z",
   "id": "oKocWEMrvF6mseQA",
   "name": "Working_AI_Gemini_Job Application Assistant_Linkedin",
@@ -174,7 +174,7 @@
       "typeVersion": 3,
       "position": [
         848,
-        304
+        272
       ],
       "id": "b606fd75-702c-4d93-8f4f-418948b81a03",
       "name": "Loop Over Items"
@@ -763,8 +763,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "6d779e8c-1c40-4173-a566-af74c2666f0c",
-  "activeVersionId": "6d779e8c-1c40-4173-a566-af74c2666f0c",
+  "versionId": "311ff67f-1246-42ae-89ad-56693a0acec4",
+  "activeVersionId": "311ff67f-1246-42ae-89ad-56693a0acec4",
   "triggerCount": 1,
   "shared": [
     {
@@ -776,9 +776,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-11-29T20:50:52.630Z",
-    "createdAt": "2025-11-29T20:50:52.630Z",
-    "versionId": "6d779e8c-1c40-4173-a566-af74c2666f0c",
+    "updatedAt": "2025-12-02T15:45:55.527Z",
+    "createdAt": "2025-12-02T15:45:55.527Z",
+    "versionId": "311ff67f-1246-42ae-89ad-56693a0acec4",
     "workflowId": "oKocWEMrvF6mseQA",
     "nodes": [
       {
@@ -949,7 +949,7 @@
         "typeVersion": 3,
         "position": [
           848,
-          304
+          272
         ],
         "id": "b606fd75-702c-4d93-8f4f-418948b81a03",
         "name": "Loop Over Items"
