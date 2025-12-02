@@ -1,0 +1,246 @@
+{
+  "updatedAt": "2025-11-27T08:43:59.000Z",
+  "createdAt": "2025-11-26T08:41:47.058Z",
+  "id": "6KPoFdvNz6EnIitP",
+  "name": "Working_Upwork Job Alerts To Telegram with rapid api",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10,
+              "triggerAtMinute": 5
+            }
+          ]
+        }
+      },
+      "id": "344e2376-fbe3-4759-9ee2-0c7248a1ca0d",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        320,
+        288
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d78912c8-c63e-4f32-af19-60a568d02377",
+              "name": "Job Tile",
+              "type": "string",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "id": "7ade5447-cac2-4fc2-bff2-517a8583d11e",
+              "name": "job posted",
+              "type": "string",
+              "value": "={{ $json.published_at }}"
+            },
+            {
+              "id": "52215059-aa70-469b-8b09-f51ada9a5fa0",
+              "name": "skills",
+              "type": "string",
+              "value": "={{ $json.skills }}"
+            },
+            {
+              "id": "89926694-3595-4d22-b6ea-00228fb38a11",
+              "name": "budget",
+              "type": "string",
+              "value": "={{ $json[\"budget_total_usd\"] }}"
+            },
+            {
+              "id": "5e48ea5b-92ad-49ce-be07-2f377c073af9",
+              "name": "budge type",
+              "type": "string",
+              "value": "={{ $json.budget_type }}"
+            },
+            {
+              "id": "72901628-4739-4902-babf-5ff729918cfa",
+              "name": "project length",
+              "value": "={{ $json.project_length }}",
+              "type": "string"
+            },
+            {
+              "id": "c5e9f5fd-5cc1-4a28-b374-6344bf5c87a4",
+              "name": "hours per week",
+              "value": "={{ $json.hours_per_week }}",
+              "type": "string"
+            },
+            {
+              "id": "d7194dc5-4179-4e44-8043-1c96e72d4630",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0c4f1f2e-f732-4516-ba86-728ed39b9cd9",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1280,
+        320
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "https://upwork-jobs-api3.p.rapidapi.com/upwork?q=Greece&skills_match_mode=all&limit=20",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-key",
+              "value": "7d2fc119bdmsh52a72c3f50d16edp12cc57jsncd134f36f79d"
+            },
+            {
+              "name": "x-rapidapi-host",
+              "value": "upwork-jobs-api3.p.rapidapi.com"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        624,
+        288
+      ],
+      "id": "97a7a91a-b66b-4c1e-a27e-c0aba75209a2",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        912,
+        320
+      ],
+      "id": "95949fd4-ad54-474b-957c-6d823535e9f6",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "=<b>📢 Upwork Results For Greece!</b>\n━━━━━━━━━━━━━━\n<b>💼 Job Title:</b> {{ $json['Job Tile'] }}\n\n<b>🛠 Skills:</b> {{ $json.skills }}\n\n<b>📅 Posted On:</b> {{ $json['job posted'] }}\n\n<b>💰 Budget:</b> {{ $json.budget }}\n\n<b>🔗 URL:</b>{{ $json.url }}\n━━━━━━━━━━━━━━\n",
+        "replyMarkup": "=none",
+        "forceReply": {},
+        "replyKeyboardOptions": {},
+        "replyKeyboardRemove": {},
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        320
+      ],
+      "id": "ba323d45-c70a-4352-b0bc-8bd44b28d7a2",
+      "name": "Send a text message",
+      "webhookId": "94692df6-ca17-4a94-9605-0fbc7313cbfb",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateId": "9713",
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f5c92417-4602-486c-8938-ae55fc8a83d9",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-26T08:41:47.060Z",
+      "createdAt": "2025-11-26T08:41:47.060Z",
+      "role": "workflow:owner",
+      "workflowId": "6KPoFdvNz6EnIitP",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
