@@ -1,0 +1,240 @@
+{
+  "updatedAt": "2025-10-25T12:01:05.000Z",
+  "createdAt": "2025-10-22T07:42:58.825Z",
+  "id": "vuBURR6TPP9DqG29",
+  "name": "Working_Upload Only Receipts with Telegram and email google drive link attachement with gmail",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        -128
+      ],
+      "id": "db5a80d1-d580-43ed-b84b-dfc9658cf39e",
+      "name": "Telegram Trigger",
+      "webhookId": "ddc04cab-edc6-4cc9-bc14-f2914497156a",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.photo.last().file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        -128
+      ],
+      "id": "a4a389b2-ef14-43d9-b9b5-f206fb779ae6",
+      "name": "Get a file",
+      "webhookId": "523b1cd0-eb71-4468-bf5b-d92f33c47b5f",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1WrT48EhZuJ0refpt6gNXGQgQc51kGQz6",
+          "mode": "list",
+          "cachedResultName": "Apodeikseis",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1WrT48EhZuJ0refpt6gNXGQgQc51kGQz6"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        -128
+      ],
+      "id": "f7aa41c3-2f32-497a-a68d-ec7ec8b737ca",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "Receipt Upload Notification",
+        "emailType": "text",
+        "message": "=This is the receipt you uploaded in Google Drive.\n{{ $json.text }}\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}",
+        "options": {
+          "appendAttribution": "={{ false }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "fc0c8858-caef-43db-be33-142fc4166ef3",
+      "name": "Send a message",
+      "webhookId": "86b9d739-e729-4f87-ab8b-799b2c6fe7c1",
+      "alwaysOutputData": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        96,
+        -32
+      ],
+      "id": "123be408-8baf-4a49-b76b-9e46a02a3cac",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This Function node formats Google Drive output into a Gmail-friendly JSON message\n// that includes a public Google Drive link in the email body.\n\nconst items = $input.all();\n\nreturn items.map(item => {\n  const fileId = item.json.id;\n  const fileName = item.json.name || 'Google Drive File';\n\n  // Construct a standard Drive file URL\n  const driveLink = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;\n\n  // Return Gmail message structure\n  return {\n    json: {\n      to: \"recipient@example.com\",  // 👈 change this to your recipient\n      subject: `File shared: ${fileName}`,\n      text: `Here is the file you requested:\\n${driveLink}`,\n      html: `<p>Here is the file you requested:</p>\n             <p><a href=\"${driveLink}\" target=\"_blank\">${fileName}</a></p>`,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        -144
+      ],
+      "id": "d1a8953b-8402-4da0-8fe0-0d0e656a42c9",
+      "name": "format binary data"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "format binary data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format binary data": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b14f709d-69de-4fad-9deb-2fc0583775e2",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-22T07:42:58.828Z",
+      "createdAt": "2025-10-22T07:42:58.828Z",
+      "role": "workflow:owner",
+      "workflowId": "vuBURR6TPP9DqG29",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
