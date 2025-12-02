@@ -1,0 +1,259 @@
+{
+  "updatedAt": "2025-11-09T09:51:54.576Z",
+  "createdAt": "2025-11-09T09:51:54.576Z",
+  "id": "UZKM5zG3GNbvaCLl",
+  "name": "Telegram Receipts → OCR → Gemini → Regex Fallback → Google Sheets",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "9c1b9439-0800-41cd-89e9-9a1ca4ae604b",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        848
+      ],
+      "webhookId": "5fe07c1c-5d3c-48c4-84db-e707a1dd9eb0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json[\"message\"][\"photo\"]}}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b17be6e4-6e3d-44d9-9061-98d2e350f1ae",
+      "name": "Filter Photos Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        1072
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "1834cf02-2706-4894-b0f3-e23f6917c244",
+      "name": "Read Existing File IDs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        -1088,
+        176
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1d8796b8-7e99-402e-85e1-a4f6cdc48953",
+      "name": "Check Duplicate",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json[\"chat_id\"]}}",
+        "text": "Αυτή η απόδειξη έχει ήδη υποβληθεί ✅",
+        "additionalFields": {}
+      },
+      "id": "171a4b87-dcf4-47c3-a71d-84a5d52bab2e",
+      "name": "Telegram Reply - Duplicate",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        -48
+      ],
+      "webhookId": "0a90126a-068e-47ff-8c8b-7d0bc13dc257"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{$json[\"message\"][\"photo\"][-1][\"file_id\"]}}",
+        "additionalFields": {}
+      },
+      "id": "092b76b2-c0d1-4364-9e3e-1c805a210e5c",
+      "name": "Telegram Get File Path",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        1296
+      ],
+      "webhookId": "f7890ce3-bfcd-4304-80fe-ce48630190cc"
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/file/botYOUR_TELEGRAM_BOT_TOKEN/{{$json[\"result\"][\"file_path\"]}}",
+        "options": {}
+      },
+      "id": "c1592fdd-d267-4f98-8bed-4ef88dcabe08",
+      "name": "Download Photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -864,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.ocr.space/parse/image",
+        "options": {}
+      },
+      "id": "9dbd2a0d-af7d-4aa5-bf5a-e05163910866",
+      "name": "OCR.space API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -640,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=YOUR_GEMINI_API_KEY",
+        "options": {}
+      },
+      "id": "5eba06ac-51f2-4e3d-83c4-fea30902b39b",
+      "name": "Google Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -416,
+        1296
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e65b1c6e-2423-4ea8-92a4-f8cbc2ffe121",
+      "name": "Regex Fallback Parser",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "b78744b0-8351-422e-b347-382b96432e78",
+      "name": "Google Sheets - Append Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        -1088,
+        1744
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json[\"chat_id\"]}}",
+        "text": "Η απόδειξη καταχωρήθηκε με επιτυχία στο Google Sheets 📊",
+        "additionalFields": {}
+      },
+      "id": "a34f9b50-c81a-4475-a942-d574c5d2f42a",
+      "name": "Telegram Reply - Success",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        624
+      ],
+      "webhookId": "5708bcf9-e763-4311-919f-4a32482eaf3c"
+    }
+  ],
+  "connections": {
+    "Telegram Get File Path": {
+      "main": [
+        [
+          {
+            "node": "Download Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Photo": {
+      "main": [
+        [
+          {
+            "node": "OCR.space API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR.space API": {
+      "main": [
+        [
+          {
+            "node": "Google Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d886b2d7-d65e-45cb-b56f-ac5300c8f3da",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-09T09:51:54.579Z",
+      "createdAt": "2025-11-09T09:51:54.579Z",
+      "role": "workflow:owner",
+      "workflowId": "UZKM5zG3GNbvaCLl",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
