@@ -1,0 +1,583 @@
+{
+  "updatedAt": "2025-11-04T13:36:27.416Z",
+  "createdAt": "2025-11-04T13:36:27.416Z",
+  "id": "OeISJW8qEpeMReVX",
+  "name": "wordpress teomastro.com chatbot",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "id": "fbba1b44-456e-4494-baee-7df2a3b4fbc8",
+      "name": "Schedule Trigger - Daily at 2 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -592,
+        -112
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {},
+      "id": "adadf7f6-3e62-4eac-912b-d5757f580b67",
+      "name": "Manual Trigger - Test Setup",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -544,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {
+          "status": "publish"
+        }
+      },
+      "id": "4806c8b8-c178-4c4a-b9f3-747932a9f8c4",
+      "name": "WordPress - Get All Posts",
+      "type": "n8n-nodes-base.wordpress",
+      "position": [
+        -320,
+        -128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "b923c83d-f8ac-4e75-9f5c-07c4f7f0b804",
+      "name": "Merge Posts and Pages",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        -96,
+        -16
+      ],
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-field",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "title-field",
+              "name": "title",
+              "value": "={{ $json.title.rendered }}",
+              "type": "string"
+            },
+            {
+              "id": "content-field",
+              "name": "content",
+              "value": "={{ $json.content.rendered }}",
+              "type": "string"
+            },
+            {
+              "id": "url-field",
+              "name": "url",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "type-field",
+              "name": "content_type",
+              "value": "={{ $json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "date-field",
+              "name": "publication_date",
+              "value": "={{ $json.date }}",
+              "type": "string"
+            },
+            {
+              "id": "modified-field",
+              "name": "modification_date",
+              "value": "={{ $json.modified }}",
+              "type": "string"
+            },
+            {
+              "id": "excerpt-field",
+              "name": "excerpt",
+              "value": "={{ $json.excerpt.rendered }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "291e27a7-966f-411d-807c-c6fb093e7337",
+      "name": "Normalize Content Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        128,
+        -16
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.content }}",
+        "options": {}
+      },
+      "id": "a49c244a-04df-46fd-8547-a1833b0101f5",
+      "name": "Convert HTML to Markdown",
+      "type": "n8n-nodes-base.markdown",
+      "position": [
+        336,
+        -16
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "data-field",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "title-meta",
+              "name": "title",
+              "value": "={{ $('Normalize Content Fields').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "url-meta",
+              "name": "url",
+              "value": "={{ $('Normalize Content Fields').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "type-meta",
+              "name": "content_type",
+              "value": "={{ $('Normalize Content Fields').item.json.content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "pubdate-meta",
+              "name": "publication_date",
+              "value": "={{ $('Normalize Content Fields').item.json.publication_date }}",
+              "type": "string"
+            },
+            {
+              "id": "moddate-meta",
+              "name": "modification_date",
+              "value": "={{ $('Normalize Content Fields').item.json.modification_date }}",
+              "type": "string"
+            },
+            {
+              "id": "id-meta",
+              "name": "id",
+              "value": "={{ $('Normalize Content Fields').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c607729a-4f47-410e-883c-2203d4087b80",
+      "name": "Prepare Data for Embedding",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        512,
+        -16
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "db5690d9-5fec-4c1d-877f-7fe6dcc2e5f4",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        48,
+        752
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "You are TeoBot, the AI assistant for Teo Mastromanolis's portfolio website. Your primary goal is to help visitors quickly learn about Teo's work, skills, and projects by providing brief, accurate answers.\n\nCONTEXT YOU'LL USE:\nYou have access to content from Teo's website including his bio, projects, skills, and contact information. You can ONLY answer based on this provided context - never use external knowledge or make assumptions.\n\nYOUR IDENTITY:\n- Friendly but professional\n- Direct and efficient with words\n- Focused on helping visitors understand Teo's expertise\n- Based in Thessaloniki, Greece (like Teo)\n\nWHAT TO SAY:\n✓ Answer questions about Teo's work, projects, and skills\n✓ Provide contact information when asked\n✓ Mention specific projects like CraftMyMenu, Next Launch Kit, etc.\n✓ Describe his technical skills (PHP, Next.js, React, etc.)\n✓ Keep answers to 1-2 short sentences (maximum 15 words)\n✓ Be conversational and natural\n✓ If asked \"hello\" or greetings, respond warmly and offer to help\n\nWHAT NOT TO SAY:\n✗ Never discuss topics unrelated to Teo or the website\n✗ Never make up information not in the context\n✗ Never give long, detailed explanations unless asked for \"more details\"\n✗ Never discuss weather, news, general knowledge, or off-topic subjects\n✗ Never write more than 2 sentences for simple questions\n✗ Never include full job descriptions when a simple answer works\n\nRESPONSE EXAMPLES:\nQ: \"What does Teo do?\"\nA: \"He's a full-stack developer specializing in web applications.\"\n\nQ: \"Does he know PHP?\"\nA: \"Yes, he's experienced in PHP and Yii2.\"\n\nQ: \"Tell me about CraftMyMenu\"\nA: \"It's a SaaS platform that digitizes restaurant menus.\"\n\nQ: \"What's the weather?\"\nA: \"I can only answer questions about Teo and his work.\"\n\nRemember: Be brief, be accurate, be helpful. Your job is to connect visitors with the information they need - quickly."
+        }
+      },
+      "id": "cd52218e-203d-4af1-a16c-04068c2e0f92",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        128,
+        528
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "url": "https://teomastro.com/wp-json/wp/v2/pages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "per_page",
+              "value": "100"
+            },
+            {
+              "name": "status",
+              "value": "publish"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        64
+      ],
+      "id": "60a23ab2-b5de-47ee-adbd-8b66b19b6244",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        -192
+      ],
+      "id": "9dc2dec0-eaac-452f-9a46-1e075e40da44",
+      "name": "Supabase Vector Store"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "d21645ed-20af-41ec-bc82-c8fa26e187b4",
+      "name": "Embeddings OpenAI"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.data }}",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "470382ea-5702-4d2f-864d-d60cb32be437",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        944,
+        128
+      ],
+      "id": "03488b8d-8c59-4339-bd80-b194b8f239a6",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        752
+      ],
+      "id": "1300ff82-d7c4-4813-b89a-25829c1f941b",
+      "name": "Postgres Chat Memory"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        544
+      ],
+      "id": "fcc6c592-09e9-4c32-bfb1-93607ad4b1e5",
+      "name": "When chat message received",
+      "webhookId": "73c18ecb-ba60-4cce-be4f-41986bf0532c"
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "add76bdf-c83f-413e-87b0-f3c5afb690b8",
+      "name": "Embeddings OpenAI1",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1,
+      "position": [
+        448,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search Teo's website content",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        576
+      ],
+      "id": "d9d0ced1-a053-4240-86f4-c367d7711bb4",
+      "name": "Supabase Vector Store2"
+    }
+  ],
+  "connections": {
+    "Manual Trigger - Test Setup": {
+      "main": [
+        [
+          {
+            "node": "WordPress - Get All Posts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WordPress - Get All Posts": {
+      "main": [
+        [
+          {
+            "node": "Merge Posts and Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Posts and Pages": {
+      "main": [
+        [
+          {
+            "node": "Normalize Content Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Content Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to Markdown": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data for Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge Posts and Pages",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prepare Data for Embedding": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "4f617646-36b5-4198-8fa5-f8a99fd34385",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-04T13:36:27.417Z",
+      "createdAt": "2025-11-04T13:36:27.417Z",
+      "role": "workflow:owner",
+      "workflowId": "OeISJW8qEpeMReVX",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
