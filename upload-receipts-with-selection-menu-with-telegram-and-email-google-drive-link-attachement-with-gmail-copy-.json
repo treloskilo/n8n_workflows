@@ -1,0 +1,322 @@
+{
+  "updatedAt": "2025-10-22T15:51:02.000Z",
+  "createdAt": "2025-10-22T11:08:17.944Z",
+  "id": "PTp2h1efeWjlFeN9",
+  "name": "Upload  Receipts with selection menu with Telegram and email google drive link attachement with gmail copy",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        -112
+      ],
+      "id": "83d31248-ad2e-435f-98d7-e691ec222680",
+      "name": "Telegram Trigger",
+      "webhookId": "4e415036-b7ed-44f6-9634-538e0f11a599",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.photo.last().file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -336
+      ],
+      "id": "09cbfe71-0032-4747-abe9-21740307f35b",
+      "name": "Get a file",
+      "webhookId": "ceae6126-0744-40a1-941a-2d9e3afca569",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1WrT48EhZuJ0refpt6gNXGQgQc51kGQz6",
+          "mode": "list",
+          "cachedResultName": "Apodeikseis",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1WrT48EhZuJ0refpt6gNXGQgQc51kGQz6"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        416,
+        -304
+      ],
+      "id": "e848bf60-d3c2-4f5c-acc5-6afafc077d52",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "Receipt Upload Notification",
+        "emailType": "text",
+        "message": "=This is the receipt you uploaded in Google Drive.\n{{ $json.text }}",
+        "options": {
+          "appendAttribution": "={{ false }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        -320
+      ],
+      "id": "e9dcaf71-17b2-4039-8f6b-38d58c80374d",
+      "name": "Send a message",
+      "webhookId": "ab399802-cfb5-4260-b593-f0d8b6d7bb01",
+      "alwaysOutputData": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        560,
+        -288
+      ],
+      "id": "07a7cfe6-a569-46d8-bc6d-e57a445eed9b",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// This Function node formats Google Drive output into a Gmail-friendly JSON message\n// that includes a public Google Drive link in the email body.\n\nconst items = $input.all();\n\nreturn items.map(item => {\n  const fileId = item.json.id;\n  const fileName = item.json.name || 'Google Drive File';\n\n  // Construct a standard Drive file URL\n  const driveLink = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;\n\n  // Return Gmail message structure\n  return {\n    json: {\n      to: \"recipient@example.com\",  // 👈 change this to your recipient\n      subject: `File shared: ${fileName}`,\n      text: `Here is the file you requested:\\n${driveLink}`,\n      html: `<p>Here is the file you requested:</p>\n             <p><a href=\"${driveLink}\" target=\"_blank\">${fileName}</a></p>`,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -304
+      ],
+      "id": "a009c3a4-09d3-462e-85e5-7ff127cc0627",
+      "name": "format binary data",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const message = item.json.message?.text || '';\n  const chatId = item.json.message?.chat?.id;\n\n  if (message === '/fotos') {\n    return {\n      json: {\n        chat_id: chatId,\n        text: 'Κατηγορίες - Categories:',\n        reply_markup: {\n          inline_keyboard: [\n            [{ text: 'Aples_Apodeikseis', callback_data: 'Aples_Apodeikseis' }],\n            [{ text: 'DEH_EYDAP', callback_data: 'DEH_EYDAP' }],\n            [{ text: 'Asxeta', callback_data: 'Asxeta' }]\n          ]\n        } \n      }\n    };\n  } else {\n    // Ignore other messages for now\n    return { json: {} };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -112
+      ],
+      "id": "fe2897d5-7df8-487e-8933-96da6dc8ff52",
+      "name": "Handle Menu"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot6725468235:AAGzhxy4-0f7GEmNVG2MEXmLEI8w6nnx-zs/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $('Handle Menu').last().json.chat_id }}\",\n  \"text\": \"{{ $json.text }}\",\n  \"parse_mode\": \"HTML\",\n  \"reply_markup\": {\n    \"inline_keyboard\": [\n      [\n        {\n          \"text\": \"{{ $json.reply_markup.inline_keyboard[0][0].text }}\",\n          \"callback_data\": \"{{ $json.reply_markup.inline_keyboard[0][0].callback_data }}\"\n        }\n      ],\n      [\n        {\n          \"text\": \"{{ $json.reply_markup.inline_keyboard[1][0].text }}\",\n          \"callback_data\": \"{{ $json.reply_markup.inline_keyboard[1][0].callback_data }}\"\n        }\n      ],\n      [\n        {\n          \"text\": \"{{ $json.reply_markup.inline_keyboard[2][0].text }}\",\n          \"callback_data\": \"{{ $json.reply_markup.inline_keyboard[2][0].callback_data }}\"\n        }\n      ]\n    ]\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        -112
+      ],
+      "id": "e86760eb-50f7-4fa6-8a7d-4c8cc5768d8a",
+      "name": "Reply To Telegram with Menu"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Handle Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "format binary data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format binary data": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Menu": {
+      "main": [
+        [
+          {
+            "node": "Reply To Telegram with Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply To Telegram with Menu": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 756199814,
+          "message": {
+            "message_id": 331,
+            "from": {
+              "id": 5870531738,
+              "is_bot": false,
+              "first_name": "bill",
+              "username": "treloskilo",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 5870531738,
+              "first_name": "bill",
+              "username": "treloskilo",
+              "type": "private"
+            },
+            "date": 1761136630,
+            "text": "/fotos",
+            "entities": [
+              {
+                "offset": 0,
+                "length": 6,
+                "type": "bot_command"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "bb3178d6-4cb3-477d-8313-3f8a2a5f11cf",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-10-22T11:08:17.946Z",
+      "createdAt": "2025-10-22T11:08:17.946Z",
+      "role": "workflow:owner",
+      "workflowId": "PTp2h1efeWjlFeN9",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
