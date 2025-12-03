@@ -1,0 +1,1085 @@
+{
+  "updatedAt": "2025-12-03T12:11:49.000Z",
+  "createdAt": "2025-12-03T11:55:57.906Z",
+  "id": "7izLxF7iR1Hvgz15",
+  "name": "Job Application Assistant (Pro & Deduplicated)",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "5 10,17 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2464,
+        0
+      ],
+      "id": "2e86d848-f58a-421e-9ed5-6dba73f4987d",
+      "name": "Daily Schedule"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2464,
+        192
+      ],
+      "id": "a8ad136f-9a84-4ffc-9dc3-98343a395fcb",
+      "name": "Weekly Summary Trigger"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "mode",
+              "value": "daily"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -2240,
+        0
+      ],
+      "id": "6d07afa5-9ac5-4f38-9dd1-b0dd35bc3c5d",
+      "name": "Set Mode: Daily"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "mode",
+              "value": "weekly"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -2240,
+        192
+      ],
+      "id": "c7905b85-be97-48bf-b69e-f1293e0fa89e",
+      "name": "Set Mode: Weekly"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -2016,
+        0
+      ],
+      "id": "31b3f803-01a4-48f4-851d-c1c836f63519",
+      "name": "Merge Flows"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mode }}",
+              "value2": "daily"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        0
+      ],
+      "id": "d40ad3f9-43b4-4795-82d8-5a33e9fe5031",
+      "name": "Daily or Weekly?"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "14hVbtKoG_UTEcX5crGYbJY3Af317xzNh",
+          "mode": "list",
+          "cachedResultName": "VASILEIOS SEREMETIS_CV.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/14hVbtKoG_UTEcX5crGYbJY3Af317xzNh/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1568,
+        0
+      ],
+      "id": "11481471-9bcf-4f26-934f-c62f1051ec32",
+      "name": "Download CV",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1344,
+        0
+      ],
+      "id": "747c2965-aac3-4621-90bc-7e471515aa2d",
+      "name": "Extract CV Text"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ",
+          "mode": "list",
+          "cachedResultName": "Job Search Preferences",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Filter",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1056,
+        0
+      ],
+      "id": "1f1dd9b3-1713-4384-be8b-b326f3627ccf",
+      "name": "Get Preferences",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let url = \"https://www.linkedin.com/jobs/search/?f_TPR=r86400\"\n\nconst keyword = $input.first().json.Keyword\nconst location = $input.first().json.Location\nconst experienceLevel = $input.first().json['Experience Level']\nconst remote = $input.first().json.Remote\nconst jobType = $input.first().json['Job Type']\nconst easyApply = $input.first().json['Easy Apply']\n\nif (keyword != \"\") {\n  url += `&keywords=${keyword}`;\n}\n\nif (location != \"\") {\n  url += `&location=${location}`;\n}\n\nif (experienceLevel !== \"\") {\n  const transformedExperiences = experienceLevel\n    .split(\",\")\n    .map((exp) => {\n      switch (exp.trim()) {\n        case \"Internship\": return \"1\";\n        case \"Entry level\": return \"2\";\n        case \"Associate\": return \"3\";\n        case \"Mid-Senior level\": return \"4\";\n        case \"Director\": return \"5\";\n        case \"Executive\": return \"6\";\n        default: return \"\";\n      }\n    })\n    .filter(Boolean);\n  url += `&f_E=${transformedExperiences.join(\",\")}`;\n}\n\nif (remote.length != \"\") {\n  const transformedRemote = remote\n    .split(\",\")\n    .map((e) => {\n      switch (e.trim()) {\n        case \"Remote\": return \"2\";\n        case \"Hybrid\": return \"3\";\n        case \"On-Site\": return \"1\";\n        default: return \"\";\n      }\n    })\n    .filter(Boolean);\n  url += `&f_WT=${transformedRemote.join(\",\")}`;\n}\n\nif (jobType != \"\") {\n  const transformedJobType = jobType\n    .split(\",\")\n    .map((type) => type.trim().charAt(0).toUpperCase());\n  url += `&f_JT=${transformedJobType.join(\",\")}`;\n}\n\nif (easyApply != \"\") {\n  url += \"&f_EA=true\";\n}\n\nreturn {url}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        0
+      ],
+      "id": "0cc40b55-f4b5-40b3-b553-6e2496dc0c6b",
+      "name": "Create Search URL"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -480,
+        0
+      ],
+      "id": "6000d1bc-ffa8-4399-a4b5-4a75f8668748",
+      "name": "Fetch LinkedIn Search"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "links",
+              "cssSelector": "ul.jobs-search__results-list li div a[class*=\"base-card\"]",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "27e59512-a5b5-4678-a9f5-6d2fae044905",
+      "name": "Extract Job Links"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "links",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        32,
+        0
+      ],
+      "id": "2dae4a29-b968-4932-9e28-ac7118c30593",
+      "name": "Split Links"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ",
+          "mode": "list",
+          "cachedResultName": "Job Search Preferences",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1128377851,
+          "mode": "list",
+          "cachedResultName": "Result",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit#gid=1128377851"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        32,
+        576
+      ],
+      "id": "4d028eab-7e5d-4a8c-bb4a-2ac37ed5b0f5",
+      "name": "Read Existing Links",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        0
+      ],
+      "id": "4638d6c4-6b22-42f1-97e9-d4d06e262341",
+      "name": "Merge for Filter"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the new links found in this run\nconst newLinks = $input.item(0, 1) ? [$input.item(0, 1).json.links] : [];\n\n// Get the list of all previously saved links from Google Sheets\n// We handle the case where the sheet might be empty or this is the first item\nconst existingLinks = $input.all(0).map(item => item.json.link).filter(Boolean);\n\n// Check if the current new link exists in the database\nconst isDuplicate = existingLinks.some(savedLink => \n    newLinks[0] && savedLink.includes(newLinks[0].split('?')[0]) // Simple check ignoring query params\n);\n\n// If it's a duplicate, return empty to stop processing this item\nif (isDuplicate) {\n    return [];\n}\n\nreturn [{ json: { links: newLinks[0] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "7f663c8c-d15c-4f73-81c6-367e4032a199",
+      "name": "Filter Duplicates"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        704,
+        288
+      ],
+      "id": "6dec3f69-8385-4bfb-bd00-7a9c3ea849e7",
+      "name": "Loop New Jobs"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        288
+      ],
+      "id": "12543957-df69-4441-9874-5f7297e0da4c",
+      "name": "Random Wait",
+      "webhookId": "79a8c81a-7268-4279-a1cd-62dfe100e69a"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.links }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1152,
+        288
+      ],
+      "id": "a7c42afc-d885-4124-9972-c2fa6ea22c69",
+      "name": "Fetch Job Page",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2464,
+        800
+      ],
+      "id": "ffb05f05-4ae2-4bbc-ab9c-0a06fed0dc37",
+      "name": "Did Fetch Fail?"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": "div h1"
+            },
+            {
+              "key": "company",
+              "cssSelector": "div span a"
+            },
+            {
+              "key": "location",
+              "cssSelector": "div span[class*='topcard__flavor topcard__flavor--bullet']"
+            },
+            {
+              "key": "description",
+              "cssSelector": "div.description__text.description__text--rich"
+            },
+            {
+              "key": "jobid",
+              "cssSelector": "a[data-item-type='semaphore']",
+              "returnValue": "attribute",
+              "attribute": "data-semaphore-content-urn"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1056,
+        384
+      ],
+      "id": "41ae0128-0934-401a-9cc2-efed040b0ea0",
+      "name": "Parse Attributes"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59f08a8e",
+              "name": "company",
+              "value": "={{ $json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "07758be3",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "50998a12",
+              "name": "description",
+              "value": "={{ $json.description.replaceAll(/\\s+/g, \" \") }}",
+              "type": "string"
+            },
+            {
+              "id": "1f48146d",
+              "name": "location",
+              "value": "={{ $json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "5d8df3f9",
+              "name": "jobid",
+              "value": "={{ $json.jobid ? $json.jobid.split(\":\").last() : 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "ae41c606",
+              "name": "applyLink",
+              "value": "={{ $json.jobid ? \"https://www.linkedin.com/jobs/view/\"+ $json.jobid.split(\":\").last() : $('Filter Duplicates').item.json.links }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        384
+      ],
+      "id": "30a294d0-fb06-4046-9cd6-e4ffc9d9fbd5",
+      "name": "Modify Attributes"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert HR assistant. Your task is to analyze a resume against a job description.\n\nTask 1: Calculate a 'Match Score' (0-100) based on skills, experience, and requirements.\nTask 2: Write a professional Cover Letter customized for this job. Do not include placeholders like '[Your Name]'. Make it ready to copy-paste.\n\nOUTPUT FORMAT: You must output strictly valid JSON only. No markdown formatting.\nExample:\n{ \"score\": 85, \"coverLetter\": \"Dear Hiring Manager...\" }\n\nJob Description:\n{{ $json.description }}\n\nCandidate Resume:\n{{ $('Extract CV Text').item.json.text }}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -544,
+        384
+      ],
+      "id": "c2caecd2-0d56-49ef-b24c-653b62eff73a",
+      "name": "AI Match & Letter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        656
+      ],
+      "id": "84c688ad-96d8-4ecb-8959-b198af825ec2",
+      "name": "Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.text.replace(/```json/g, '').replace(/```/g, '') }}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -192,
+        384
+      ],
+      "id": "ddd99d69-5d02-4475-964b-6dd1f52f8424",
+      "name": "Parse AI Output"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ",
+          "mode": "list",
+          "cachedResultName": "Job Search Preferences",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1128377851,
+          "mode": "list",
+          "cachedResultName": "Result",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit#gid=1128377851"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "link": "={{ $('clean-attributes').item.json.applyLink }}",
+            "Title": "={{ $('clean-attributes').item.json.title }}",
+            "Company": "={{ $('clean-attributes').item.json.company }}",
+            "Location": "={{ $('clean-attributes').item.json.location }}",
+            "description": "={{ $('clean-attributes').item.json.description }}",
+            "score": "={{ $json.score }}",
+            "Cover Letter": "={{ $json.coverLetter }}"
+          },
+          "matchingColumns": [
+            "link"
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        32,
+        384
+      ],
+      "id": "52a0ca1d-72ca-481a-89a4-3c5651eda6c2",
+      "name": "Save to Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "433a0de6",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 75,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        384
+      ],
+      "id": "94e02024-ebde-46d6-95fb-b683f03c70e0",
+      "name": "Score > 75?"
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "=<b>🔥 High Match Found!</b>\n\n<b>🚀 Score:</b> {{ $json.score }}/100\n<b>💼 Role:</b> <a href=\"{{ $('clean-attributes').item.json.applyLink }}\">{{ $('clean-attributes').item.json.title }}</a>\n<b>🏢 Company:</b> {{ $('clean-attributes').item.json.company }}\n<b>📍 Location:</b> {{ $('clean-attributes').item.json.location }}\n\n--------------------------------\n\n<a href=\"https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ\">📂 Open Tracking Sheet for Cover Letter</a>",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        512
+      ],
+      "id": "fb91848a-832d-409f-9cdf-9f324416f3b6",
+      "name": "Telegram Alert",
+      "webhookId": "f7db8f6b-2786-43f9-8e87-d05feba30bcc",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ",
+          "mode": "list",
+          "cachedResultName": "Job Search Preferences",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1128377851,
+          "mode": "list",
+          "cachedResultName": "Result",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/16vm6UGA74U6eKOhVjq-IUUHqjCLm0WAo_dVtrnh50AQ/edit#gid=1128377851"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1568,
+        192
+      ],
+      "id": "a71d1c1c-5b8c-4f78-824f-9d8a1d7f1180",
+      "name": "Read Last 50 Jobs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter for top jobs (Score > 80) from the list\nconst topJobs = items.filter(i => parseInt(i.json.score) > 80);\n\nif (topJobs.length === 0) {\n  return [];\n}\n\n// Format for AI\nconst summaryText = topJobs.map(j => `- ${j.json.Title} at ${j.json.Company} (Score: ${j.json.score})`).join(\"\\n\");\n\nreturn [{ json: { summaryText, count: topJobs.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        192
+      ],
+      "id": "51da3046-afe4-41af-ae10-9bea9fd10a8e",
+      "name": "Filter Top Weekly"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is a list of the best job matches found this week:\n\n{{ $json.summaryText }}\n\nPlease write a short, encouraging weekly summary for me. Highlight the top 3 roles I should prioritize applying to this weekend and why. Keep it brief and professional."
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        -1120,
+        192
+      ],
+      "id": "b2460b23-3976-4557-8cf6-08edee6991eb",
+      "name": "AI Weekly Summary"
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "=<b>📅 Weekly Job Digest</b>\n\nFound {{ $('Filter Top Weekly').item.json.count }} high-quality matches this week!\n\n{{ $json.text }}\n\nGood luck applying!",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -768,
+        192
+      ],
+      "id": "aa1e6430-9b3d-45ae-b4e7-e1f8823cb285",
+      "name": "Telegram Weekly",
+      "webhookId": "30d3a66c-d83d-4c21-97c1-e651370465b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Set Mode: Daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Summary Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Mode: Weekly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Mode: Daily": {
+      "main": [
+        [
+          {
+            "node": "Merge Flows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Mode: Weekly": {
+      "main": [
+        [
+          {
+            "node": "Merge Flows",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Flows": {
+      "main": [
+        [
+          {
+            "node": "Daily or Weekly?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily or Weekly?": {
+      "main": [
+        [
+          {
+            "node": "Download CV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read Last 50 Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CV": {
+      "main": [
+        [
+          {
+            "node": "Extract CV Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract CV Text": {
+      "main": [
+        [
+          {
+            "node": "Get Preferences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Preferences": {
+      "main": [
+        [
+          {
+            "node": "Create Search URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Search URL": {
+      "main": [
+        [
+          {
+            "node": "Fetch LinkedIn Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch LinkedIn Search": {
+      "main": [
+        [
+          {
+            "node": "Extract Job Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Job Links": {
+      "main": [
+        [
+          {
+            "node": "Split Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Links": {
+      "main": [
+        [
+          {
+            "node": "Merge for Filter",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Read Existing Links": {
+      "main": [
+        [
+          {
+            "node": "Merge for Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge for Filter": {
+      "main": [
+        [
+          {
+            "node": "Filter Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Loop New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Random Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Random Wait": {
+      "main": [
+        [
+          {
+            "node": "Fetch Job Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Attributes": {
+      "main": [
+        [
+          {
+            "node": "Modify Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modify Attributes": {
+      "main": [
+        [
+          {
+            "node": "AI Match & Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Match & Letter",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Weekly Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Match & Letter": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Output": {
+      "main": [
+        [
+          {
+            "node": "Save to Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Sheets": {
+      "main": [
+        [
+          {
+            "node": "Score > 75?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score > 75?": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Loop New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Last 50 Jobs": {
+      "main": [
+        [
+          {
+            "node": "Filter Top Weekly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Top Weekly": {
+      "main": [
+        [
+          {
+            "node": "AI Weekly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Weekly Summary": {
+      "main": [
+        [
+          {
+            "node": "Telegram Weekly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "5fda98a7-03bd-4b89-a277-43fd4284ea6e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-03T11:55:57.910Z",
+      "createdAt": "2025-12-03T11:55:57.910Z",
+      "role": "workflow:owner",
+      "workflowId": "7izLxF7iR1Hvgz15",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
