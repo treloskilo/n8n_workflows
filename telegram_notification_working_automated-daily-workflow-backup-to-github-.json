@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-02T12:14:30.000Z",
+  "updatedAt": "2025-12-03T08:19:35.000Z",
   "createdAt": "2025-12-02T09:11:41.695Z",
   "id": "R5ZuQLxMFddxzIIx",
   "name": "Telegram_notification_Working_Automated daily workflow backup to GitHub",
@@ -93,6 +93,7 @@
       "webhookId": "354d699e-44b0-4444-9d31-af7fd4ff5561",
       "typeVersion": 1,
       "alwaysOutputData": true,
+      "retryOnFail": true,
       "credentials": {
         "githubApi": {
           "id": "SlMNFtIW6g5AZnrt",
@@ -552,8 +553,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "e118adc8-b439-4c63-b6ff-50d651d72aaa",
-  "activeVersionId": "e118adc8-b439-4c63-b6ff-50d651d72aaa",
+  "versionId": "507c91c0-6d35-435f-a036-4948fa0d6fbe",
+  "activeVersionId": "507c91c0-6d35-435f-a036-4948fa0d6fbe",
   "triggerCount": 1,
   "shared": [
     {
@@ -565,9 +566,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-02T12:14:30.068Z",
-    "createdAt": "2025-12-02T12:14:30.068Z",
-    "versionId": "e118adc8-b439-4c63-b6ff-50d651d72aaa",
+    "updatedAt": "2025-12-03T08:19:35.182Z",
+    "createdAt": "2025-12-03T08:19:35.182Z",
+    "versionId": "507c91c0-6d35-435f-a036-4948fa0d6fbe",
     "workflowId": "R5ZuQLxMFddxzIIx",
     "nodes": [
       {
@@ -657,6 +658,7 @@
         "webhookId": "354d699e-44b0-4444-9d31-af7fd4ff5561",
         "typeVersion": 1,
         "alwaysOutputData": true,
+        "retryOnFail": true,
         "credentials": {
           "githubApi": {
             "id": "SlMNFtIW6g5AZnrt",
