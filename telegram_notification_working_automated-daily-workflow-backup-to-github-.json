@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-03T10:11:38.000Z",
+  "updatedAt": "2025-12-03T12:30:55.000Z",
   "createdAt": "2025-12-02T09:11:41.695Z",
   "id": "R5ZuQLxMFddxzIIx",
   "name": "Telegram_notification_Working_Automated daily workflow backup to GitHub",
@@ -307,33 +307,19 @@
     },
     {
       "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "id": "e1f919a2-0681-44c3-8c6c-67199b5813a2",
-      "name": "Aggregate Stats",
-      "type": "n8n-nodes-base.aggregate",
-      "position": [
-        1296,
-        128
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
         "assignments": {
           "assignments": [
             {
               "id": "stats-count",
               "name": "updatedCount",
               "type": "number",
-              "value": "={{ $('Update file').all().length }}"
+              "value": "={{ $if($(\"Update file\").isExecuted, $(\"Update file\").all().length, 0) }}"
             },
             {
               "id": "stats-uploaded",
               "name": "uploadedCount",
               "type": "number",
-              "value": "={{ $('Upload file').all().length }}"
+              "value": "={{ $if($(\"Upload file\").isExecuted, $(\"Upload file\").all().length, 0) }}"
             },
             {
               "id": "stats-date",
@@ -349,7 +335,7 @@
       "name": "Prepare Stats",
       "type": "n8n-nodes-base.set",
       "position": [
-        1456,
+        1472,
         128
       ],
       "typeVersion": 3.4
@@ -391,6 +377,36 @@
       "type": "n8n-nodes-base.stickyNote",
       "position": [
         1280,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "e1f919a2-0681-44c3-8c6c-67199b5813a2",
+      "name": "Aggregate Stats",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        1296,
+        128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Trigger",
+        "height": 380,
+        "width": 300,
+        "color": 7
+      },
+      "id": "a93f229b-24e4-4d14-8b8d-8e76a9cee177",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
         0
       ],
       "typeVersion": 1
@@ -514,22 +530,22 @@
         ]
       ]
     },
-    "Aggregate Stats": {
+    "Prepare Stats": {
       "main": [
         [
           {
-            "node": "Prepare Stats",
+            "node": "Send Telegram Notification",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prepare Stats": {
+    "Aggregate Stats": {
       "main": [
         [
           {
-            "node": "Send Telegram Notification",
+            "node": "Prepare Stats",
             "type": "main",
             "index": 0
           }
@@ -553,8 +569,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "ccb3734f-6f51-4d2e-9847-389d46954027",
-  "activeVersionId": "ccb3734f-6f51-4d2e-9847-389d46954027",
+  "versionId": "0c909b47-7c33-4535-a96b-0b921a669630",
+  "activeVersionId": "0c909b47-7c33-4535-a96b-0b921a669630",
   "triggerCount": 1,
   "shared": [
     {
@@ -566,9 +582,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-03T10:11:38.565Z",
-    "createdAt": "2025-12-03T10:11:38.565Z",
-    "versionId": "ccb3734f-6f51-4d2e-9847-389d46954027",
+    "updatedAt": "2025-12-03T12:30:55.131Z",
+    "createdAt": "2025-12-03T12:30:55.131Z",
+    "versionId": "0c909b47-7c33-4535-a96b-0b921a669630",
     "workflowId": "R5ZuQLxMFddxzIIx",
     "nodes": [
       {
@@ -872,33 +888,19 @@
       },
       {
         "parameters": {
-          "aggregate": "aggregateAllItemData",
-          "options": {}
-        },
-        "id": "e1f919a2-0681-44c3-8c6c-67199b5813a2",
-        "name": "Aggregate Stats",
-        "type": "n8n-nodes-base.aggregate",
-        "position": [
-          1296,
-          128
-        ],
-        "typeVersion": 1
-      },
-      {
-        "parameters": {
           "assignments": {
             "assignments": [
               {
                 "id": "stats-count",
                 "name": "updatedCount",
                 "type": "number",
-                "value": "={{ $('Update file').all().length }}"
+                "value": "={{ $if($(\"Update file\").isExecuted, $(\"Update file\").all().length, 0) }}"
               },
               {
                 "id": "stats-uploaded",
                 "name": "uploadedCount",
                 "type": "number",
-                "value": "={{ $('Upload file').all().length }}"
+                "value": "={{ $if($(\"Upload file\").isExecuted, $(\"Upload file\").all().length, 0) }}"
               },
               {
                 "id": "stats-date",
@@ -914,7 +916,7 @@
         "name": "Prepare Stats",
         "type": "n8n-nodes-base.set",
         "position": [
-          1456,
+          1472,
           128
         ],
         "typeVersion": 3.4
@@ -956,6 +958,36 @@
         "type": "n8n-nodes-base.stickyNote",
         "position": [
           1280,
+          0
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "options": {}
+        },
+        "id": "e1f919a2-0681-44c3-8c6c-67199b5813a2",
+        "name": "Aggregate Stats",
+        "type": "n8n-nodes-base.aggregate",
+        "position": [
+          1296,
+          128
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "### Trigger",
+          "height": 380,
+          "width": 300,
+          "color": 7
+        },
+        "id": "a93f229b-24e4-4d14-8b8d-8e76a9cee177",
+        "name": "Sticky Note",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -320,
           0
         ],
         "typeVersion": 1
@@ -1079,22 +1111,22 @@
           ]
         ]
       },
-      "Aggregate Stats": {
+      "Prepare Stats": {
         "main": [
           [
             {
-              "node": "Prepare Stats",
+              "node": "Send Telegram Notification",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Prepare Stats": {
+      "Aggregate Stats": {
         "main": [
           [
             {
-              "node": "Send Telegram Notification",
+              "node": "Prepare Stats",
               "type": "main",
               "index": 0
             }
