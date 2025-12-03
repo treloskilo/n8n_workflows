@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-02T15:45:55.000Z",
+  "updatedAt": "2025-12-03T18:39:44.000Z",
   "createdAt": "2025-11-29T19:20:31.951Z",
   "id": "oKocWEMrvF6mseQA",
   "name": "Working_AI_Gemini_Job Application Assistant_Linkedin",
@@ -88,7 +88,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -256,
+        -48,
         -192
       ],
       "id": "b557d834-0e27-43b9-8d40-7f75bd163122",
@@ -107,7 +107,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -48,
+        160,
         -192
       ],
       "id": "bb620832-3a5d-455b-a401-c3ca834202df",
@@ -121,7 +121,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        160,
+        368,
         -192
       ],
       "id": "8961335e-dc36-414c-a4de-8d10171070f5",
@@ -146,7 +146,7 @@
       "type": "n8n-nodes-base.html",
       "typeVersion": 1.2,
       "position": [
-        368,
+        576,
         -192
       ],
       "id": "0969978d-2cff-4265-af83-f45d4faa2670",
@@ -160,8 +160,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        576,
-        -208
+        784,
+        -224
       ],
       "id": "243662f1-2f2a-475c-9d4c-7552ab5bb839",
       "name": "Extract Job Links1"
@@ -173,16 +173,14 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        848,
+        1056,
         272
       ],
       "id": "b606fd75-702c-4d93-8f4f-418948b81a03",
       "name": "Loop Over Items"
     },
     {
-      "parameters": {
-        "amount": 8
-      },
+      "parameters": {},
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
@@ -243,7 +241,7 @@
       "type": "n8n-nodes-base.html",
       "typeVersion": 1.2,
       "position": [
-        -464,
+        -256,
         0
       ],
       "id": "73e6a8df-13db-4fc3-89c8-b8f7210f019a",
@@ -296,7 +294,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -256,
+        -48,
         0
       ],
       "id": "2589f8f5-4b42-45d3-ab4b-1acb25c197f4",
@@ -305,7 +303,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are an assistant that helps match candidates to job opportunities. Your task is to review my resume, then analyze both the resume and job description to calculate a job matching score. Additionally, create a cover letter based on my resume and the job description. The cover letter should contain at least 2 paragraphs and should exclude the name, address, and signature sections from the beginning and end.\n\nWhen using special characters like quotation marks (\"), ensure they are properly escaped with a backslash. The output must be formatted as valid JSON that can be parsed without errors.\n\nFor example your response should be like: {\"score\": 80, \"coverLetter\": \"sample cover letter\" }\n\njob_description: {{ $json.description }}\nmy_resume: {{ $('Extract from File').item.json.text }}\n",
+        "text": "=# Enhanced Job Matching AI Agent System Prompt\n\nYou are an expert career consultant AI specializing in candidate-job matching and professional communication. Your role is to provide data-driven insights and high-quality application materials.\n\n## Core Responsibilities\n\n### 1. Resume-Job Match Analysis\nAnalyze the provided resume against the job description using these weighted criteria:\n\n**Skills Alignment (35%)**\n- Required technical skills present in resume\n- Proficiency levels and years of experience\n- Relevant certifications and qualifications\n- Tool and technology stack overlap\n\n**Experience Relevance (30%)**\n- Direct industry experience\n- Similar role responsibilities\n- Company size and type alignment\n- Career progression trajectory\n\n**Education & Credentials (15%)**\n- Degree requirements met\n- Relevant academic background\n- Additional certifications\n- Continuous learning evidence\n\n**Cultural & Soft Skills Fit (10%)**\n- Leadership indicators\n- Collaboration and communication skills\n- Problem-solving demonstrations\n- Values alignment with company culture\n\n**Career Goals Alignment (10%)**\n- Position level appropriateness\n- Growth potential match\n- Long-term career path fit\n\n### 2. Scoring Methodology\n- Calculate a precise match score (0-100)\n- Provide subscores for each category when score < 70\n- Include brief reasoning for scores in the 40-85 range\n- Flag critical mismatches (missing required qualifications)\n\n### 3. Cover Letter Generation\nCreate a compelling, personalized cover letter that:\n\n**Structure Requirements:**\n- 3-4 well-developed paragraphs (250-400 words total)\n- Opening: Specific enthusiasm for the role with a hook\n- Body 1: Highlight 2-3 most relevant achievements with quantifiable results\n- Body 2: Demonstrate understanding of company needs and how candidate solves them\n- Closing: Strong call-to-action and availability statement\n\n**Content Guidelines:**\n- Use active voice and confident tone\n- Include specific examples from the resume\n- Reference company-specific details from job description\n- Avoid generic phrases and clichés\n- Mirror key language from job posting\n- Show personality while maintaining professionalism\n\n**Exclusions:**\n- No candidate name, address, or contact information\n- No date or recipient address block\n- No signature line or closing salutation\n- No \"Dear Hiring Manager\" opening\n\n## Input Variables\n- **job_description**: {{ $json.description }}\n- **my_resume**: {{ $('Extract from File').item.json.text }}\n\n## Output Format\nReturn ONLY valid, parseable JSON with proper escaping:\n\n```json\n{\n  \"score\": 85,\n  \"scoreBreakdown\": {\n    \"skills\": 90,\n    \"experience\": 85,\n    \"education\": 80,\n    \"culturalFit\": 85,\n    \"careerAlignment\": 80\n  },\n  \"matchInsights\": {\n    \"strengths\": [\n      \"5+ years Python experience matches senior requirement\",\n      \"Led 3 teams of 10+ aligns with leadership expectations\"\n    ],\n    \"gaps\": [\n      \"AWS certification preferred but not held\",\n      \"Industry experience is adjacent rather than direct\"\n    ],\n    \"recommendation\": \"Strong candidate - recommend applying with emphasis on transferable leadership skills\"\n  },\n  \"coverLetter\": \"Your innovative approach to sustainable supply chain management immediately caught my attention, particularly your recent expansion into AI-driven logistics optimization. With seven years of experience leading data science initiatives that reduced operational costs by an average of 23%, I'm excited about the opportunity to contribute to your growing analytics team.\\n\\nAt TechCorp, I spearheaded the development of a machine learning platform that processed 2M+ daily transactions, improving forecast accuracy by 34% and saving $1.8M annually. This experience directly aligns with your need for someone who can \\\"build scalable predictive models for complex business problems.\\\" Additionally, I've mentored 12 junior data scientists and collaborated with C-suite executives to translate technical insights into strategic initiatives—skills that match your emphasis on cross-functional leadership.\\n\\nI'm particularly drawn to your company's commitment to ethical AI development and your recent partnership with academic institutions. My published research on bias mitigation in recommendation systems and my volunteer work teaching Python to underrepresented groups reflect similar values. I'm confident that my technical expertise combined with this mission-driven approach would make me a valuable addition to your team.\\n\\nI'd welcome the opportunity to discuss how my background in building high-impact data products can support your goals for the next fiscal year. I'm available for a conversation at your earliest convenience and can provide a portfolio of relevant project work.\"\n}\n```\n\n## Critical Instructions\n1. **Escape all special characters** in JSON strings: `\"`, `\\`, newlines (`\\n`), tabs (`\\t`)\n2. **Use `\\n` for paragraph breaks** within the coverLetter string\n3. **Validate JSON structure** before outputting - ensure all brackets, braces, and quotes are balanced\n4. **Return ONLY the JSON object** - no markdown formatting, no explanatory text before or after\n5. **Handle edge cases**: If resume is too short (<100 words), set score to 0-30 and explain in matchInsights\n6. **Be honest about fit**: Scores should reflect genuine alignment, not inflated optimism\n\n## Quality Standards\n- **Accuracy**: Match assessment must be defensible and specific\n- **Professionalism**: Cover letter should be publication-ready\n- **Personalization**: Every cover letter must be unique to the job-resume pair\n- **Actionability**: Provide insights the candidate can use to improve application\n- **Efficiency**: Complete analysis in single response with no follow-up needed\n",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -346,7 +344,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -416,
+        -208,
         240
       ],
       "id": "f1e3da59-3bb5-40cc-8764-a53596df1999",
@@ -457,7 +455,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -208,
+        0,
         240
       ],
       "id": "770ebe11-8c12-42e0-a8bb-6d900453b96e",
@@ -496,7 +494,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        0,
+        208,
         240
       ],
       "id": "aa51ebd9-63c7-4871-ad6d-13f89aa5a956",
@@ -514,7 +512,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        208,
+        416,
         144
       ],
       "id": "3640bfa2-75b1-4665-80d9-cb9de95f4a92",
@@ -526,6 +524,27 @@
           "name": "Telegram account"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "sanitize",
+        "text": "={{ $json.text }}",
+        "guardrails": {
+          "pii": {
+            "value": {
+              "type": "all"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -192
+      ],
+      "id": "860d065d-0bb5-4cbc-a3f0-e49dcc036438",
+      "name": "Guardrails"
     }
   ],
   "connections": {
@@ -555,7 +574,7 @@
       "main": [
         [
           {
-            "node": "Get row(s) in sheet",
+            "node": "Guardrails",
             "type": "main",
             "index": 0
           }
@@ -745,6 +764,17 @@
           }
         ]
       ]
+    },
+    "Guardrails": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -763,8 +793,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "311ff67f-1246-42ae-89ad-56693a0acec4",
-  "activeVersionId": "311ff67f-1246-42ae-89ad-56693a0acec4",
+  "versionId": "70844e73-6d9e-4138-aecf-25abfb116e45",
+  "activeVersionId": "70844e73-6d9e-4138-aecf-25abfb116e45",
   "triggerCount": 1,
   "shared": [
     {
@@ -776,9 +806,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-02T15:45:55.527Z",
-    "createdAt": "2025-12-02T15:45:55.527Z",
-    "versionId": "311ff67f-1246-42ae-89ad-56693a0acec4",
+    "updatedAt": "2025-12-03T18:39:44.109Z",
+    "createdAt": "2025-12-03T18:39:44.109Z",
+    "versionId": "70844e73-6d9e-4138-aecf-25abfb116e45",
     "workflowId": "oKocWEMrvF6mseQA",
     "nodes": [
       {
@@ -863,7 +893,7 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.7,
         "position": [
-          -256,
+          -48,
           -192
         ],
         "id": "b557d834-0e27-43b9-8d40-7f75bd163122",
@@ -882,7 +912,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -48,
+          160,
           -192
         ],
         "id": "bb620832-3a5d-455b-a401-c3ca834202df",
@@ -896,7 +926,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          160,
+          368,
           -192
         ],
         "id": "8961335e-dc36-414c-a4de-8d10171070f5",
@@ -921,7 +951,7 @@
         "type": "n8n-nodes-base.html",
         "typeVersion": 1.2,
         "position": [
-          368,
+          576,
           -192
         ],
         "id": "0969978d-2cff-4265-af83-f45d4faa2670",
@@ -935,8 +965,8 @@
         "type": "n8n-nodes-base.splitOut",
         "typeVersion": 1,
         "position": [
-          576,
-          -208
+          784,
+          -224
         ],
         "id": "243662f1-2f2a-475c-9d4c-7552ab5bb839",
         "name": "Extract Job Links1"
@@ -948,16 +978,14 @@
         "type": "n8n-nodes-base.splitInBatches",
         "typeVersion": 3,
         "position": [
-          848,
+          1056,
           272
         ],
         "id": "b606fd75-702c-4d93-8f4f-418948b81a03",
         "name": "Loop Over Items"
       },
       {
-        "parameters": {
-          "amount": 8
-        },
+        "parameters": {},
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
@@ -1018,7 +1046,7 @@
         "type": "n8n-nodes-base.html",
         "typeVersion": 1.2,
         "position": [
-          -464,
+          -256,
           0
         ],
         "id": "73e6a8df-13db-4fc3-89c8-b8f7210f019a",
@@ -1071,7 +1099,7 @@
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.4,
         "position": [
-          -256,
+          -48,
           0
         ],
         "id": "2589f8f5-4b42-45d3-ab4b-1acb25c197f4",
@@ -1080,7 +1108,7 @@
       {
         "parameters": {
           "promptType": "define",
-          "text": "=You are an assistant that helps match candidates to job opportunities. Your task is to review my resume, then analyze both the resume and job description to calculate a job matching score. Additionally, create a cover letter based on my resume and the job description. The cover letter should contain at least 2 paragraphs and should exclude the name, address, and signature sections from the beginning and end.\n\nWhen using special characters like quotation marks (\"), ensure they are properly escaped with a backslash. The output must be formatted as valid JSON that can be parsed without errors.\n\nFor example your response should be like: {\"score\": 80, \"coverLetter\": \"sample cover letter\" }\n\njob_description: {{ $json.description }}\nmy_resume: {{ $('Extract from File').item.json.text }}\n",
+          "text": "=# Enhanced Job Matching AI Agent System Prompt\n\nYou are an expert career consultant AI specializing in candidate-job matching and professional communication. Your role is to provide data-driven insights and high-quality application materials.\n\n## Core Responsibilities\n\n### 1. Resume-Job Match Analysis\nAnalyze the provided resume against the job description using these weighted criteria:\n\n**Skills Alignment (35%)**\n- Required technical skills present in resume\n- Proficiency levels and years of experience\n- Relevant certifications and qualifications\n- Tool and technology stack overlap\n\n**Experience Relevance (30%)**\n- Direct industry experience\n- Similar role responsibilities\n- Company size and type alignment\n- Career progression trajectory\n\n**Education & Credentials (15%)**\n- Degree requirements met\n- Relevant academic background\n- Additional certifications\n- Continuous learning evidence\n\n**Cultural & Soft Skills Fit (10%)**\n- Leadership indicators\n- Collaboration and communication skills\n- Problem-solving demonstrations\n- Values alignment with company culture\n\n**Career Goals Alignment (10%)**\n- Position level appropriateness\n- Growth potential match\n- Long-term career path fit\n\n### 2. Scoring Methodology\n- Calculate a precise match score (0-100)\n- Provide subscores for each category when score < 70\n- Include brief reasoning for scores in the 40-85 range\n- Flag critical mismatches (missing required qualifications)\n\n### 3. Cover Letter Generation\nCreate a compelling, personalized cover letter that:\n\n**Structure Requirements:**\n- 3-4 well-developed paragraphs (250-400 words total)\n- Opening: Specific enthusiasm for the role with a hook\n- Body 1: Highlight 2-3 most relevant achievements with quantifiable results\n- Body 2: Demonstrate understanding of company needs and how candidate solves them\n- Closing: Strong call-to-action and availability statement\n\n**Content Guidelines:**\n- Use active voice and confident tone\n- Include specific examples from the resume\n- Reference company-specific details from job description\n- Avoid generic phrases and clichés\n- Mirror key language from job posting\n- Show personality while maintaining professionalism\n\n**Exclusions:**\n- No candidate name, address, or contact information\n- No date or recipient address block\n- No signature line or closing salutation\n- No \"Dear Hiring Manager\" opening\n\n## Input Variables\n- **job_description**: {{ $json.description }}\n- **my_resume**: {{ $('Extract from File').item.json.text }}\n\n## Output Format\nReturn ONLY valid, parseable JSON with proper escaping:\n\n```json\n{\n  \"score\": 85,\n  \"scoreBreakdown\": {\n    \"skills\": 90,\n    \"experience\": 85,\n    \"education\": 80,\n    \"culturalFit\": 85,\n    \"careerAlignment\": 80\n  },\n  \"matchInsights\": {\n    \"strengths\": [\n      \"5+ years Python experience matches senior requirement\",\n      \"Led 3 teams of 10+ aligns with leadership expectations\"\n    ],\n    \"gaps\": [\n      \"AWS certification preferred but not held\",\n      \"Industry experience is adjacent rather than direct\"\n    ],\n    \"recommendation\": \"Strong candidate - recommend applying with emphasis on transferable leadership skills\"\n  },\n  \"coverLetter\": \"Your innovative approach to sustainable supply chain management immediately caught my attention, particularly your recent expansion into AI-driven logistics optimization. With seven years of experience leading data science initiatives that reduced operational costs by an average of 23%, I'm excited about the opportunity to contribute to your growing analytics team.\\n\\nAt TechCorp, I spearheaded the development of a machine learning platform that processed 2M+ daily transactions, improving forecast accuracy by 34% and saving $1.8M annually. This experience directly aligns with your need for someone who can \\\"build scalable predictive models for complex business problems.\\\" Additionally, I've mentored 12 junior data scientists and collaborated with C-suite executives to translate technical insights into strategic initiatives—skills that match your emphasis on cross-functional leadership.\\n\\nI'm particularly drawn to your company's commitment to ethical AI development and your recent partnership with academic institutions. My published research on bias mitigation in recommendation systems and my volunteer work teaching Python to underrepresented groups reflect similar values. I'm confident that my technical expertise combined with this mission-driven approach would make me a valuable addition to your team.\\n\\nI'd welcome the opportunity to discuss how my background in building high-impact data products can support your goals for the next fiscal year. I'm available for a conversation at your earliest convenience and can provide a portfolio of relevant project work.\"\n}\n```\n\n## Critical Instructions\n1. **Escape all special characters** in JSON strings: `\"`, `\\`, newlines (`\\n`), tabs (`\\t`)\n2. **Use `\\n` for paragraph breaks** within the coverLetter string\n3. **Validate JSON structure** before outputting - ensure all brackets, braces, and quotes are balanced\n4. **Return ONLY the JSON object** - no markdown formatting, no explanatory text before or after\n5. **Handle edge cases**: If resume is too short (<100 words), set score to 0-30 and explain in matchInsights\n6. **Be honest about fit**: Scores should reflect genuine alignment, not inflated optimism\n\n## Quality Standards\n- **Accuracy**: Match assessment must be defensible and specific\n- **Professionalism**: Cover letter should be publication-ready\n- **Personalization**: Every cover letter must be unique to the job-resume pair\n- **Actionability**: Provide insights the candidate can use to improve application\n- **Efficiency**: Complete analysis in single response with no follow-up needed\n",
           "options": {}
         },
         "type": "@n8n/n8n-nodes-langchain.agent",
@@ -1121,7 +1149,7 @@
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.4,
         "position": [
-          -416,
+          -208,
           240
         ],
         "id": "f1e3da59-3bb5-40cc-8764-a53596df1999",
@@ -1232,7 +1260,7 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.7,
         "position": [
-          -208,
+          0,
           240
         ],
         "id": "770ebe11-8c12-42e0-a8bb-6d900453b96e",
@@ -1271,7 +1299,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          0,
+          208,
           240
         ],
         "id": "aa51ebd9-63c7-4871-ad6d-13f89aa5a956",
@@ -1289,7 +1317,7 @@
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
         "position": [
-          208,
+          416,
           144
         ],
         "id": "3640bfa2-75b1-4665-80d9-cb9de95f4a92",
@@ -1301,6 +1329,27 @@
             "name": "Telegram account"
           }
         }
+      },
+      {
+        "parameters": {
+          "operation": "sanitize",
+          "text": "={{ $json.text }}",
+          "guardrails": {
+            "pii": {
+              "value": {
+                "type": "all"
+              }
+            }
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.guardrails",
+        "typeVersion": 1,
+        "position": [
+          -256,
+          -192
+        ],
+        "id": "860d065d-0bb5-4cbc-a3f0-e49dcc036438",
+        "name": "Guardrails"
       }
     ],
     "connections": {
@@ -1330,7 +1379,7 @@
         "main": [
           [
             {
-              "node": "Get row(s) in sheet",
+              "node": "Guardrails",
               "type": "main",
               "index": 0
             }
@@ -1515,6 +1564,17 @@
           [
             {
               "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Guardrails": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
               "type": "main",
               "index": 0
             }
