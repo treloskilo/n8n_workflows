@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-03T12:30:55.000Z",
+  "updatedAt": "2025-12-04T06:44:15.000Z",
   "createdAt": "2025-12-02T09:11:41.695Z",
   "id": "R5ZuQLxMFddxzIIx",
   "name": "Telegram_notification_Working_Automated daily workflow backup to GitHub",
@@ -10,7 +10,10 @@
       "parameters": {
         "rule": {
           "interval": [
-            {}
+            {
+              "triggerAtHour": 23,
+              "triggerAtMinute": 5
+            }
           ]
         }
       },
@@ -569,8 +572,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "0c909b47-7c33-4535-a96b-0b921a669630",
-  "activeVersionId": "0c909b47-7c33-4535-a96b-0b921a669630",
+  "versionId": "0f51bc56-ff9a-48b4-b1bf-d5c037156729",
+  "activeVersionId": "0f51bc56-ff9a-48b4-b1bf-d5c037156729",
   "triggerCount": 1,
   "shared": [
     {
@@ -582,16 +585,19 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-03T12:30:55.131Z",
-    "createdAt": "2025-12-03T12:30:55.131Z",
-    "versionId": "0c909b47-7c33-4535-a96b-0b921a669630",
+    "updatedAt": "2025-12-04T06:44:15.579Z",
+    "createdAt": "2025-12-04T06:44:15.579Z",
+    "versionId": "0f51bc56-ff9a-48b4-b1bf-d5c037156729",
     "workflowId": "R5ZuQLxMFddxzIIx",
     "nodes": [
       {
         "parameters": {
           "rule": {
             "interval": [
-              {}
+              {
+                "triggerAtHour": 23,
+                "triggerAtMinute": 5
+              }
             ]
           }
         },
