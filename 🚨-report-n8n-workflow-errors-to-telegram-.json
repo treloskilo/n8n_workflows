@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-03T19:02:04.000Z",
+  "updatedAt": "2025-12-04T08:59:33.000Z",
   "createdAt": "2025-11-12T09:19:14.987Z",
   "id": "g6VSaJXbw9uphgte",
   "name": "🚨 Report n8n workflow errors to Telegram",
@@ -24,7 +24,7 @@
           "string": [
             {
               "name": "message",
-              "value": "=⚠️ Workflow `{{$json[\"workflow\"][\"name\"]}}` failed to run! [execution]({{ $json.execution.url }})\n\nWorkflow Error: {{ $json.workflow.name }}\n\n{{ $json.execution.error.node.name }} errored at {{ $now.format('yyyy-MM-dd hh:mma') }}.\n\nThe error message was: {{ $json.execution.error.message }}\n\nSee this execution here: {{ $json.execution.url }}\n\n"
+              "value": "=⚠️ <b>Workflow Execution Failed</b>\n\nWorkflow: {{ $json.workflow.name }}   \nNode: {{ $json.execution.error.node.name }}   \nTime: {{ $now.format('dd-MM-yyyy hh:mma') }}. \n\nError:  {{$json.execution.error.message }}\n  \n\n<a href=\"{{ $json.execution.url }}\">View Execution</a>\n\n"
             }
           ]
         },
@@ -60,15 +60,16 @@
         "chatId": "5870531738",
         "text": "={{ $json.message }}",
         "additionalFields": {
-          "appendAttribution": false
+          "appendAttribution": false,
+          "parse_mode": "HTML"
         }
       },
       "id": "845ddf26-2d40-4cc6-843b-ccb3b365fbfb",
       "name": "Telegram",
       "type": "n8n-nodes-base.telegram",
       "position": [
-        928,
-        448
+        976,
+        432
       ],
       "typeVersion": 1.1,
       "webhookId": "b9fa2f49-d8de-4720-8fd2-96830d600129",
@@ -130,7 +131,7 @@
     "templateId": "2159"
   },
   "pinData": {},
-  "versionId": "1f134659-195e-4191-8634-7126fc2d6566",
+  "versionId": "8446e3c7-110e-4a2b-88bf-35065cbc3c86",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
