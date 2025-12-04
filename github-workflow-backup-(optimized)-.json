@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2025-12-03T13:24:05.722Z",
+  "updatedAt": "2025-12-04T07:21:27.000Z",
   "createdAt": "2025-12-03T13:24:05.722Z",
   "id": "hHvfm23gfPlIqLwe",
   "name": "GitHub Workflow Backup (Optimized)",
   "active": false,
-  "isArchived": false,
+  "isArchived": true,
   "nodes": [
     {
       "parameters": {
@@ -578,7 +578,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "8106a39b-a37a-4da7-9912-7b84b29d5a62",
+  "versionId": "0071601d-4ba0-46eb-969b-850f47285add",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
