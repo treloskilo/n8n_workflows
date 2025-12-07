@@ -1,0 +1,492 @@
+{
+  "updatedAt": "2025-12-04T22:10:21.000Z",
+  "createdAt": "2025-12-04T14:18:22.306Z",
+  "id": "wvxSv3CIc5WDKwx9",
+  "name": "Working_Google_Translate_To_Google_Drive",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "15rcXtp_36VYCyssjE9HypJQA4U8rCPVL",
+          "mode": "list",
+          "cachedResultName": "Translations",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/15rcXtp_36VYCyssjE9HypJQA4U8rCPVL"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "id": "409d6bb9-d595-40d4-8674-581c16c4ab13",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        -80
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "b5a06b78-9aa1-4782-adda-d485dca5f7d3",
+      "name": "Download File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1552,
+        -80
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "video-condition",
+              "leftValue": "={{ $json.mimeType }}",
+              "rightValue": "video",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "488aa299-3e5c-47ac-b8cb-be0e952167b4",
+      "name": "IF Video",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "1456ef66-fe55-4166-aab6-714019e4d802",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/speech-to-text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "YOUR_ELEVENLABS_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model_id",
+              "value": "eleven_multilingual_v2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1ae1b68e-cec1-4168-991f-7b2039d9f28a",
+      "name": "Speech to Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "text-field",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "91984e33-7155-46c8-b48c-89498db4dbd1",
+      "name": "Consolidate Text",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -880,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split text into chunks of ~4000 characters (safely under 5000 char limit)\nconst text = $input.item.json.text;\nconst maxChunkSize = 4000;\nconst chunks = [];\n\nif (text.length <= maxChunkSize) {\n  // If text is small enough, return as single item\n  return [{ json: { text: text, chunkIndex: 0, totalChunks: 1 } }];\n}\n\n// Split into sentences first to avoid breaking mid-sentence\nconst sentences = text.match(/[^.!?]+[.!?]+/g) || [text];\nlet currentChunk = '';\nlet chunkIndex = 0;\n\nfor (const sentence of sentences) {\n  if ((currentChunk + sentence).length > maxChunkSize && currentChunk.length > 0) {\n    chunks.push({ \n      json: { \n        text: currentChunk.trim(), \n        chunkIndex: chunkIndex,\n        totalChunks: -1 // Will update later\n      } \n    });\n    currentChunk = sentence;\n    chunkIndex++;\n  } else {\n    currentChunk += sentence;\n  }\n}\n\n// Add the last chunk\nif (currentChunk.trim().length > 0) {\n  chunks.push({ \n    json: { \n      text: currentChunk.trim(), \n      chunkIndex: chunkIndex,\n      totalChunks: -1\n    } \n  });\n}\n\n// Update total chunks count\nconst totalChunks = chunks.length;\nchunks.forEach(chunk => {\n  chunk.json.totalChunks = totalChunks;\n});\n\nreturn chunks;"
+      },
+      "id": "e58c376f-e151-442b-818f-91e7c82a8329",
+      "name": "Split Text into Chunks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "translated-chunk",
+              "name": "translatedChunk",
+              "value": "={{ $json.data.translations[0].translatedText }} {{ $json.translatedText }}",
+              "type": "string"
+            },
+            {
+              "id": "chunk-index",
+              "name": "chunkIndex",
+              "value": "={{ $('Split Text into Chunks').item.json.chunkIndex }}",
+              "type": "number"
+            },
+            {
+              "id": "total-chunks",
+              "name": "totalChunks",
+              "value": "={{ $('Split Text into Chunks').item.json.totalChunks }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6f240d3-9538-4f44-a726-d0a5b8ae93ca",
+      "name": "Store Chunk Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        -208,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "3f9e0013-7c08-40e0-b437-a2b9f7b0249b",
+      "name": "Aggregate All Chunks",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Sort safely using the correct nested path\nconst sortedChunks = items.sort((a, b) => {\n  return (a.json.data?.[0]?.chunkIndex || 0) - (b.json.data?.[0]?.chunkIndex || 0);\n});\n\n// Combine all translated chunks from the correct path\nconst fullTranslation = sortedChunks\n  .map(item => item.json.data?.[0]?.translatedChunk || '')\n  .filter(text => text.trim() !== '')\n  .join(' ');\n\nreturn [{\n  json: {\n    translatedText: fullTranslation,\n    totalChunks: sortedChunks.length\n  }\n}];\n"
+      },
+      "id": "faebf8de-eb89-40f2-a424-0362e8625700",
+      "name": "Combine Translated Chunks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "name": "={{ $item(\"Convert to File\").file.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "15rcXtp_36VYCyssjE9HypJQA4U8rCPVL",
+          "mode": "list",
+          "cachedResultName": "Translations",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/15rcXtp_36VYCyssjE9HypJQA4U8rCPVL"
+        },
+        "options": {}
+      },
+      "id": "80b7b217-adbf-4ff1-a8a8-d0b563be441a",
+      "name": "Save to Google Drive1",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        608,
+        -80
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "EPjI9NCOANqdMBKb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "translateTo": "en"
+      },
+      "type": "n8n-nodes-base.googleTranslate",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -80
+      ],
+      "id": "a619721e-89a3-47a0-a44b-88edbfa24ece",
+      "name": "Translate a language",
+      "credentials": {
+        "googleTranslateOAuth2Api": {
+          "id": "onfvjdwazzWm7npE",
+          "name": "Google Translate account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "translatedText",
+        "options": {
+          "fileName": "={{ $json.translatedText.substring(0, 50) }}.txt"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        -80
+      ],
+      "id": "593a8fe1-bea6-45a6-946e-79f5aed5aad6",
+      "name": "Convert to File"
+    }
+  ],
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "IF Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Video": {
+      "main": [
+        [
+          {
+            "node": "Speech to Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Speech to Text": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Text": {
+      "main": [
+        [
+          {
+            "node": "Split Text into Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Text into Chunks": {
+      "main": [
+        [
+          {
+            "node": "Translate a language",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Chunk Data": {
+      "main": [
+        [
+          {
+            "node": "Aggregate All Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate All Chunks": {
+      "main": [
+        [
+          {
+            "node": "Combine Translated Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Translated Chunks": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Drive1": {
+      "main": [
+        []
+      ]
+    },
+    "Translate a language": {
+      "main": [
+        [
+          {
+            "node": "Store Chunk Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Drive1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "499e2f02-0c2c-4c46-90eb-b18334362f1e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-04T14:18:22.311Z",
+      "createdAt": "2025-12-04T14:18:22.311Z",
+      "role": "workflow:owner",
+      "workflowId": "wvxSv3CIc5WDKwx9",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
