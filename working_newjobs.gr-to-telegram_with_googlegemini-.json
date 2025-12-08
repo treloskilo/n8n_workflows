@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-28T14:04:35.000Z",
+  "updatedAt": "2025-12-08T19:08:16.000Z",
   "createdAt": "2025-11-27T11:36:59.599Z",
   "id": "ivTyzJgTkmC4WNGE",
   "name": "Working_Newjobs.gr to Telegram_with_GoogleGemini",
@@ -175,7 +175,6 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-2.5-pro",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
@@ -338,8 +337,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "40e731e5-f407-411d-8e32-8f8dc0c0563b",
-  "activeVersionId": "40e731e5-f407-411d-8e32-8f8dc0c0563b",
+  "versionId": "647f4133-03b6-4db4-9aa9-f4fe4782a6b7",
+  "activeVersionId": "647f4133-03b6-4db4-9aa9-f4fe4782a6b7",
   "triggerCount": 1,
   "shared": [
     {
@@ -351,9 +350,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-11-28T14:04:16.869Z",
-    "createdAt": "2025-11-28T14:04:16.869Z",
-    "versionId": "40e731e5-f407-411d-8e32-8f8dc0c0563b",
+    "updatedAt": "2025-12-08T19:08:16.572Z",
+    "createdAt": "2025-12-08T19:08:16.572Z",
+    "versionId": "647f4133-03b6-4db4-9aa9-f4fe4782a6b7",
     "workflowId": "ivTyzJgTkmC4WNGE",
     "nodes": [
       {
@@ -525,7 +524,6 @@
       },
       {
         "parameters": {
-          "modelName": "models/gemini-2.5-pro",
           "options": {}
         },
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
