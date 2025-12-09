@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-03T18:39:44.000Z",
+  "updatedAt": "2025-12-09T15:35:56.060Z",
   "createdAt": "2025-11-29T19:20:31.951Z",
   "id": "oKocWEMrvF6mseQA",
   "name": "Working_AI_Gemini_Job Application Assistant_Linkedin",
@@ -161,7 +161,7 @@
       "typeVersion": 1,
       "position": [
         784,
-        -224
+        -256
       ],
       "id": "243662f1-2f2a-475c-9d4c-7552ab5bb839",
       "name": "Extract Job Links1"
@@ -322,8 +322,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -848,
-        384
+        -1120,
+        368
       ],
       "id": "b176fe2b-bcd0-4502-b9ca-fb0d79bc7620",
       "name": "Google Gemini Chat Model",
@@ -518,6 +518,7 @@
       "id": "3640bfa2-75b1-4665-80d9-cb9de95f4a92",
       "name": "Send a text message",
       "webhookId": "80899c6b-d1c2-4d76-8c8d-532caa83da8f",
+      "retryOnFail": true,
       "credentials": {
         "telegramApi": {
           "id": "i5VGPAGcIQB6DQ6M",
@@ -793,8 +794,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "70844e73-6d9e-4138-aecf-25abfb116e45",
-  "activeVersionId": "70844e73-6d9e-4138-aecf-25abfb116e45",
+  "versionId": "599c13d2-d4d7-4862-bc4f-ca2941e7a49a",
+  "activeVersionId": "599c13d2-d4d7-4862-bc4f-ca2941e7a49a",
   "triggerCount": 1,
   "shared": [
     {
@@ -806,9 +807,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-03T18:39:44.109Z",
-    "createdAt": "2025-12-03T18:39:44.109Z",
-    "versionId": "70844e73-6d9e-4138-aecf-25abfb116e45",
+    "updatedAt": "2025-12-09T15:35:56.061Z",
+    "createdAt": "2025-12-09T15:35:56.061Z",
+    "versionId": "599c13d2-d4d7-4862-bc4f-ca2941e7a49a",
     "workflowId": "oKocWEMrvF6mseQA",
     "nodes": [
       {
@@ -966,7 +967,7 @@
         "typeVersion": 1,
         "position": [
           784,
-          -224
+          -256
         ],
         "id": "243662f1-2f2a-475c-9d4c-7552ab5bb839",
         "name": "Extract Job Links1"
@@ -1127,8 +1128,8 @@
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
         "typeVersion": 1,
         "position": [
-          -848,
-          384
+          -1120,
+          368
         ],
         "id": "b176fe2b-bcd0-4502-b9ca-fb0d79bc7620",
         "name": "Google Gemini Chat Model",
@@ -1323,6 +1324,7 @@
         "id": "3640bfa2-75b1-4665-80d9-cb9de95f4a92",
         "name": "Send a text message",
         "webhookId": "80899c6b-d1c2-4d76-8c8d-532caa83da8f",
+        "retryOnFail": true,
         "credentials": {
           "telegramApi": {
             "id": "i5VGPAGcIQB6DQ6M",
