@@ -1,0 +1,143 @@
+{
+  "updatedAt": "2025-12-09T20:13:12.720Z",
+  "createdAt": "2025-12-09T19:51:18.022Z",
+  "id": "hkUySip2prgBlxcJ",
+  "name": "MySQL Test",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "select",
+        "table": {
+          "__rl": true,
+          "value": "Persons",
+          "mode": "list",
+          "cachedResultName": "Persons"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -384,
+        -80
+      ],
+      "id": "21377ba1-8c58-4a15-85e0-09afc916b99d",
+      "name": "Select rows from a table",
+      "credentials": {
+        "mySql": {
+          "id": "W7Bf1RyNs9nVm9rq",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.LastName }} {{ $json.FirstName }} {{ $json.FirstName }} {{ $json.Address }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant that searches from the resu;ts from mysql server and answers the questions."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -192,
+        -112
+      ],
+      "id": "e39b74cf-c5e6-494f-a5f0-61b6b1c49416",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        96
+      ],
+      "id": "abf339fa-f721-4510-8b47-7113a509f773",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -688,
+        -80
+      ],
+      "id": "d682f8ba-e8b4-4c4e-bc0e-c1ca7837eb0d",
+      "name": "When chat message received",
+      "webhookId": "240754bc-4d0c-4ae4-888b-095522c42590"
+    }
+  ],
+  "connections": {
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9e858fca-fe03-486b-833d-3deaee3924f5",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-09T19:51:18.026Z",
+      "createdAt": "2025-12-09T19:51:18.026Z",
+      "role": "workflow:owner",
+      "workflowId": "hkUySip2prgBlxcJ",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
