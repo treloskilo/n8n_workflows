@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-04T08:10:46.000Z",
+  "updatedAt": "2025-12-10T08:19:17.948Z",
   "createdAt": "2025-12-04T07:59:50.629Z",
   "id": "041W2X3w8yn17VaW",
   "name": "Resume AI Analyzer",
@@ -262,7 +262,7 @@
       "typeVersion": 4.6,
       "position": [
         1984,
-        304
+        288
       ],
       "id": "a2503e42-0d8d-4b47-b30e-fc87043c823f",
       "name": "Append row in sheet"
@@ -544,7 +544,7 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "8f7e1932-bc92-4211-b832-ad65fc23a061",
+  "versionId": "58640a8e-61a3-46e8-82cd-fc3837d6f323",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
