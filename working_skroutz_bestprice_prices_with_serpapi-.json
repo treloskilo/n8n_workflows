@@ -1,0 +1,344 @@
+{
+  "updatedAt": "2025-12-10T16:34:51.854Z",
+  "createdAt": "2025-11-28T18:29:25.350Z",
+  "id": "vvQGx3jHoGXyzTbc",
+  "name": "Working_Skroutz_Bestprice_Prices_With_SerpAPI",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI",
+          "mode": "list",
+          "cachedResultName": "Products",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17v1Mk13c7LOjh41YtEG645k2siqdAtKPR2vlL0wmFDI/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        -160
+      ],
+      "id": "cd2d2b9b-6d15-4c0f-aa06-8ba8be58f551",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "K0QjunUHfrmcIe9T",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://serpapi.com/search.json?q=site:skroutz.gr {{ encodeURIComponent($('Google Sheets Trigger').item.json['Product Name']) }} &api_key=3e2064380a5d720eb3181089963d50d645e411d4cb521a0cf7b89b8ba5bd59d3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -704,
+        -272
+      ],
+      "id": "44134722-b5b7-4b24-aaf3-14127e680810",
+      "name": "skroutz",
+      "alwaysOutputData": true,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://serpapi.com/search.json?q=site:bestprice.gr {{ encodeURIComponent($('Google Sheets Trigger').item.json['Product Name']) }} &api_key=3e2064380a5d720eb3181089963d50d645e411d4cb521a0cf7b89b8ba5bd59d3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -704,
+        -96
+      ],
+      "id": "6af0f23f-6abb-4754-ba58-f90b1479377a",
+      "name": "bestprice",
+      "alwaysOutputData": true,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function to extract prices, now prioritizing URL text over snippet text.\nfunction extractPrices(results) {\n    let prices = [];\n    \n    if (!results || results.length === 0) return prices;\n\n    for (const result of results) {\n        const textToSearch = (result.link || '') + ' ' + (result.displayed_link || '') + ' ' + (result.snippet || '') + ' ' + (result.title || '');\n        \n        // --- Price Extraction Logic ---\n        \n        // 1. Look for currency symbol (€) immediately followed by digits in the combined text.\n        // We will target the format \"€166.75\" or \"166,75€\"\n        \n        const priceMatches = textToSearch.match(/€\\s?([0-9]{1,5})[.,]([0-9]{2})|([0-9]{1,5})[.,]([0-9]{2})\\s?€/g);\n        \n        if (priceMatches) {\n            for (const match of priceMatches) {\n                // Clean the price by removing currency symbols and spaces, then replace comma with dot.\n                const cleanPrice = match.replace(/[€\\s]/g, '').replace(',', '.');\n                const numPrice = parseFloat(cleanPrice);\n                \n                // Filter: Only accept prices > €100.00 (the known price floor)\n                if (numPrice > 100.00 && numPrice < 3000.00) {\n                    prices.push(numPrice);\n                }\n            }\n        }\n    }\n    \n    // Return unique prices\n    return [...new Set(prices)];\n}\n\n// Get the product name from the trigger\nconst triggerNode = $('Google Sheets Trigger');\nconst productName = triggerNode.item.json['Product Name'];\n\n// The input is ONLY from the 'skroutz' HTTP node (items[0])\nconst skroutzResults = items[0].json.organic_results || [];\nconst skroutzPrices = extractPrices(skroutzResults);\n\nconst skroutzLow = skroutzPrices.length > 0 ? Math.min(...skroutzPrices).toFixed(2) : 'N/A';\nconst skroutzMax = skroutzPrices.length > 0 ? Math.max(...skroutzPrices).toFixed(2) : 'N/A';\n\n// We format the output to be easily merged later\nreturn [{\n    json: {\n        skroutz_low: skroutzLow,\n        skroutz_max: skroutzMax,\n        product_name: productName\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        -272
+      ],
+      "id": "43b23cb6-8529-45a9-9b4c-7bfaa9fddf42",
+      "name": "SkroutzPrices"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function to safely extract prices from a search results array\nfunction extractPrices(results) {\n    let prices = [];\n    \n    if (!results || results.length === 0) return prices;\n    for (const result of results) {\n        const snippet = result.snippet || '';\n        const title = result.title || '';\n        const text = snippet + ' ' + title;\n        \n        // Prioritize the \"from price\" (από) pattern\n        const fromPriceMatches = text.match(/από\\s+€?\\s?([0-9]{1,5})[.,]([0-9]{2})\\s?€?/g);\n        \n        if (fromPriceMatches && fromPriceMatches.length > 0) {\n            const match = fromPriceMatches[0];\n            const cleanPrice = match.replace(/από\\s+/i, '').replace(/[€\\s]/g, '').replace(',', '.');\n            const numPrice = parseFloat(cleanPrice);\n            \n            // Filter: (100.00 to 250.00) - tighter range for Samsung A17\n            if (numPrice > 100.00 && numPrice < 250.00) {\n                prices.push(numPrice);\n                continue; \n            }\n        }\n        \n        // Fallback - General Euro price extraction\n        const generalPriceMatches = text.match(/([0-9]{1,5})[.,]([0-9]{2})\\s?€|([0-9]{1,5})[.,]([0-9]{2})\\s?Ευρώ/g);\n        \n        if (generalPriceMatches) {\n            for (const match of generalPriceMatches) {\n                const cleanPrice = match.replace(/[€\\sΕυρώ]/g, '').replace(',', '.');\n                const numPrice = parseFloat(cleanPrice);\n                // Filter: (100.00 to 250.00) - tighter range for Samsung A17\n                if (numPrice > 100.00 && numPrice < 250.00) {\n                    prices.push(numPrice);\n                }\n            }\n        }\n    }\n    return [...new Set(prices)];\n}\n\n// Get the product name from the trigger\nconst triggerNode = $('Google Sheets Trigger');\nconst productName = triggerNode.item.json['Product Name'];\n\n// The input is ONLY from the 'bestprice' HTTP node (items[0])\nconst bestpriceResults = items[0].json.organic_results || [];\nconst bestpricePrices = extractPrices(bestpriceResults);\n\nconst bestpriceLow = bestpricePrices.length > 0 ? Math.min(...bestpricePrices).toFixed(2) : 'N/A';\nconst bestpriceMax = bestpricePrices.length > 0 ? Math.max(...bestpricePrices).toFixed(2) : 'N/A';\n\n// We format the output to be easily merged later\nreturn [{\n    json: {\n        bestprice_low: bestpriceLow,\n        bestprice_max: bestpriceMax,\n        product_name: productName\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        -96
+      ],
+      "id": "47ce68c4-ce6f-4203-b99d-233a51755093",
+      "name": "BestpricePrices"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1T3GK-q30zxIRFPolqZ3XgDsN3335ED6qGRrUk7FYYa8",
+          "mode": "list",
+          "cachedResultName": "Product_Results",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1T3GK-q30zxIRFPolqZ3XgDsN3335ED6qGRrUk7FYYa8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1T3GK-q30zxIRFPolqZ3XgDsN3335ED6qGRrUk7FYYa8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "product name ": "={{ $json.product_name }}",
+            "Best Price Low Price": "={{ $json.bestprice_low }}",
+            "Bestprice Max Price": "={{ $json.bestprice_max }}",
+            "Skroutz Low Price": "={{ $json.skroutz_low }}",
+            "Skroutz Max Price": "={{ $json.skroutz_max }}",
+            "Date": "={{ $json.search_date }} - {{ $json.search_time }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "product name ",
+              "displayName": "product name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Best Price Low Price",
+              "displayName": "Best Price Low Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bestprice Max Price",
+              "displayName": "Bestprice Max Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skroutz Low Price",
+              "displayName": "Skroutz Low Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skroutz Max Price",
+              "displayName": "Skroutz Max Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        288,
+        -160
+      ],
+      "id": "70bf7377-a83f-45e5-9574-16667c4b3f43",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -224,
+        -160
+      ],
+      "id": "6eb0b718-a8fe-4773-a5d7-9171a988ee92",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const skroutz = items[0].json;\nconst bestprice = items[1].json;\n\n// Get current date and time\nconst now = new Date();\nconst day = String(now.getDate()).padStart(2, '0');\nconst month = String(now.getMonth() + 1).padStart(2, '0');\nconst year = now.getFullYear();\nconst searchDate = `${day}-${month}-${year}`; // Format: DD-MM-YYYY\nconst searchTime = now.toTimeString().split(' ')[0]; // Format: HH:MM:SS\n\nreturn [{\n  json: {\n    search_date: searchDate,\n    search_time: searchTime,\n    product_name: skroutz.product_name,\n    skroutz_low: skroutz.skroutz_low,\n    skroutz_max: skroutz.skroutz_max,\n    bestprice_low: bestprice.bestprice_low,\n    bestprice_max: bestprice.bestprice_max\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        -160
+      ],
+      "id": "d8bd3318-83d7-4cab-9c88-693de84cebaa",
+      "name": "combine data"
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "skroutz",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "bestprice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "skroutz": {
+      "main": [
+        [
+          {
+            "node": "SkroutzPrices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "bestprice": {
+      "main": [
+        [
+          {
+            "node": "BestpricePrices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SkroutzPrices": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BestpricePrices": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "combine data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "combine data": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "628c415c-2796-4018-a354-65d2d42742d8",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-28T18:29:25.356Z",
+      "createdAt": "2025-11-28T18:29:25.356Z",
+      "role": "workflow:owner",
+      "workflowId": "vvQGx3jHoGXyzTbc",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
