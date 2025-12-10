@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-01T09:31:40.000Z",
+  "updatedAt": "2025-12-10T08:25:03.293Z",
   "createdAt": "2025-11-30T14:13:56.825Z",
   "id": "pXbIi7OIvsBbKW4o",
   "name": "XE.gr IT Support Jobs to Telegram - Ready",
@@ -98,8 +98,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.1,
       "position": [
-        -1024,
-        16
+        -1040,
+        -16
       ],
       "webhookId": "f9221316-1e30-4188-a391-6ac602a2a6b9",
       "credentials": {
@@ -177,8 +177,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "7736c815-3878-49d7-9d18-52a09645ceee",
-  "activeVersionId": "7736c815-3878-49d7-9d18-52a09645ceee",
+  "versionId": "4e360850-70ee-4d24-bac6-48bd7bbdcee0",
+  "activeVersionId": "4e360850-70ee-4d24-bac6-48bd7bbdcee0",
   "triggerCount": 1,
   "shared": [
     {
@@ -190,9 +190,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-01T09:31:40.365Z",
-    "createdAt": "2025-12-01T09:31:40.365Z",
-    "versionId": "7736c815-3878-49d7-9d18-52a09645ceee",
+    "updatedAt": "2025-12-10T08:25:03.294Z",
+    "createdAt": "2025-12-10T08:25:03.294Z",
+    "versionId": "4e360850-70ee-4d24-bac6-48bd7bbdcee0",
     "workflowId": "pXbIi7OIvsBbKW4o",
     "nodes": [
       {
@@ -287,8 +287,8 @@
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.1,
         "position": [
-          -1024,
-          16
+          -1040,
+          -16
         ],
         "webhookId": "f9221316-1e30-4188-a391-6ac602a2a6b9",
         "credentials": {
