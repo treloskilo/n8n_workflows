@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-09T20:13:12.720Z",
+  "updatedAt": "2025-12-10T08:13:33.947Z",
   "createdAt": "2025-12-09T19:51:18.022Z",
   "id": "hkUySip2prgBlxcJ",
   "name": "MySQL Test",
@@ -126,7 +126,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "9e858fca-fe03-486b-833d-3deaee3924f5",
+  "versionId": "ad740759-65ae-4822-ada6-144f38c87a92",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
