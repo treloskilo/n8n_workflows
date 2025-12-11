@@ -1,0 +1,781 @@
+{
+  "updatedAt": "2025-12-11T19:55:53.489Z",
+  "createdAt": "2025-12-11T19:46:37.379Z",
+  "id": "zuMRTofL2sB4Vd26",
+  "name": "Firecrawl MCP - Sponsor Video Research Agent",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## ✅  Data Fetching from Email Label",
+        "height": 520,
+        "width": 1288,
+        "color": 4
+      },
+      "id": "73ed6911-276a-480c-933a-9f32fc8f7bb5",
+      "name": "Sticky Note - Video1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        572,
+        -280
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🎬  Extractor",
+        "height": 520,
+        "width": 408
+      },
+      "id": "fe1465d6-ce96-4a8c-a62d-3208befe4e75",
+      "name": "Sticky Note - Video",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2196,
+        -168
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🎬  VIDEO RESEARCH AGENT",
+        "height": 520,
+        "width": 328,
+        "color": 2
+      },
+      "id": "6093501f-aa2d-4d35-ac21-e9e98a5db541",
+      "name": "Sticky Note - Video3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2812,
+        -168
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📧  SEND EMAIL + LABELING",
+        "height": 528,
+        "width": 568,
+        "color": 3
+      },
+      "id": "1265e54c-cecb-41e8-8334-362d437dc935",
+      "name": "Sticky Note - Video2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3316,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "label_name",
+              "name": "labelName",
+              "value": "Sponsorship/Research",
+              "type": "string"
+            },
+            {
+              "id": "firecrawl_api_key",
+              "name": "firecrawlApiKey",
+              "value": "YOUR_FIRECRAWL_API_KEY",
+              "type": "string"
+            },
+            {
+              "id": "processed_label_id",
+              "name": "processedLabelId",
+              "value": "YOUR_PROCESSED_LABEL_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a10c33c0-29fb-44ea-bea3-e7d193df942d",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "returnAll": true
+      },
+      "id": "08f80ff4-0e14-4afc-b0bb-b972c8bf4dce",
+      "name": "Gmail - Get Labels",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        80
+      ],
+      "webhookId": "1bc6086a-6eb9-4d04-9fb3-8fbd4f6cc423",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const labels = $input.all();\nconst config = $('Config').item.json;\nconst targetLabelName = config.labelName;\n\nconst matchingLabel = labels.find(item => \n  item.json.name.toLowerCase() === targetLabelName.toLowerCase()\n);\n\nif (!matchingLabel) {\n  throw new Error(`Label \"${targetLabelName}\" not found.`);\n}\n\nreturn {\n  json: {\n    labelId: matchingLabel.json.id,\n    labelName: matchingLabel.json.name,\n    firecrawlApiKey: config.firecrawlApiKey,\n    processedLabelId: config.processedLabelId\n  }\n};"
+      },
+      "id": "7afba5d8-bca4-4b61-907a-312866f44ae9",
+      "name": "Find Label ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "simple": false,
+        "filters": {
+          "labelIds": "={{ $json.labelId }}"
+        },
+        "options": {}
+      },
+      "id": "2bd47c22-a56e-4d30-bb0c-4b7740822cf4",
+      "name": "Gmail - Get Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        80
+      ],
+      "webhookId": "98460e1e-02d5-4f52-bf3b-4c59e4d3ca37",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst config = $('Find Label ID').item.json;\n\nconst hasEmail = items.length > 0 && items[0].json && items[0].json.id;\n\nif (!hasEmail) {\n  return {\n    json: {\n      hasEmail: false,\n      emailId: null,\n      labelId: config.labelId,\n      firecrawlApiKey: config.firecrawlApiKey,\n      processedLabelId: config.processedLabelId\n    }\n  };\n}\n\nconst email = items[0].json;\nreturn {\n  json: {\n    hasEmail: true,\n    ...email,\n    labelId: config.labelId,\n    firecrawlApiKey: config.firecrawlApiKey,\n    processedLabelId: config.processedLabelId\n  }\n};"
+      },
+      "id": "8ec4d6d6-1bfd-4871-8f81-b9d280d0144a",
+      "name": "Check Email Exists",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-email-check",
+              "leftValue": "={{ $json.hasEmail }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1d2e94dc-d802-4114-be96-bbba2a01319f",
+      "name": "IF Has Email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "253f5dd1-6d8a-4b11-a3a3-f5a5063821af",
+      "name": "No Email - Stop",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {}
+      },
+      "id": "f9e459af-5882-4f0a-b74f-08e1fef1cdf2",
+      "name": "Gmail - Get Thread",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1840,
+        -16
+      ],
+      "webhookId": "bb196dc5-6539-4962-83d4-bdd70e2c74e4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = $input.item.json;\nconst config = $('Check Email Exists').item.json;\n\n// Safely extract from field with multiple fallbacks\nlet fromRaw = '';\nif (email.from && typeof email.from === 'object' && email.from.text) {\n  fromRaw = email.from.text;\n} else if (email.from && typeof email.from === 'string') {\n  fromRaw = email.from;\n} else if (email.headers && email.headers.from) {\n  fromRaw = email.headers.from;\n} else if (email.payload && email.payload.headers) {\n  const fromHeader = email.payload.headers.find(h => h.name.toLowerCase() === 'from');\n  fromRaw = fromHeader ? fromHeader.value : 'Unknown Sender';\n} else {\n  fromRaw = 'Unknown Sender';\n}\n\nconst subject = email.subject || email.headers?.subject || 'No Subject';\n\n// Extract email address and domain\nlet senderEmail = '';\nlet senderDomain = '';\nconst emailMatch = fromRaw.match(/<([^>]+)>/) || fromRaw.match(/([\\w.-]+@[\\w.-]+)/);\nif (emailMatch) {\n  senderEmail = emailMatch[1];\n  senderDomain = senderEmail.split('@')[1] || '';\n}\n\n// Build company URL\nlet companyUrl = '';\nconst personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'mail.com', 'protonmail.com'];\nif (senderDomain && !personalDomains.includes(senderDomain.toLowerCase())) {\n  companyUrl = 'https://' + senderDomain;\n}\n\n// Get email body with multiple fallbacks\nlet emailBody = '';\nif (email.text && email.text.length > 10) {\n  emailBody = email.text;\n} else if (email.textPlain) {\n  emailBody = email.textPlain;\n} else if (email.textAsHtml) {\n  emailBody = email.textAsHtml.replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim();\n} else if (email.html) {\n  emailBody = email.html\n    .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '')\n    .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/\\s+/g, ' ')\n    .trim();\n} else if (email.snippet) {\n  emailBody = email.snippet;\n}\n\n// Extract URLs from email\nconst urlRegex = /https?:\\/\\/[^\\s<>\"']+/gi;\nconst allUrls = emailBody.match(urlRegex) || [];\n\n// Filter URLs\nconst excludePatterns = [\n  /unsubscribe/i, /mailto:/i, /linkedin\\.com/i, /twitter\\.com/i,\n  /facebook\\.com/i, /instagram\\.com/i, /calendly\\.com/i, /zoom\\.us/i,\n  /meet\\.google/i, /teams\\.microsoft/i, /\\.(png|jpg|jpeg|gif|svg|ico)$/i\n];\n\nconst briefUrls = allUrls.filter(url => \n  /drive\\.google\\.com|docs\\.google\\.com|notion\\.so|dropbox\\.com/i.test(url)\n);\n\nconst productUrls = [...new Set(allUrls)].filter(url => \n  !excludePatterns.some(pattern => pattern.test(url)) &&\n  !briefUrls.includes(url)\n);\n\n// Extract latest message only (remove reply chains)\nlet latestMessage = emailBody;\nconst replyMarkers = [\n  /On .{10,50} wrote:/i,\n  /From:.*?Sent:.*?To:/is,\n  /----+ ?Original Message ?----+/i,\n  /_{10,}/\n];\nfor (const pattern of replyMarkers) {\n  const match = emailBody.match(pattern);\n  if (match && match.index > 50) {\n    latestMessage = emailBody.substring(0, match.index).trim();\n    break;\n  }\n}\n\nreturn {\n  json: {\n    emailId: email.id || '',\n    threadId: email.threadId || '',\n    from: fromRaw,\n    senderEmail: senderEmail,\n    senderDomain: senderDomain,\n    companyUrl: companyUrl,\n    subject: subject,\n    latestMessage: latestMessage.substring(0, 2500),\n    fullEmailBody: emailBody.substring(0, 4000),\n    productUrls: productUrls.slice(0, 5),\n    briefUrls: briefUrls.slice(0, 3),\n    labelId: config.labelId,\n    firecrawlApiKey: config.firecrawlApiKey,\n    processedLabelId: config.processedLabelId\n  }\n};"
+      },
+      "id": "cf795fb1-2598-48e2-b13b-033f1698af12",
+      "name": "Format Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "text": "==Analyze this sponsorship email and extract ALL details.\n\nFROM: {{ $json.from }}\nSUBJECT: {{ $json.subject }}\nSENDER EMAIL: {{ $json.senderEmail }}\nCOMPANY DOMAIN: {{ $json.senderDomain }}\nCOMPANY URL: {{ $json.companyUrl }}\nPRODUCT URLS FOUND: {{ ($json.productUrls || []).join(', ') }}\n\nFULL EMAIL CONTENT:\n{{ $json.fullEmailBody }}\n\nIMPORTANT: \n- Look for product names mentioned (like \"Z.ai\" or any tool name)\n- Extract the sender's first name from signature (like \"Jacinth\" or \"Best regards, [Name]\")\n- Find ALL features mentioned (like \"GLM-4.6\", \"code generation\", \"AI slides\", etc.)\n- The product name is often in the subject line or email body, NOT the domain",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "senderFirstName",
+              "description": "The sender's first name. Look for signatures like \"Best regards, Jacinth\" or \"Thanks, John\". Extract just the first name. If the From field has a name like \"李莹莹\", look in the email body for an English name in the signature.",
+              "required": true
+            },
+            {
+              "name": "senderFullName",
+              "description": "The sender's full name if available."
+            },
+            {
+              "name": "senderRole",
+              "description": "Sender's job title/role if mentioned (e.g., 'Marketing Manager', 'Developer Advocate', 'CEO')."
+            },
+            {
+              "name": "companyName",
+              "description": "The company or organization name. Look for explicit mentions or derive from email domain.",
+              "required": true
+            },
+            {
+              "name": "productName",
+              "description": "The specific product or tool name mentioned in the email. Look in the subject line and body. Examples: \"Z.ai\", \"Cursor\", \"Supabase\". Do NOT use the domain name - find the actual product name.",
+              "required": true
+            },
+            {
+              "name": "productCategory",
+              "description": "Categorize: 'AI/ML tools', 'API development', 'Database', 'Developer productivity', 'DevOps/Infrastructure', 'Automation/Workflow', 'Security', 'Analytics/Monitoring', 'Cloud services', 'Code editor/IDE', 'Testing', 'Other'",
+              "required": true
+            },
+            {
+              "name": "productDescription",
+              "description": "One-line description of what the product does based on the email content."
+            },
+            {
+              "name": "keyFeatures",
+              "description": "List key features/capabilities mentioned, comma-separated. Be specific with tech names."
+            },
+            {
+              "name": "integrations",
+              "description": "Any integrations mentioned (e.g., 'GitHub, VS Code, Slack'). Return 'not mentioned' if none."
+            },
+            {
+              "name": "targetAudience",
+              "description": "Who is this product for? (e.g., 'backend developers', 'DevOps engineers', 'data scientists')"
+            },
+            {
+              "name": "competitorsMentioned",
+              "description": "Any competitor products mentioned or implied (e.g., 'alternative to Postman'). Return 'none' if not mentioned."
+            },
+            {
+              "name": "sponsorshipType",
+              "description": "What they want: 'dedicated video', 'integration/mention', 'review', 'tutorial', 'comparison', 'demo', or 'unclear'",
+              "required": true
+            },
+            {
+              "name": "specificAsk",
+              "description": "Any specific content they requested (e.g., 'show the API feature', 'compare with X')."
+            },
+            {
+              "name": "budgetMentioned",
+              "description": "Any budget/compensation mentioned. Return exact amount if stated, otherwise 'not mentioned'."
+            },
+            {
+              "name": "timeline",
+              "description": "Any deadline or timeline mentioned. Return 'flexible' if none specified."
+            },
+            {
+              "name": "whyEricChannel",
+              "description": "Did they mention why they chose Eric's channel? What resonated with them?"
+            },
+            {
+              "name": "toneAndStyle",
+              "description": "Email tone: 'formal/corporate', 'casual/friendly', 'technical', 'salesy'"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert at analyzing sponsorship inquiry emails for a tech YouTube channel. Extract accurate, specific information. Be precise with product names and technical details. If something is not explicitly stated, make a reasonable inference based on context but mark uncertain fields appropriately. Never leave required fields empty."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        2288,
+        -16
+      ],
+      "id": "76257756-9ef8-40fd-8d8f-b980d5a58f72",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==Research {{ $json.productName }} and write a video direction.\n\nSPONSOR INFO:\nContact: {{ $json.senderFirstName }}\nCompany: {{ $json.companyName }}\nProduct: {{ $json.productName }}\nCategory: {{ $json.productCategory }}\nFeatures: {{ $json.keyFeatures || 'Not specified' }}\nURL: {{ $('Format Email').item.json.companyUrl }}\n\nEMAIL:\n{{ $('Format Email').item.json.latestMessage }}\n\nSTEPS:\n1. Scrape {{ $('Format Email').item.json.companyUrl }}\n2. Search \"{{ $json.productName }} tutorial\" → Scrape top result\n3. Search \"{{ $json.productName }} vs\" → Scrape top result\n4. Write email below\n\nOUTPUT (HTML only):\n\n<p>Hey {{ $json.senderFirstName }},</p>\n\n<p>Researched {{ $json.productName }}. Here's my direction:</p>\n\n<h4>Research</h4>\n<ul>\n<li><b>Product:</b> [specific features from scrape]</li>\n<li><b>Market:</b> [what devs say from search results]</li>\n<li><b>Gap:</b> [what's missing in existing content]</li>\n</ul>\n\n<h4>Angle</h4>\n<p>[unique hook for Eric's audience]</p>\n\n<h4>Demo Plan</h4>\n<ul>\n<li>[Feature] → [pain point] → [time saved]</li>\n<li>[Feature] → [pain point] → [time saved]</li>\n</ul>\n\n<h4>Next Steps</h4>\n<p>Need: [access required]. Timeline: 7-10 days.</p>\n\n<p>Best,<br>Eric</p>",
+        "options": {
+          "systemMessage": "You are Eric's Video Research AI.\n\nTOOL PATTERN:\n1. firecrawl_scrape: {\"url\": \"https://example.com\"} - Read full page\n2. firecrawl_search: {\"query\": \"simple terms\", \"limit\": 3} - Get URLs\n\nRESEARCH STEPS (4-5 tool calls max):\n1. Scrape company website\n2. Search \"[product] tutorial 2025\" → Scrape top 1 result\n3. Search \"[product] vs alternative\" → Scrape top 1 result\n\nCHANNEL CONTEXT:\n- 30K subs, senior devs & technical founders\n- Style: No-BS, fast demos, working code\n- Top hits: Gemini CLI (85K), Job Automation (60K)\n\nOUTPUT RULES:\n- Clean HTML only\n- Every claim needs specific details from research\n- Under 300 words"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2864,
+        -16
+      ],
+      "id": "b1afd415-9b5a-466e-bd02-ffddfbd3e8e3",
+      "name": "AI - Video Direction",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1",
+        "options": {
+          "maxTokens": 20000,
+          "temperature": 0.5,
+          "timeout": 120000,
+          "maxRetries": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        2872,
+        208
+      ],
+      "id": "30def62d-4671-4f63-a743-a917a20e304a",
+      "name": "LLM"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "=https://mcp.firecrawl.dev/{{ $('Format Email').item.json.firecrawlApiKey }}/v2/mcp",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        3000,
+        208
+      ],
+      "id": "3d8cf3ab-b3af-4783-a7bf-553b91330a02",
+      "name": "FireCrawl MCP"
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiResult = $input.item.json || {};\nconst emailData = $('Format Email').item.json;\nconst extractedData = $('Merge Extracted Data1').item.json;\n\nlet output = aiResult.output || aiResult.text || '';\n\n// Fallback if AI failed\nif (!output || output.length < 100) {\n  const senderName = extractedData.senderFirstName || 'there';\n  const productName = extractedData.productName || 'your product';\n  const companyName = extractedData.companyName || 'your company';\n  output = '<p>Hey ' + senderName + ',</p>' +\n    '<p>Thanks for reaching out about ' + productName + '! I\\'d love to explore a video collaboration.</p>' +\n    '<p>To create the best angle for my audience (30K+ senior devs and technical founders), could you share:</p>' +\n    '<ul>' +\n    '<li>Product access or demo account</li>' +\n    '<li>Key features you want highlighted</li>' +\n    '<li>Any product brief or messaging doc</li>' +\n    '</ul>' +\n    '<p>Once I have access, I\\'ll research the space and come back with a unique video direction that stands out from existing content.</p>' +\n    '<p>Best,<br>Eric</p>';\n}\n\n// Clean markdown code blocks if present\nif (output.startsWith('```html')) {\n  output = output.replace(/^```html\\n?/, '').replace(/\\n?```$/, '');\n} else if (output.startsWith('```')) {\n  output = output.replace(/^```\\n?/, '').replace(/\\n?```$/, '');\n}\n\n// Clean any remaining markdown\noutput = output.replace(/```/g, '');\n\nreturn {\n  json: {\n    emailId: emailData.emailId,\n    threadId: emailData.threadId,\n    labelId: emailData.labelId,\n    processedLabelId: emailData.processedLabelId,\n    replyContent: output.trim()\n  }\n};"
+      },
+      "id": "3db76566-8c4e-4997-b0be-e2645de5e938",
+      "name": "Prepare Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3216,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.emailId }}",
+        "message": "={{ $json.replyContent }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "dd4e3ab4-17a1-424f-afae-45ec09d97683",
+      "name": "Gmail - Send Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3440,
+        -16
+      ],
+      "webhookId": "7f82a4cc-7ae1-47ff-b161-9f061db8b2fa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "removeLabels",
+        "threadId": "={{ $json.threadId }}",
+        "labelIds": "={{ $('Prepare Reply').item.json.labelId }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3664,
+        -16
+      ],
+      "id": "da0312f1-9da5-43d6-b2d3-1383c1ed5f90",
+      "name": "Gmail - Remove Label",
+      "webhookId": "45ccb156-779d-4866-9371-6ecd606dbf9d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "addLabels",
+        "threadId": "={{ $json.threadId }}",
+        "labelIds": "={{ $('Prepare Reply').item.json.processedLabelId }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3888,
+        -16
+      ],
+      "id": "0b179db0-32be-42af-80be-5145fcbb435c",
+      "name": "Gmail - Add Processed Label",
+      "webhookId": "df824969-9af8-458a-959c-6bb30b66c7d7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "e87297dd-8231-4168-8b98-1aa1d86cfa94",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1",
+        "options": {
+          "maxTokens": 800,
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        208
+      ],
+      "id": "a075acfa-dd2c-4628-8915-480e350d09e3",
+      "name": "Extractor LLM1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const extracted = $input.item.json || {};\nconst emailData = $('Format Email').item.json;\n\nreturn {\n  json: {\n    // Extracted fields with defaults\n    senderFirstName: extracted.senderFirstName || 'there',\n    senderFullName: extracted.senderFullName || '',\n    senderRole: extracted.senderRole || '',\n    companyName: extracted.companyName || emailData.senderDomain || 'Unknown Company',\n    productName: extracted.productName || 'their product',\n    productCategory: extracted.productCategory || 'Developer tools',\n    productDescription: extracted.productDescription || '',\n    keyFeatures: extracted.keyFeatures || '',\n    integrations: extracted.integrations || 'not mentioned',\n    targetAudience: extracted.targetAudience || 'developers',\n    competitorsMentioned: extracted.competitorsMentioned || 'none',\n    sponsorshipType: extracted.sponsorshipType || 'unclear',\n    specificAsk: extracted.specificAsk || '',\n    budgetMentioned: extracted.budgetMentioned || 'not mentioned',\n    timeline: extracted.timeline || 'flexible',\n    whyEricChannel: extracted.whyEricChannel || '',\n    toneAndStyle: extracted.toneAndStyle || 'casual/friendly',\n    \n    // Pass through email data\n    emailId: emailData.emailId,\n    threadId: emailData.threadId,\n    from: emailData.from,\n    subject: emailData.subject,\n    companyUrl: emailData.companyUrl,\n    senderDomain: emailData.senderDomain,\n    latestMessage: emailData.latestMessage,\n    productUrls: emailData.productUrls || [],\n    briefUrls: emailData.briefUrls || [],\n    labelId: emailData.labelId,\n    firecrawlApiKey: emailData.firecrawlApiKey,\n    processedLabelId: emailData.processedLabelId\n  }\n};"
+      },
+      "id": "5f6a9f1b-cd60-42c4-b119-df2d3191da93",
+      "name": "Merge Extracted Data1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 SETUP INSTRUCTIONS\n\n**1. Config Node (Required)**\n- `labelName`: Create a Gmail label for sponsor emails (e.g., \"Sponsorship/Research\")\n- `firecrawlApiKey`: Get from https://firecrawl.dev\n- `processedLabelId`: Create a \"Processed\" label in Gmail, then find its ID\n\n**2. Credentials Needed**\n- Gmail OAuth2\n- Azure OpenAI (or swap for OpenAI/Anthropic)\n\n**3. How to Get Label IDs**\n- Run the \"Gmail - Get Labels\" node once\n- Find your label in the output\n- Copy the ID value",
+        "height": 340,
+        "width": 400,
+        "color": 6
+      },
+      "id": "69b08eac-d283-4ddc-bbc9-4aad1ac99051",
+      "name": "Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -48
+      ]
+    }
+  ],
+  "connections": {
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Get Labels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Get Labels": {
+      "main": [
+        [
+          {
+            "node": "Find Label ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Label ID": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Get Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Get Email": {
+      "main": [
+        [
+          {
+            "node": "Check Email Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Email Exists": {
+      "main": [
+        [
+          {
+            "node": "IF Has Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Has Email": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Get Thread",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Email - Stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Get Thread": {
+      "main": [
+        [
+          {
+            "node": "Format Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Email": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Merge Extracted Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Video Direction": {
+      "main": [
+        [
+          {
+            "node": "Prepare Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Video Direction",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FireCrawl MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI - Video Direction",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Reply": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Send Reply": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Remove Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Remove Label": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Add Processed Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extractor LLM1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Extracted Data1": {
+      "main": [
+        [
+          {
+            "node": "AI - Video Direction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "59915563-ac2d-42cb-b47e-468806d46bb6",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-11T19:46:37.383Z",
+      "createdAt": "2025-12-11T19:46:37.383Z",
+      "role": "workflow:owner",
+      "workflowId": "zuMRTofL2sB4Vd26",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
