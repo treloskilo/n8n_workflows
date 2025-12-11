@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2025-12-10T16:59:34.021Z",
+  "updatedAt": "2025-12-11T19:39:51.108Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
-  "active": true,
+  "active": false,
   "isArchived": false,
   "nodes": [
     {
@@ -193,8 +193,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        64,
-        192
+        144,
+        176
       ],
       "id": "6e750225-4ae7-4ae0-9c42-f18e358c693b",
       "name": "Score Filter"
@@ -245,21 +245,22 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        592,
-        -80
+        656,
+        -112
       ],
       "id": "d64a29c2-d89f-49f4-b688-22e082bfb283",
       "name": "Basic LLM Chain"
     },
     {
       "parameters": {
+        "modelName": "models/gemini-2.0-flash",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        528,
-        128
+        592,
+        96
       ],
       "id": "b9f19ec8-65fe-461b-be3c-31d0b2ffd161",
       "name": "Google Gemini Chat Model",
@@ -412,23 +413,23 @@
         ]
       ]
     },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Basic LLM Chain": {
       "main": [
         [
           {
             "node": "Edit Fields",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -450,8 +451,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "ae1289d7-49ab-4010-b3ff-e6eb480b2870",
-  "activeVersionId": "ae1289d7-49ab-4010-b3ff-e6eb480b2870",
+  "versionId": "c71952c3-d297-45e6-a459-31fcc8e440b6",
+  "activeVersionId": null,
   "triggerCount": 1,
   "shared": [
     {
@@ -462,444 +463,6 @@
       "projectId": "7jNXHgiAtPda1pR0"
     }
   ],
-  "activeVersion": {
-    "updatedAt": "2025-12-10T16:59:34.022Z",
-    "createdAt": "2025-12-10T16:59:34.022Z",
-    "versionId": "ae1289d7-49ab-4010-b3ff-e6eb480b2870",
-    "workflowId": "ctDJnyAsl0S17Pva",
-    "nodes": [
-      {
-        "parameters": {
-          "fieldToSplitOut": "links",
-          "options": {}
-        },
-        "type": "n8n-nodes-base.splitOut",
-        "typeVersion": 1,
-        "position": [
-          464,
-          -288
-        ],
-        "id": "9e624485-999a-4e30-9873-45884dcfe876",
-        "name": "Split Out"
-      },
-      {
-        "parameters": {
-          "options": {}
-        },
-        "type": "n8n-nodes-base.splitInBatches",
-        "typeVersion": 3,
-        "position": [
-          -240,
-          -32
-        ],
-        "id": "b1fdf1c5-6fba-4c29-b1de-ad78ced2c5ae",
-        "name": "Loop Over Items"
-      },
-      {
-        "parameters": {
-          "chatId": "5870531738",
-          "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
-          "additionalFields": {}
-        },
-        "type": "n8n-nodes-base.telegram",
-        "typeVersion": 1.2,
-        "position": [
-          896,
-          256
-        ],
-        "id": "6d3aea5a-aa3a-47e7-aaaf-49030e882e0e",
-        "name": "Telegram",
-        "webhookId": "17b9ebe8-c8d4-4bd9-ad20-45842ddc2c00",
-        "credentials": {
-          "telegramApi": {
-            "id": "i5VGPAGcIQB6DQ6M",
-            "name": "Telegram account"
-          }
-        }
-      },
-      {
-        "parameters": {
-          "url": "https://www.linkedin.com/jobs/search?keywords=IT&location=Athens&geoId=103077496&distance=50&f_TPR=r604800&f_WT=3&position=1&pageNum=0",
-          "options": {}
-        },
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          -160,
-          -288
-        ],
-        "id": "bdd84e8d-16c0-49cd-84cf-67cd7f88ba4d",
-        "name": "Scrape Last 24 hours Job"
-      },
-      {
-        "parameters": {
-          "language": "python",
-          "pythonCode": "# Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfrom urllib.parse import urlparse, urlunparse\nfrom bs4 import BeautifulSoup\n\n\nhtml = _input.all()[0]['json']['data']\nsoup = BeautifulSoup(html, 'html.parser')\n\njob_links = soup.select('ul.jobs-search__results-list li div a[class*=\"base-card\"]')\n\n\n\njob_urls = []\nfor a_tag in job_links:\n    href = a_tag.get('href')\n    if href:\n\n        parsed = urlparse(href)\n        parsed_new = parsed._replace(netloc=\"www.linkedin.com\")\n        new_url = urlunparse(parsed_new)\n        job_urls.append(new_url)\n\n\n\n\nreturn {\"links\": job_urls}\n\n\n"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          224,
-          -288
-        ],
-        "id": "9e9c8dac-dcd4-46d6-80be-900a60487ec2",
-        "name": "Extract Job Links"
-      },
-      {
-        "parameters": {
-          "url": "={{ $json.links }}",
-          "options": {}
-        },
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          192,
-          -16
-        ],
-        "id": "a402343b-35b2-4997-baae-fd236113e616",
-        "name": "Scrape Each Job",
-        "retryOnFail": true,
-        "executeOnce": false,
-        "waitBetweenTries": 5000,
-        "onError": "continueRegularOutput"
-      },
-      {
-        "parameters": {
-          "language": "python",
-          "pythonCode": "from bs4 import BeautifulSoup\n\n\nhtml = _input.all()[0]['json']['data']\nsoup = BeautifulSoup(html, 'html.parser')\n\ntitle = soup.select('div h1')[0].text\ncompany = soup.select('div span a')[0].text.strip()\n\nlocation = soup.select(\"div span[class*='topcard__flavor topcard__flavor--bullet']\")[0].text.strip()\n\njd_container = soup.find(\"div\", class_=\"description__text description__text--rich\")\n\nif jd_container:\n    \n  complete_jd = jd_container.get_text(separator=\"\\n\", strip=True)\n    \nelse:\n    company_jd = \"no jd\"\n\n\nurns = [a.get(\"data-semaphore-content-urn\") for a in soup.select(\"a[data-item-type='semaphore']\")]\n\njob_id =urns[0].split(\":\")[-1]\n\n\napply_link = \"https://www.linkedin.com/jobs/view/\" + job_id\napply_link\n\n\nreturn {\n  \"title\": title,\n  \"company\": company,\n  \"location\": location,\n  \"jd\": complete_jd,\n  \"link\": apply_link\n  \n  \n}\n\n\n\n\n\n"
-        },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          368,
-          -16
-        ],
-        "id": "9b6cf46c-0166-49fc-bb71-0586a44e3ca9",
-        "name": "Parse"
-      },
-      {
-        "parameters": {
-          "mode": "raw",
-          "jsonOutput": "={{ $json.text }}",
-          "includeOtherFields": true,
-          "options": {}
-        },
-        "type": "n8n-nodes-base.set",
-        "typeVersion": 3.4,
-        "position": [
-          -208,
-          144
-        ],
-        "id": "8f527a0c-5940-49b5-b550-b6fb10f83a45",
-        "name": "Edit Fields"
-      },
-      {
-        "parameters": {
-          "amount": 10
-        },
-        "type": "n8n-nodes-base.wait",
-        "typeVersion": 1.1,
-        "position": [
-          0,
-          -16
-        ],
-        "id": "6951a74f-d7d1-4758-94d1-cee2a41c3136",
-        "name": "Wait",
-        "webhookId": "c9cb4878-ae4d-4b8e-bd37-5395011f7761"
-      },
-      {
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "triggerAtHour": 9,
-                "triggerAtMinute": 5
-              }
-            ]
-          }
-        },
-        "type": "n8n-nodes-base.scheduleTrigger",
-        "typeVersion": 1.2,
-        "position": [
-          -736,
-          -288
-        ],
-        "id": "b9acc81f-35a4-47ab-9820-6a1642ee4802",
-        "name": "Schedule Trigger"
-      },
-      {
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "loose",
-              "version": 2
-            },
-            "conditions": [
-              {
-                "id": "1499f1ac-a7ae-4983-85c7-aa7b8445b2e2",
-                "leftValue": "={{ $json.job_match_score }}",
-                "rightValue": 65,
-                "operator": {
-                  "type": "number",
-                  "operation": "gte"
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "looseTypeValidation": true,
-          "options": {}
-        },
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.2,
-        "position": [
-          64,
-          192
-        ],
-        "id": "6e750225-4ae7-4ae0-9c42-f18e358c693b",
-        "name": "Score Filter"
-      },
-      {
-        "parameters": {
-          "assignments": {
-            "assignments": [
-              {
-                "id": "500890d8-f9a0-4075-8419-664c13f9428f",
-                "name": "resume",
-                "value": "I am Vasileios Seremetis. I am an experienced in IT Support , L1 - L3, and in  IT Systems & Network Administrator with over 20 years of expertise in IT infrastructure, virtualization, cloud computing, and technical support. Skilled in leading IT operations, managing hybrid environments, and implementing secure, reliable solutions for businesses. Strong communicator with a track record of delivering IT projects and supporting enterprise environments.",
-                "type": "string"
-              },
-              {
-                "id": "ae8adfc4-db9e-40ea-8f8d-c45f4113d1ab",
-                "name": "core_skills",
-                "value": "Virtualization: VMware, Proxmox, Hyper-V\tVoIP: Asterisk, FreePBX, Issabel, Cloud: Contabo, Hetzner Cloud, VPS\t Backup: Synology, Proxmox Backup, OpenMediaVault  Systems: Windows Server, Linux Admin\t Collaboration: Microsoft 365, Zimbra, ManageEngine Networking: VPNs (WireGuard, Mikrotik), Firewalls\t Security: CSF, Fail2Ban, VoIPBL, Apiban",
-                "type": "string"
-              }
-            ]
-          },
-          "options": {}
-        },
-        "type": "n8n-nodes-base.set",
-        "typeVersion": 3.4,
-        "position": [
-          -464,
-          -288
-        ],
-        "id": "e06cd380-b03c-4709-9f13-fc3f21fc2f10",
-        "name": "resume"
-      },
-      {
-        "parameters": {
-          "promptType": "define",
-          "text": "=Hi, you are a helpful job matcher, you analyze the given resume and job description and providing a job matching score in a json format    for example   your response should be like {\"job_match_score\": 80 }  make sure you give project json data, dont give any json markdown text and all  my resume: {{ $('resume').item.json.resume }} and my skills: {{ $('resume').item.json.core_skills }}  job_description:    {{ $json.jd }}",
-          "messages": {
-            "messageValues": [
-              {
-                "type": "HumanMessagePromptTemplate",
-                "message": "=Hi, you are a helpful job matcher, you analyze the given resume and job description and providing a job matching score in a json format    for example   your response should be like {\"job_match_score\": 80 }  make sure you give project json data, dont give any json markdown text and all  my resume: {{ $('resume').item.json.resume }}   job_description:    {{ $json.jd }}"
-              }
-            ]
-          },
-          "batching": {}
-        },
-        "type": "@n8n/n8n-nodes-langchain.chainLlm",
-        "typeVersion": 1.7,
-        "position": [
-          592,
-          -80
-        ],
-        "id": "d64a29c2-d89f-49f4-b688-22e082bfb283",
-        "name": "Basic LLM Chain"
-      },
-      {
-        "parameters": {
-          "options": {}
-        },
-        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-        "typeVersion": 1,
-        "position": [
-          528,
-          128
-        ],
-        "id": "b9f19ec8-65fe-461b-be3c-31d0b2ffd161",
-        "name": "Google Gemini Chat Model",
-        "credentials": {
-          "googlePalmApi": {
-            "id": "3uUCLR5yvdkNtbXj",
-            "name": "Google Gemini(PaLM) Api account"
-          }
-        }
-      }
-    ],
-    "connections": {
-      "Split Out": {
-        "main": [
-          [
-            {
-              "node": "Loop Over Items",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Loop Over Items": {
-        "main": [
-          [],
-          [
-            {
-              "node": "Wait",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Telegram": {
-        "main": [
-          [
-            {
-              "node": "Loop Over Items",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Scrape Last 24 hours Job": {
-        "main": [
-          [
-            {
-              "node": "Extract Job Links",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Extract Job Links": {
-        "main": [
-          [
-            {
-              "node": "Split Out",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Scrape Each Job": {
-        "main": [
-          [
-            {
-              "node": "Parse",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Parse": {
-        "main": [
-          [
-            {
-              "node": "Basic LLM Chain",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Edit Fields": {
-        "main": [
-          [
-            {
-              "node": "Score Filter",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Wait": {
-        "main": [
-          [
-            {
-              "node": "Scrape Each Job",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Schedule Trigger": {
-        "main": [
-          [
-            {
-              "node": "resume",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Score Filter": {
-        "main": [
-          [
-            {
-              "node": "Telegram",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "Loop Over Items",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "resume": {
-        "main": [
-          [
-            {
-              "node": "Scrape Last 24 hours Job",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Google Gemini Chat Model": {
-        "ai_languageModel": [
-          [
-            {
-              "node": "Basic LLM Chain",
-              "type": "ai_languageModel",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Basic LLM Chain": {
-        "main": [
-          [
-            {
-              "node": "Edit Fields",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      }
-    },
-    "authors": "trelos skilos",
-    "name": null,
-    "description": null
-  },
+  "activeVersion": null,
   "tags": []
 }
