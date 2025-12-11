@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-10T17:03:31.277Z",
+  "updatedAt": "2025-12-11T19:40:17.500Z",
   "createdAt": "2025-11-29T19:20:31.951Z",
   "id": "oKocWEMrvF6mseQA",
   "name": "Working_5pm_AI_Gemini_Job Application Assistant_Linkedin",
@@ -783,7 +783,8 @@
     "timezone": "Europe/Athens",
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false,
-    "errorWorkflow": "g6VSaJXbw9uphgte"
+    "errorWorkflow": "g6VSaJXbw9uphgte",
+    "timeSavedMode": "fixed"
   },
   "staticData": {
     "node:Schedule Trigger": {
@@ -794,8 +795,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "c1fdcb3b-8547-40ae-bc33-1126e7660e36",
-  "activeVersionId": "c1fdcb3b-8547-40ae-bc33-1126e7660e36",
+  "versionId": "6903db6e-0b02-41da-9927-6dd650b7455f",
+  "activeVersionId": "6903db6e-0b02-41da-9927-6dd650b7455f",
   "triggerCount": 1,
   "shared": [
     {
@@ -807,9 +808,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-10T17:03:31.278Z",
-    "createdAt": "2025-12-10T17:03:31.278Z",
-    "versionId": "c1fdcb3b-8547-40ae-bc33-1126e7660e36",
+    "updatedAt": "2025-12-11T19:40:17.501Z",
+    "createdAt": "2025-12-11T19:40:17.501Z",
+    "versionId": "6903db6e-0b02-41da-9927-6dd650b7455f",
     "workflowId": "oKocWEMrvF6mseQA",
     "nodes": [
       {
