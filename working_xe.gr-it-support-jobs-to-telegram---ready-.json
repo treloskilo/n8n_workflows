@@ -1,0 +1,358 @@
+{
+  "updatedAt": "2025-12-14T10:05:39.217Z",
+  "createdAt": "2025-11-30T14:13:56.825Z",
+  "id": "pXbIi7OIvsBbKW4o",
+  "name": "Working_XE.gr IT Support Jobs to Telegram - Ready",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9,18 * * 1-7"
+            }
+          ]
+        }
+      },
+      "id": "1e5af538-572c-44fc-8ac8-a82eafa563d7",
+      "name": "Schedule: 9:05 AM & 6:05 PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2048,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.xe.gr/εργασία/θέσεις-εργασίας?free_text=IT+Support",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "el-GR,el;q=0.9,en;q=0.8"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7f3601be-b531-4afe-aa05-e361df595123",
+      "name": "Fetch XE.gr Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1824,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// XE.GR Job Scraper - Final Version (ID, Description, Exact Location)\nconst html = $input.item.json.data;\n\nif (!html) {\n  return [{ json: { error: 'No HTML received' } }];\n}\n\n// Helper function to decode HTML entities and clean text\nfunction cleanText(text) {\n  if (!text) return '';\n  return text\n    .replace(/<br\\s*\\/?>/gi, '\\n')\n    .replace(/<[^>]+>/g, '')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#039;/g, \"'\")\n    .replace(/&nbsp;/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nconst jobs = [];\n\n// Match the main wrapper shown in your screenshot\nconst jobPattern = /<div class=\"result-list-narrow-item-wrapper\"[^>]*>([\\s\\S]*?)<\\/div>\\s*<\\/div>\\s*<\\/div>/gi;\nconst jobBlocks = html.match(jobPattern);\n\nif (!jobBlocks || jobBlocks.length === 0) {\n    return [{ json: { error: 'NO_JOBS_FOUND' } }];\n}\n\n(jobBlocks || []).forEach((block, index) => {\n  try {\n    // 1. EXTRACT ID (from id=\"job-listing-...\")\n    let jobId = '';\n    const idMatch = block.match(/id=\"job-listing-([a-f0-9\\-]+)\"/i);\n    if (idMatch) jobId = idMatch[1];\n    else {\n        const urlIdMatch = block.match(/\\/jobs\\/results\\/([a-f0-9\\-]+)/i);\n        if (urlIdMatch) jobId = urlIdMatch[1];\n    }\n\n    // 2. EXTRACT URL\n    const linkMatch = block.match(/<a href=\"([^\"]+)\"[^>]*class=\"result-list-narrow-item-link gold\"/i);\n    let jobUrl = '';\n    if (linkMatch && linkMatch[1]) {\n      jobUrl = linkMatch[1].startsWith('http') ? linkMatch[1] : 'https://www.xe.gr' + linkMatch[1];\n    }\n    \n    // 3. EXTRACT TITLE\n    const titleMatch = block.match(/<h2 class=\"results-item-title\">([^<]+)<\\/h2>/i);\n    const title = titleMatch ? cleanText(titleMatch[1]) : '';\n    \n    // 4. EXTRACT DESCRIPTION (Full text)\n    const descMatch = block.match(/<div[^>]*class=\"[^\"]*result-description[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/i);\n    let description = descMatch ? cleanText(descMatch[1]) : 'No description available';\n\n    // 5. EXTRACT EXACT LOCATION (From Footer)\n    // Structure is usually: \"Company - Location - Time\" inside \"result-item-footer\"\n    let location = 'Not specified';\n    let company = '';\n    let publishedDate = new Date().toISOString().split('T')[0];\n\n    const footerMatch = block.match(/<div class=\"result-item-footer\"[^>]*>([\\s\\S]*?)<\\/div>/i);\n    \n    if (footerMatch) {\n        const footerText = cleanText(footerMatch[1]);\n        // Split by hyphen surrounded by spaces (standard XE separator)\n        // e.g. \"Company - Athens (Center) - 2 days ago\"\n        const parts = footerText.split(/\\s-\\s/);\n        \n        if (parts.length >= 3) {\n            // Case: Company - Location - Time\n            company = parts[0].trim();\n            location = parts[1].trim(); // This captures \"Αθήνα (Αμπελόκηποι)\"\n            publishedDate = parts[2].trim();\n        } else if (parts.length === 2) {\n            // Case: Location - Time (Company might be missing or merged)\n            location = parts[0].trim();\n            publishedDate = parts[1].trim();\n        }\n    }\n\n    // Fallbacks if footer parsing failed\n    if (!company) {\n        const companyMatch = block.match(/class=\"result-list-narrow-item-link[^>]*>([^<]+)</i);\n        company = companyMatch ? cleanText(companyMatch[1]) : 'Company not specified';\n    }\n    \n    const uniqueId = jobId || `${company}-${title}`.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase().substring(0, 100);\n    \n    if (title) {\n      jobs.push({\n        json: {\n          id: uniqueId,\n          title,\n          company,\n          location, // Will now be \"Αθήνα (Αμπελόκηποι)\"\n          description,\n          jobUrl,\n          publishedDate,\n          scrapedAt: new Date().toISOString()\n        }\n      });\n    }\n  } catch (error) {\n    console.error(`Error parsing job ${index}:`, error.message);\n  }\n});\n\nreturn jobs;"
+      },
+      "id": "579ad5c5-a81d-429a-9df1-b85cd7155591",
+      "name": "Parse XE.gr Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter out already processed jobs\nconst allJobs = $('Parse XE.gr Jobs').all();\nconst newJobs = [];\nlet processedIds = [];\n\n// Get previously processed job IDs\ntry {\n  const data = $input.first().json;\n  if (data && data.processedJobs) {\n    processedIds = typeof data.processedJobs === 'string' \n      ? JSON.parse(data.processedJobs) \n      : data.processedJobs;\n  }\n} catch (e) {\n  console.log('Starting fresh job tracking');\n}\n\n// Ensure it's an array and limit size\nif (!Array.isArray(processedIds)) processedIds = [];\nif (processedIds.length > 500) processedIds = processedIds.slice(-500);\n\n// Filter for new jobs only\nallJobs.forEach(item => {\n  const job = item.json;\n  \n  // Pass through error messages\n  if (job.error) {\n    newJobs.push(item);\n    return;\n  }\n  \n  // Check if this job was already processed\n  if (!processedIds.includes(job.id)) {\n    newJobs.push(item);\n    processedIds.push(job.id);\n  }\n});\n\n// Store updated list in first item for saving\nif (newJobs.length > 0 && !newJobs[0].json.error) {\n  newJobs[0].json.updatedProcessedJobs = JSON.stringify(processedIds);\n}\n\nconst existingCount = processedIds.length - newJobs.length;\nconsole.log(`Found ${allJobs.length} jobs total, ${newJobs.length} new, ${existingCount} already seen`);\n\nreturn newJobs.length > 0 ? newJobs : [];"
+      },
+      "id": "fff1641f-f3ca-418b-9e21-7a53cd179e41",
+      "name": "Filter New Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "=5870531738",
+        "text": "=🆕 *New IT Support Job\n\nCompany: {{ $json.company }}\n\nTitle: {{ $json.title }}\n\nLocation: {{ $json.location }}\n\nDescription: {{ $json.description }}\n\n🔗 Apply here: {{decodeURIComponent($json.jobUrl) }}\n\n",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "258c9a07-36a1-4726-89d1-2dd84664c5a6",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        -1040,
+        -16
+      ],
+      "webhookId": "f9221316-1e30-4188-a391-6ac602a2a6b9",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule: 9:05 AM & 6:05 PM": {
+      "main": [
+        [
+          {
+            "node": "Fetch XE.gr Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch XE.gr Jobs": {
+      "main": [
+        [
+          {
+            "node": "Parse XE.gr Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse XE.gr Jobs": {
+      "main": [
+        [
+          {
+            "node": "Filter New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Telegram": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": {
+    "node:Schedule: 9:05 AM & 6:05 PM": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "eb7bbd05-b94c-496a-8ca6-f57bf002936b",
+  "activeVersionId": "eb7bbd05-b94c-496a-8ca6-f57bf002936b",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-11-30T14:13:56.828Z",
+      "createdAt": "2025-11-30T14:13:56.828Z",
+      "role": "workflow:owner",
+      "workflowId": "pXbIi7OIvsBbKW4o",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2025-12-14T10:05:39.218Z",
+    "createdAt": "2025-12-14T10:05:39.218Z",
+    "versionId": "eb7bbd05-b94c-496a-8ca6-f57bf002936b",
+    "workflowId": "pXbIi7OIvsBbKW4o",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 9,18 * * 1-7"
+              }
+            ]
+          }
+        },
+        "id": "1e5af538-572c-44fc-8ac8-a82eafa563d7",
+        "name": "Schedule: 9:05 AM & 6:05 PM",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -2048,
+          16
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://www.xe.gr/εργασία/θέσεις-εργασίας?free_text=IT+Support",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "User-Agent",
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+              },
+              {
+                "name": "Accept",
+                "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+              },
+              {
+                "name": "Accept-Language",
+                "value": "el-GR,el;q=0.9,en;q=0.8"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "7f3601be-b531-4afe-aa05-e361df595123",
+        "name": "Fetch XE.gr Jobs",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1824,
+          16
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// XE.GR Job Scraper - Final Version (ID, Description, Exact Location)\nconst html = $input.item.json.data;\n\nif (!html) {\n  return [{ json: { error: 'No HTML received' } }];\n}\n\n// Helper function to decode HTML entities and clean text\nfunction cleanText(text) {\n  if (!text) return '';\n  return text\n    .replace(/<br\\s*\\/?>/gi, '\\n')\n    .replace(/<[^>]+>/g, '')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#039;/g, \"'\")\n    .replace(/&nbsp;/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nconst jobs = [];\n\n// Match the main wrapper shown in your screenshot\nconst jobPattern = /<div class=\"result-list-narrow-item-wrapper\"[^>]*>([\\s\\S]*?)<\\/div>\\s*<\\/div>\\s*<\\/div>/gi;\nconst jobBlocks = html.match(jobPattern);\n\nif (!jobBlocks || jobBlocks.length === 0) {\n    return [{ json: { error: 'NO_JOBS_FOUND' } }];\n}\n\n(jobBlocks || []).forEach((block, index) => {\n  try {\n    // 1. EXTRACT ID (from id=\"job-listing-...\")\n    let jobId = '';\n    const idMatch = block.match(/id=\"job-listing-([a-f0-9\\-]+)\"/i);\n    if (idMatch) jobId = idMatch[1];\n    else {\n        const urlIdMatch = block.match(/\\/jobs\\/results\\/([a-f0-9\\-]+)/i);\n        if (urlIdMatch) jobId = urlIdMatch[1];\n    }\n\n    // 2. EXTRACT URL\n    const linkMatch = block.match(/<a href=\"([^\"]+)\"[^>]*class=\"result-list-narrow-item-link gold\"/i);\n    let jobUrl = '';\n    if (linkMatch && linkMatch[1]) {\n      jobUrl = linkMatch[1].startsWith('http') ? linkMatch[1] : 'https://www.xe.gr' + linkMatch[1];\n    }\n    \n    // 3. EXTRACT TITLE\n    const titleMatch = block.match(/<h2 class=\"results-item-title\">([^<]+)<\\/h2>/i);\n    const title = titleMatch ? cleanText(titleMatch[1]) : '';\n    \n    // 4. EXTRACT DESCRIPTION (Full text)\n    const descMatch = block.match(/<div[^>]*class=\"[^\"]*result-description[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/i);\n    let description = descMatch ? cleanText(descMatch[1]) : 'No description available';\n\n    // 5. EXTRACT EXACT LOCATION (From Footer)\n    // Structure is usually: \"Company - Location - Time\" inside \"result-item-footer\"\n    let location = 'Not specified';\n    let company = '';\n    let publishedDate = new Date().toISOString().split('T')[0];\n\n    const footerMatch = block.match(/<div class=\"result-item-footer\"[^>]*>([\\s\\S]*?)<\\/div>/i);\n    \n    if (footerMatch) {\n        const footerText = cleanText(footerMatch[1]);\n        // Split by hyphen surrounded by spaces (standard XE separator)\n        // e.g. \"Company - Athens (Center) - 2 days ago\"\n        const parts = footerText.split(/\\s-\\s/);\n        \n        if (parts.length >= 3) {\n            // Case: Company - Location - Time\n            company = parts[0].trim();\n            location = parts[1].trim(); // This captures \"Αθήνα (Αμπελόκηποι)\"\n            publishedDate = parts[2].trim();\n        } else if (parts.length === 2) {\n            // Case: Location - Time (Company might be missing or merged)\n            location = parts[0].trim();\n            publishedDate = parts[1].trim();\n        }\n    }\n\n    // Fallbacks if footer parsing failed\n    if (!company) {\n        const companyMatch = block.match(/class=\"result-list-narrow-item-link[^>]*>([^<]+)</i);\n        company = companyMatch ? cleanText(companyMatch[1]) : 'Company not specified';\n    }\n    \n    const uniqueId = jobId || `${company}-${title}`.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase().substring(0, 100);\n    \n    if (title) {\n      jobs.push({\n        json: {\n          id: uniqueId,\n          title,\n          company,\n          location, // Will now be \"Αθήνα (Αμπελόκηποι)\"\n          description,\n          jobUrl,\n          publishedDate,\n          scrapedAt: new Date().toISOString()\n        }\n      });\n    }\n  } catch (error) {\n    console.error(`Error parsing job ${index}:`, error.message);\n  }\n});\n\nreturn jobs;"
+        },
+        "id": "579ad5c5-a81d-429a-9df1-b85cd7155591",
+        "name": "Parse XE.gr Jobs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1600,
+          16
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Filter out already processed jobs\nconst allJobs = $('Parse XE.gr Jobs').all();\nconst newJobs = [];\nlet processedIds = [];\n\n// Get previously processed job IDs\ntry {\n  const data = $input.first().json;\n  if (data && data.processedJobs) {\n    processedIds = typeof data.processedJobs === 'string' \n      ? JSON.parse(data.processedJobs) \n      : data.processedJobs;\n  }\n} catch (e) {\n  console.log('Starting fresh job tracking');\n}\n\n// Ensure it's an array and limit size\nif (!Array.isArray(processedIds)) processedIds = [];\nif (processedIds.length > 500) processedIds = processedIds.slice(-500);\n\n// Filter for new jobs only\nallJobs.forEach(item => {\n  const job = item.json;\n  \n  // Pass through error messages\n  if (job.error) {\n    newJobs.push(item);\n    return;\n  }\n  \n  // Check if this job was already processed\n  if (!processedIds.includes(job.id)) {\n    newJobs.push(item);\n    processedIds.push(job.id);\n  }\n});\n\n// Store updated list in first item for saving\nif (newJobs.length > 0 && !newJobs[0].json.error) {\n  newJobs[0].json.updatedProcessedJobs = JSON.stringify(processedIds);\n}\n\nconst existingCount = processedIds.length - newJobs.length;\nconsole.log(`Found ${allJobs.length} jobs total, ${newJobs.length} new, ${existingCount} already seen`);\n\nreturn newJobs.length > 0 ? newJobs : [];"
+        },
+        "id": "fff1641f-f3ca-418b-9e21-7a53cd179e41",
+        "name": "Filter New Jobs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1360,
+          32
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "=5870531738",
+          "text": "=🆕 *New IT Support Job\n\nCompany: {{ $json.company }}\n\nTitle: {{ $json.title }}\n\nLocation: {{ $json.location }}\n\nDescription: {{ $json.description }}\n\n🔗 Apply here: {{decodeURIComponent($json.jobUrl) }}\n\n",
+          "additionalFields": {
+            "appendAttribution": false,
+            "disable_web_page_preview": true,
+            "parse_mode": "HTML"
+          }
+        },
+        "id": "258c9a07-36a1-4726-89d1-2dd84664c5a6",
+        "name": "Send to Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.1,
+        "position": [
+          -1040,
+          -16
+        ],
+        "webhookId": "f9221316-1e30-4188-a391-6ac602a2a6b9",
+        "credentials": {
+          "telegramApi": {
+            "id": "i5VGPAGcIQB6DQ6M",
+            "name": "Telegram account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule: 9:05 AM & 6:05 PM": {
+        "main": [
+          [
+            {
+              "node": "Fetch XE.gr Jobs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch XE.gr Jobs": {
+        "main": [
+          [
+            {
+              "node": "Parse XE.gr Jobs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse XE.gr Jobs": {
+        "main": [
+          [
+            {
+              "node": "Filter New Jobs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter New Jobs": {
+        "main": [
+          [
+            {
+              "node": "Send to Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send to Telegram": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "trelos skilos",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
