@@ -1,0 +1,234 @@
+{
+  "updatedAt": "2025-12-15T16:49:10.347Z",
+  "createdAt": "2025-12-15T16:28:20.113Z",
+  "id": "4H21VPSmnP5D5EvT",
+  "name": "Contact Form to Google Sheets + Email Notifications",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contact-form",
+        "options": {}
+      },
+      "id": "7830ff72-53e1-4f7c-8f0d-d32e5b2450a6",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        80
+      ],
+      "webhookId": "01499e24-eb11-417c-8675-c49f053c8d4b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.email}}",
+              "operation": "notEmpty"
+            }
+          ]
+        }
+      },
+      "id": "413a62b5-309b-40b7-aef4-73724b3dfc5f",
+      "name": "Validate Email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        96
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "7e96e5b8-fe6f-48c4-9309-225c728cc1d9",
+      "name": "Add Row to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        128,
+        -48
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pH3TVxLVuEt7LSmn",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yoursite.com",
+        "toEmail": "={{$json.email}}",
+        "subject": "We received your message",
+        "text": "Hello {{$json.name}},\n\nThank you for contacting us. We've received your message and will get back to you as soon as possible.\n\nBest regards,\nOur Team",
+        "options": {}
+      },
+      "id": "d5abb71e-20b0-4b28-9d3d-9898c9d08275",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        304,
+        80
+      ],
+      "credentials": {
+        "smtp": {
+          "id": null,
+          "name": "gmail_cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yoursite.com",
+        "toEmail": "admin@yoursite.com",
+        "subject": "New Contact Form Submission",
+        "text": "New submission received:\n\nName: {{$json.name}}\nEmail: {{$json.email}}\nMessage: {{$json.message}}\nTimestamp: {{$json.timestamp}}",
+        "options": {}
+      },
+      "id": "5e0285ed-549e-4539-982a-6fb237f6f8cc",
+      "name": "Send Admin Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        128,
+        192
+      ],
+      "credentials": {
+        "smtp": {
+          "id": null,
+          "name": "gmail_cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yoursite.com",
+        "toEmail": "admin@yoursite.com",
+        "subject": "Submission Missing Email Address",
+        "text": "A contact form was submitted without an email address.\n\nName: {{$json.name}}\nMessage: {{$json.message}}\nTimestamp: {{$json.timestamp}}\n\nPlease follow up manually if needed.",
+        "options": {}
+      },
+      "id": "3746b4e0-2619-4e9e-870a-a7e6a1894c45",
+      "name": "No Email Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        272
+      ],
+      "credentials": {
+        "smtp": {
+          "id": null,
+          "name": "gmail_cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## contact form\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Contact Form</title>\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n\n        body {\n            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            min-height: 100vh;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            padding: 20px;\n        }\n\n        .container {\n            background: white;\n            border-radius: 10px;\n            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);\n            padding: 40px;\n            width: 100%;\n            max-width: 500px;\n        }\n\n        h1 {\n            color: #333;\n            margin-bottom: 10px;\n            font-size: 28px;\n        }\n\n        .subtitle {\n            color: #666;\n            margin-bottom: 30px;\n            font-size: 14px;\n        }\n\n        .form-group {\n            margin-bottom: 20px;\n        }\n\n        label {\n            display: block;\n            margin-bottom: 8px;\n            color: #333;\n            font-weight: 500;\n            font-size: 14px;\n        }\n\n        input[type=\"text\"],\n        input[type=\"email\"],\n        textarea {\n            width: 100%;\n            padding: 12px;\n            border: 2px solid #e0e0e0;\n            border-radius: 5px;\n            font-size: 14px;\n            font-family: inherit;\n            transition: border-color 0.3s ease;\n        }\n\n        input[type=\"text\"]:focus,\n        input[type=\"email\"]:focus,\n        textarea:focus {\n            outline: none;\n            border-color: #667eea;\n            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);\n        }\n\n        textarea {\n            resize: vertical;\n            min-height: 120px;\n        }\n\n        button {\n            width: 100%;\n            padding: 12px;\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n            color: white;\n            border: none;\n            border-radius: 5px;\n            font-size: 16px;\n            font-weight: 600;\n            cursor: pointer;\n            transition: transform 0.2s ease, box-shadow 0.2s ease;\n        }\n\n        button:hover {\n            transform: translateY(-2px);\n            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);\n        }\n\n        button:active {\n            transform: translateY(0);\n        }\n\n        button:disabled {\n            opacity: 0.7;\n            cursor: not-allowed;\n        }\n\n        .message {\n            margin-top: 20px;\n            padding: 15px;\n            border-radius: 5px;\n            display: none;\n            font-size: 14px;\n            animation: slideIn 0.3s ease;\n        }\n\n        .message.success {\n            background-color: #d4edda;\n            color: #155724;\n            border: 1px solid #c3e6cb;\n            display: block;\n        }\n\n        .message.error {\n            background-color: #f8d7da;\n            color: #721c24;\n            border: 1px solid #f5c6cb;\n            display: block;\n        }\n\n        .message.loading {\n            background-color: #d1ecf1;\n            color: #0c5460;\n            border: 1px solid #bee5eb;\n            display: block;\n        }\n\n        @keyframes slideIn {\n            from {\n                opacity: 0;\n                transform: translateY(-10px);\n            }\n            to {\n                opacity: 1;\n                transform: translateY(0);\n            }\n        }\n\n        .required {\n            color: #e74c3c;\n        }\n\n        @media (max-width: 600px) {\n            .container {\n                padding: 30px 20px;\n            }\n\n            h1 {\n                font-size: 24px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Get In Touch</h1>\n        <p class=\"subtitle\">We'd love to hear from you. Send us a message!</p>\n\n        <div id=\"contactForm\">\n            <div class=\"form-group\">\n                <label for=\"name\">Name <span class=\"required\">*</span></label>\n                <input \n                    type=\"text\" \n                    id=\"name\" \n                    placeholder=\"John Doe\"\n                    required\n                >\n            </div>\n\n            <div class=\"form-group\">\n                <label for=\"email\">Email</label>\n                <input \n                    type=\"email\" \n                    id=\"email\" \n                    placeholder=\"john@example.com\"\n                >\n            </div>\n\n            <div class=\"form-group\">\n                <label for=\"message\">Message <span class=\"required\">*</span></label>\n                <textarea \n                    id=\"message\" \n                    placeholder=\"Your message here...\"\n                    required\n                ></textarea>\n            </div>\n\n            <button type=\"button\" id=\"submitBtn\">Send Message</button>\n            <div id=\"messageBox\" class=\"message\"></div>\n        </div>\n    </div>\n\n    <script>\n        const submitBtn = document.getElementById('submitBtn');\n        const messageBox = document.getElementById('messageBox');\n        const nameInput = document.getElementById('name');\n        const emailInput = document.getElementById('email');\n        const messageInput = document.getElementById('message');\n\n        // Replace with your n8n webhook URL\n        const WEBHOOK_URL = 'https://n8n.techmetit.com/webhook/contact-form';\n\n        function showMessage(text, type) {\n            messageBox.textContent = text;\n            messageBox.className = `message ${type}`;\n        }\n\n        function resetForm() {\n            nameInput.value = '';\n            emailInput.value = '';\n            messageInput.value = '';\n        }\n\n        function validateForm() {\n            if (!nameInput.value.trim()) {\n                showMessage('Please enter your name', 'error');\n                return false;\n            }\n            if (!messageInput.value.trim()) {\n                showMessage('Please enter a message', 'error');\n                return false;\n            }\n            if (emailInput.value && !isValidEmail(emailInput.value)) {\n                showMessage('Please enter a valid email address', 'error');\n                return false;\n            }\n            return true;\n        }\n\n        function isValidEmail(email) {\n            const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n            return emailRegex.test(email);\n        }\n\n        submitBtn.addEventListener('click', async () => {\n            if (!validateForm()) {\n                return;\n            }\n\n            const formData = {\n                name: nameInput.value.trim(),\n                email: emailInput.value.trim(),\n                message: messageInput.value.trim(),\n                timestamp: new Date().toISOString()\n            };\n\n            showMessage('Sending your message...', 'loading');\n            submitBtn.disabled = true;\n\n            try {\n                const response = await fetch(WEBHOOK_URL, {\n                    method: 'POST',\n                    headers: {\n                        'Content-Type': 'application/json'\n                    },\n                    body: JSON.stringify(formData)\n                });\n\n                if (response.ok) {\n                    showMessage('Thank you! Your message has been sent successfully. We\\'ll get back to you soon.', 'success');\n                    resetForm();\n                    setTimeout(() => {\n                        messageBox.className = 'message';\n                    }, 5000);\n                } else {\n                    showMessage('Error sending message. Please try again.', 'error');\n                }\n            } catch (error) {\n                console.error('Error:', error);\n                showMessage('Network error. Please check your connection and try again.', 'error');\n            } finally {\n                submitBtn.disabled = false;\n            }\n        });\n\n        // Allow Enter key to submit\n        messageInput.addEventListener('keydown', (e) => {\n            if (e.key === 'Enter' && e.ctrlKey) {\n                submitBtn.click();\n            }\n        });\n    </script>\n</body>\n</html>",
+        "height": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -48
+      ],
+      "id": "223231f2-e24e-4149-9d6f-ea5b60a20357",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## create .env file in server\n\nVITE_WEBHOOK_URL=https://your-actual-webhook.com/webhook/contact-form\nThen access it in your form:\njavascriptconst WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL;\nThis works with Vite, Next.js, or similar build tools. The URL never appears in the public code",
+        "height": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -48
+      ],
+      "id": "9545ec92-cd1b-46b4-8f9f-5441be4bbe62",
+      "name": "Sticky Note1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Email": {
+      "main": [
+        [
+          {
+            "node": "Add Row to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Admin Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Email Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d51a8181-d0b4-4d84-9a9b-156dd7b1668b",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-15T16:28:20.116Z",
+      "createdAt": "2025-12-15T16:28:20.116Z",
+      "role": "workflow:owner",
+      "workflowId": "4H21VPSmnP5D5EvT",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
