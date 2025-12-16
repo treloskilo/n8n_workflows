@@ -1,0 +1,170 @@
+{
+  "updatedAt": "2025-12-16T20:46:04.306Z",
+  "createdAt": "2025-12-16T16:17:22.598Z",
+  "id": "FCWmfN3URO0tInF0",
+  "name": "Working_CNN Greece News to Telegram",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "5 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cff3c404-6ce5-4616-b167-13723d45878a",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.cnn.gr/eidhseis",
+        "options": {}
+      },
+      "id": "40129808-decb-47b1-8cc4-135b8ced7f5b",
+      "name": "Fetch CNN Greece",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1296,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get HTML content\nconst html = $input.item.json.data || $input.item.json;\n\n// Remove HTML tags function\nfunction stripHtml(text) {\n  return text\n    .replace(/<[^>]*>/g, '')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .trim();\n}\n\nconst articles = [];\nconst seenUrls = new Set();\n\n// Pattern 1: Look for links with story URLs and h3 titles\n// More flexible pattern that captures the full URL path\nconst pattern1 = /href=[\"'](\\/[a-z]+\\/story\\/\\d+\\/[^\"']+)[\"'][^>]*>.*?<h3[^>]*>([^<]+)<\\/h3>/gis;\nlet match;\n\nwhile ((match = pattern1.exec(html)) !== null && articles.length < 20) {\n  const url = 'https://www.cnn.gr' + match[1];\n  const title = stripHtml(match[2]);\n  \n  // Skip duplicates\n  if (seenUrls.has(url)) continue;\n  seenUrls.add(url);\n  \n  // Try to find the date near this article\n  const beforeLink = html.substring(Math.max(0, match.index - 500), match.index);\n  const datePattern = /(\\d{1,2}\\s+[Α-Ωα-ω]{3}\\s+\\d{4}\\s+\\d{2}:\\d{2})/;\n  const dateMatch = beforeLink.match(datePattern);\n  const datetime = dateMatch ? dateMatch[1] : 'Not available';\n  \n  if (title && url && title.length > 10) {\n    articles.push({\n      title: title,\n      url: url,\n      datetime: datetime,\n      source: 'CNN Greece'\n    });\n  }\n}\n\n// Pattern 2: Broader search for any link with story pattern\nif (articles.length < 25) {\n  const pattern2 = /href=[\"'](\\/[^\"'\\/]+\\/story\\/\\d+\\/[^\"'\\s]+)[\"']/gi;\n  let match2;\n  \n  while ((match2 = pattern2.exec(html)) !== null && articles.length < 20) {\n    const url = 'https://www.cnn.gr' + match2[1];\n    \n    // Skip duplicates\n    if (seenUrls.has(url)) continue;\n    seenUrls.add(url);\n    \n    // Look for title near this URL (within 300 chars after)\n    const afterUrl = html.substring(match2.index, match2.index + 300);\n    const titleMatch = afterUrl.match(/<h[23][^>]*>([^<]+)<\\/h[23]>/i);\n    const title = titleMatch ? stripHtml(titleMatch[1]) : null;\n    \n    if (title && title.length > 10) {\n      articles.push({\n        title: title,\n        url: url,\n        datetime: 'Not available',\n        source: 'CNN Greece'\n      });\n    }\n  }\n}\n\n// Return articles\nif (articles.length === 0) {\n  return [{ json: { \n    title: 'No articles found', \n    url: 'https://www.cnn.gr/eidhseis', \n    datetime: 'N/A',\n    error: true\n  }}];\n}\n\n// Return top 25 articles\nreturn articles.slice(0, 25).map(article => ({ json: article }));"
+      },
+      "id": "74490a16-68a5-4b17-b70c-e03e1e7a624a",
+      "name": "Parse HTML & Extract News",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const articles = $input.all();\nconst MAX_LENGTH = 3800;\n\n// ---------- Date / Time ----------\nconst now = new Date();\nconst date = now.toLocaleDateString('el-GR', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\nconst time = now.toLocaleTimeString('el-GR', {\n  hour: '2-digit',\n  minute: '2-digit'\n});\n\n// ---------- Header ----------\nconst buildHeader = () =>\n  `📰 <b>CNN Greece — Daily News Update</b>\\n` +\n  `${date} · ${time}\\n` +\n  `────────────────────\\n\\n`;\n\n// ---------- Category Detection ----------\nconst getCategory = (url) => {\n  if (url.includes('/politiki/')) return '📌 <b>ΠΟΛΙΤΙΚΗ</b>';\n  if (url.includes('/ellada/')) return '📌 <b>ΕΛΛΑΔΑ</b>';\n  if (url.includes('/kosmos/')) return '📌 <b>ΚΟΣΜΟΣ</b>';\n  if (url.includes('/oikonomia/')) return '📌 <b>ΟΙΚΟΝΟΜΙΑ</b>';\n  return '📌 <b>ΛΟΙΠΑ</b>';\n};\n\n// ---------- Group Articles ----------\nconst grouped = {};\narticles.forEach(a => {\n  const cat = getCategory(a.json.url);\n  if (!grouped[cat]) grouped[cat] = [];\n  grouped[cat].push(a.json);\n});\n\n// ---------- Build Messages ----------\nlet messages = [];\nlet currentMessage = buildHeader();\nlet part = 1;\nlet articleCounter = 1;\n\nfor (const category of Object.keys(grouped)) {\n  const categoryHeader = `${category}\\n\\n`;\n\n  if ((currentMessage.length + categoryHeader.length) > MAX_LENGTH) {\n    currentMessage += `<i>Μέρος ${part}</i>`;\n    messages.push({ text: currentMessage });\n    part++;\n    currentMessage = buildHeader();\n  }\n\n  currentMessage += categoryHeader;\n\n  for (const article of grouped[category]) {\n    let block =\n      `<b>${articleCounter}. ${article.title}</b>\\n`;\n\n    if (article.datetime && article.datetime !== 'Not available') {\n      block += `🕐 ${article.datetime}\\n`;\n    }\n\n    block += `\\n`;\n\n    if ((currentMessage.length + block.length) > MAX_LENGTH) {\n      currentMessage += `<i>Μέρος ${part}</i>`;\n      messages.push({ text: currentMessage });\n      part++;\n      currentMessage = buildHeader() + `<i>Συνέχεια ειδήσεων</i>\\n\\n` + block;\n    } else {\n      currentMessage += block;\n    }\n\n    // ---------- Inline Button ----------\n    messages.push({\n      text: currentMessage,\n      reply_markup: {\n        inline_keyboard: [[\n          { text: '🔗 Διαβάστε το άρθρο', url: article.url }\n        ]]\n      }\n    });\n\n    currentMessage = buildHeader();\n    articleCounter++;\n  }\n\n  currentMessage += `────────────────────\\n\\n`;\n}\n\n// ---------- Final ----------\nif (currentMessage.trim().length > 0) {\n  currentMessage += `<i>Μέρος ${part}</i>`;\n  messages.push({ text: currentMessage });\n}\n\n// ---------- Output ----------\nreturn messages.map(m => ({ json: m }));\n"
+      },
+      "id": "f9c3c2ec-76bc-4e07-ba85-ef2d5f99f79f",
+      "name": "Format Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "={{ $json.message }}\n\n{{ $json.text }}\n{{ $json.reply_markup.inline_keyboard[0][0].text }}\n{{ $json.reply_markup.inline_keyboard[0][0].url }}\n\n",
+        "replyMarkup": "inlineKeyboard",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "8f22ec8f-34bc-462a-bc1b-bfb4130a1ad3",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1888,
+        208
+      ],
+      "webhookId": "c1ed5981-ce13-40c3-a1bf-cccf047c93c8",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch CNN Greece",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch CNN Greece": {
+      "main": [
+        [
+          {
+            "node": "Parse HTML & Extract News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse HTML & Extract News": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "bd5e3d5d-3377-468c-8ed5-65fda0ea51e8",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-16T16:17:22.602Z",
+      "createdAt": "2025-12-16T16:17:22.602Z",
+      "role": "workflow:owner",
+      "workflowId": "FCWmfN3URO0tInF0",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
