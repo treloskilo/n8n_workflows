@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-11T13:11:24.976Z",
+  "updatedAt": "2025-12-16T10:45:59.386Z",
   "createdAt": "2025-11-27T11:36:59.599Z",
   "id": "ivTyzJgTkmC4WNGE",
   "name": "Working_Newjobs.gr to Telegram_with_GoogleGemini",
@@ -55,7 +55,9 @@
         -144
       ],
       "id": "cdc0a1c4-1596-4029-bbb4-606494c2be87",
-      "name": "AI Agent"
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
     },
     {
       "parameters": {
@@ -205,7 +207,7 @@
       "typeVersion": 2.1,
       "position": [
         816,
-        -144
+        -176
       ],
       "id": "1e3850e7-5132-4862-b8f6-69732c6736f5",
       "name": "Send a message",
@@ -337,8 +339,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "b1b10a65-df09-4b60-8f39-65387fe4f0de",
-  "activeVersionId": "b1b10a65-df09-4b60-8f39-65387fe4f0de",
+  "versionId": "b15ab7d3-6a8d-42d8-ac2d-6a8dcf324c9b",
+  "activeVersionId": "b15ab7d3-6a8d-42d8-ac2d-6a8dcf324c9b",
   "triggerCount": 1,
   "shared": [
     {
@@ -350,9 +352,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-11T13:11:24.977Z",
-    "createdAt": "2025-12-11T13:11:24.977Z",
-    "versionId": "b1b10a65-df09-4b60-8f39-65387fe4f0de",
+    "updatedAt": "2025-12-16T10:45:59.387Z",
+    "createdAt": "2025-12-16T10:45:59.387Z",
+    "versionId": "b15ab7d3-6a8d-42d8-ac2d-6a8dcf324c9b",
     "workflowId": "ivTyzJgTkmC4WNGE",
     "nodes": [
       {
@@ -404,7 +406,9 @@
           -144
         ],
         "id": "cdc0a1c4-1596-4029-bbb4-606494c2be87",
-        "name": "AI Agent"
+        "name": "AI Agent",
+        "retryOnFail": true,
+        "waitBetweenTries": 3000
       },
       {
         "parameters": {
@@ -554,7 +558,7 @@
         "typeVersion": 2.1,
         "position": [
           816,
-          -144
+          -176
         ],
         "id": "1e3850e7-5132-4862-b8f6-69732c6736f5",
         "name": "Send a message",
