@@ -1,0 +1,374 @@
+{
+  "updatedAt": "2025-12-16T12:31:45.000Z",
+  "createdAt": "2025-12-16T10:46:59.652Z",
+  "id": "v4uRI3uMF7Kinaqa",
+  "name": "My workflow 9",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11,
+              "triggerAtMinute": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -736,
+        -208
+      ],
+      "id": "3dd58902-39d6-47eb-9439-6bdf1e1b7512",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.newjobs.gr/search?location=Athens&query=IT&day_range=14",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -512,
+        -208
+      ],
+      "id": "cb0ce5df-0e4d-4a5f-822f-61486bdc64f4",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You will receive an array of job items\nEach item includes fields such as:\ntitle\ndescription\ncompany name\ndepartment\nlocation\nrequirements\nbenefits\nurl\ndate_created\nworkplace\n\nYour task is to:\n1. Analyze all job items.\n2. Group them by company.\n3. Produce a short structured summary according to the System Prompt.\n4. Remove all HTML from descriptions and requirements before processing.\n5. Maintain strict Markdown formatting.\n\nHere are the job items:\n[JOB DATA]:\n{{ JSON.stringify($json.data, null, 2) }}",
+        "options": {
+          "systemMessage": "=You are a super smart, super highly efficient, super clever and both very and super detailed Job Market Analyst generating a concise summary report for IT job seekers.\n\nEach item contains fields such as:\ntitle\ndescription (may include HTML)\ncompany\ndepartment\nlocation\nrequirements\nbenefits\nurl\ndate_created\nworkplace\nbenefits\n\nYou are a highly efficient Job Market Analyst generating a concise summary report for IT job seekers. Your goal is to produce a clean, ready-to-email Markdown report.\n\n### Primary Output & Brevity Rules:\n1.  **Actionable Summary Table (Required):** The report MUST begin with a high-level Markdown table summarizing ALL jobs with columns for Company, Role, Location, Primary Focus (Skills), and URL.\n2.  **Strict Brevity:** For the detailed section, only list the 5-6 MOST CRITICAL and UNIQUE points for Responsibilities and Requirements. Eliminate generic or obvious bullet points (e.g., \"Good communication skills\").\n3.  **Data Cleaning:** Strip any HTML tags from the input descriptions or requirements.\n4.  **Grouping:** Group all findings by Company Name.\n\n### Detailed Section Structure (Mandatory Headings):\nImmediately following the Summary Table, provide the detailed breakdown for each company using this exact structure:\n\n## [COMPANY NAME] - [JOB TITLE]\n\n**Location:** [City, Region, Country]\n\n**Primary Focus / Keywords:** [A 5-8 word summary of the main technical skills required]\n\n**Key Responsibilities:**\n* [Most critical point 1]\n* [Most critical point 2]\n* ... (up to 5-6 points)\n\n**Required Skills:**\n* [Most critical skill/tool 1]\n* [Most critical skill/tool 2]\n* ... (up to 5-6 points)\n\n**Notable Benefits:**\n* [Concise list of unique benefits, e.g., Private Health Insurance, Stock Options]\n\n**URL:** [Full link to job posting]\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        352,
+        -208
+      ],
+      "id": "0042b7fa-9ca2-4a9a-b9f6-ee1a5fd5710a",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Get the HTML content.\nconst htmlContent = $input.item.json.data;\n\n// Step 2: Use regex to extract the entire 'window.jobBoard = { ... }' assignment.\n// We look for the variable assignment and capture everything until the closing script tag or end of string.\nconst assignmentRegex = /window\\.jobBoard\\s*=\\s*(\\{[\\s\\S]*?\\})\\s*;/i;\nconst assignmentMatch = htmlContent.match(assignmentRegex);\n\nif (!assignmentMatch || !assignmentMatch[1]) {\n    return [{ json: { error: \"Failed to locate the 'window.jobBoard' variable assignment.\" } }];\n}\n\n// The captured content is the full JavaScript object (not yet strict JSON).\nlet jobBoardContent = assignmentMatch[1].trim();\n\n// Step 3: Use eval() to safely parse the JavaScript object string into an object.\n// The surrounding 'window.jobBoard =' is stripped, leaving only the object literal { ... }.\ntry {\n    // ⚠️ Security Note: eval() is used as a last resort to parse the complex JS object literal.\n    // We execute the string, which assigns its content to a new variable.\n    const variableName = 'tempJobBoardData';\n    eval(`var ${variableName} = ${jobBoardContent}`);\n    \n    // Retrieve the variable created by eval()\n    const jobBoardObject = global[variableName];\n\n    // Step 4: Navigate to the desired job data structure.\n    const jobData = jobBoardObject.initialState[\"api/v1/jobs\"].data;\n\n    if (!jobData || !Array.isArray(jobData.jobs)) {\n        return [{ json: { error: \"Job data structure is invalid: 'jobs' array not found.\" } }];\n    }\n\n    // Step 5: Create one n8n output item for each job.\n    const outputItems = jobData.jobs.map(job => ({\n        json: job\n    }));\n\n    // Clean up the global variable\n    delete global[variableName];\n\n    return outputItems;\n\n} catch (error) {\n    console.error(\"Failed to execute eval() or access nested properties:\", error);\n    return [{ json: { \n        error: \"Failed to parse JavaScript object using eval().\", \n        details: error.message\n    } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -208
+      ],
+      "id": "9b1a45c4-861d-45ab-bb09-fb5732484439",
+      "name": "JobData"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efd91b63-9b71-4b55-a1c2-62a612def5d7",
+              "name": "Department",
+              "value": "={{ $json.department }}",
+              "type": "string"
+            },
+            {
+              "id": "c2fc7667-b2fd-4163-8f90-467bb0c53c85",
+              "name": "Title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "0fd1bd1a-e89b-4846-9b38-3be493ad3026",
+              "name": "=Description",
+              "value": "={{ $json.description\n    .replace(/<\\/p>/g, '\\n\\n')\n    .replace(/<li>/g, '• ')\n    .replace(/<\\/li>/g, '\\n')\n    .replace(/<[^>]*>/g, '')\n}}\n",
+              "type": "string"
+            },
+            {
+              "id": "a58a370e-0b69-49b3-9f1d-542174fd3b47",
+              "name": "Requirements",
+              "value": "={{ $json.requirementsSection\n    .replace(/<\\/p>/g, '\\n\\n')\n    .replace(/<li>/g, '• ')\n    .replace(/<\\/li>/g, '\\n')\n    .replace(/<[^>]*>/g, '')\n}}\n",
+              "type": "string"
+            },
+            {
+              "id": "0299fdf2-21fc-4dbd-8748-dafc36589320",
+              "name": "Workplace",
+              "value": "={{ $json.workplace }}",
+              "type": "string"
+            },
+            {
+              "id": "0052a88c-4904-493d-a648-4a4cac6b1b13",
+              "name": "URL",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "dee051f6-15a0-45e5-aea6-5c22772402bb",
+              "name": "Location",
+              "value": "={{ $json.locations }}",
+              "type": "string"
+            },
+            {
+              "id": "9dff1d80-f42e-47bf-8de7-36dbf6261ae0",
+              "name": "Creation Date",
+              "value": "={{ $json.created }}",
+              "type": "string"
+            },
+            {
+              "id": "61d9e911-e8db-4665-a89e-2ba5da99efe5",
+              "name": "Decription 2",
+              "value": "={{ $json.socialSharingDescription }}",
+              "type": "string"
+            },
+            {
+              "id": "8bdd4d3c-db96-4f1a-89a6-5f5d57861d9e",
+              "name": "Benefits",
+              "value": "={{ $json.benefitsSection\n    .replace(/<\\/p>/g, '\\n\\n')\n    .replace(/<li>/g, '• ')\n    .replace(/<\\/li>/g, '\\n')\n    .replace(/<[^>]*>/g, '')\n}}\n",
+              "type": "string"
+            },
+            {
+              "id": "600ca758-8b01-4aa6-bf6a-50a0ba6dffd3",
+              "name": "Employment Type",
+              "value": "={{ $json.employmentType }}",
+              "type": "string"
+            },
+            {
+              "id": "8e8d711b-88a1-468d-977c-3323b38d3ecb",
+              "name": "Company Name",
+              "value": "={{ $json.company.title }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        -208
+      ],
+      "id": "67fc0b65-fa4e-4886-9170-341ec624b9b5",
+      "name": "AllJobsInput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -208
+      ],
+      "id": "4f279cb3-c7ff-4025-ac48-2f1329735aca",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "571823e6-215f-4965-8ad3-48055c4d3eaa",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "=summary of the latest IT job openings collected from NewJobs.gr.",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        864,
+        -208
+      ],
+      "id": "4aaaf0bf-c011-4c7a-9597-621f08c63a73",
+      "name": "Send a message",
+      "webhookId": "63b570c1-4cf5-441d-bdee-c263932cd1b5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const md = items[0].json.output;  // AI text output\n\n// Convert Markdown table into an array of rows\nfunction mdTableToHtml(mdTable) {\n  const lines = mdTable.trim().split(\"\\n\");\n\n  // Filter lines that are part of the table\n  const rows = lines.filter(line => line.startsWith(\"|\"));\n\n  const htmlRows = rows.map((line, index) => {\n    // Split columns\n    const cols = line.split(\"|\").slice(1, -1).map(c => c.trim());\n\n    if (index === 0) {\n      // Header row\n      return \"<tr>\" + cols.map(c => `<th style=\"padding: 8px; background:#f4f4f4; border:1px solid #ddd;\">${c}</th>`).join(\"\") + \"</tr>\";\n    }\n\n    // Skip alignment row (---)\n    if (line.includes(\"---\")) return \"\";\n\n    // Data rows\n    return \"<tr>\" + cols.map(c => `<td style=\"padding: 8px; border:1px solid #ddd;\">${c}</td>`).join(\"\") + \"</tr>\";\n  }).join(\"\\n\");\n\n  return `\n    <table style=\"border-collapse: collapse; width: 100%; margin-top: 20px;\">\n      ${htmlRows}\n    </table>\n  `;\n}\n\n// Convert markdown table to HTML\nconst htmlTable = mdTableToHtml(md);\n\nreturn [{\n  json: {\n    html: `\n    <html>\n      <body style=\"font-family: Arial, sans-serif; color: #333; padding: 20px;\">\n        \n        <h1 style=\"color:#0077cc;\">IT Job Market Summary Report</h1>\n\n        <p>Below is a structured summary of the latest IT job openings collected from NewJobs.gr.</p>\n\n        ${htmlTable}\n\n        <br><br>\n        <p style=\"font-size: 12px; color:#777;\">\n          Generated automatically by n8n AI · ${new Date().toLocaleString(\"en-GB\", { timeZone: \"Europe/Athens\" })}\n        </p>\n\n      </body>\n    </html>\n    `\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        -208
+      ],
+      "id": "5a907063-8686-4c17-b92d-b9c24069f271",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "mistral:7b-instruct-q4_0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        320,
+        96
+      ],
+      "id": "d42a93e8-53c8-40f4-a35d-5cb0657d732f",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "0ETxcr9uFCQDEfJV",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "JobData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JobData": {
+      "main": [
+        [
+          {
+            "node": "AllJobsInput",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AllJobsInput": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "61e9fd3d-a5d8-477d-bb8c-8fe30b06b0fb",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-16T10:46:59.656Z",
+      "createdAt": "2025-12-16T10:46:59.656Z",
+      "role": "workflow:owner",
+      "workflowId": "v4uRI3uMF7Kinaqa",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
