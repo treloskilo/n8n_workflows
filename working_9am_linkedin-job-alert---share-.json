@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-14T09:20:42.150Z",
+  "updatedAt": "2025-12-17T13:56:03.983Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -253,6 +253,7 @@
     },
     {
       "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
@@ -452,8 +453,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "53234103-3724-421f-b737-39de6444af62",
-  "activeVersionId": "53234103-3724-421f-b737-39de6444af62",
+  "versionId": "51ea8b49-83bc-44b8-9696-19659429e273",
+  "activeVersionId": "51ea8b49-83bc-44b8-9696-19659429e273",
   "triggerCount": 1,
   "shared": [
     {
@@ -465,9 +466,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-14T09:20:42.151Z",
-    "createdAt": "2025-12-14T09:20:42.151Z",
-    "versionId": "53234103-3724-421f-b737-39de6444af62",
+    "updatedAt": "2025-12-17T13:56:03.984Z",
+    "createdAt": "2025-12-17T13:56:03.984Z",
+    "versionId": "51ea8b49-83bc-44b8-9696-19659429e273",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
@@ -717,6 +718,7 @@
       },
       {
         "parameters": {
+          "modelName": "models/gemini-2.5-flash-lite",
           "options": {}
         },
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
