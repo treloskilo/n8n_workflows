@@ -1,0 +1,168 @@
+{
+  "updatedAt": "2025-12-17T20:13:56.027Z",
+  "createdAt": "2025-12-17T15:42:40.545Z",
+  "id": "XLtUt55usgvSi1bL",
+  "name": "Working_JobFind ITJobs_to_Telegram",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://www.jobfind.gr/JobAds/all/all/GR/Theseis_Ergasias?cnt=1&st=IT",
+        "options": {
+          "redirect": {}
+        }
+      },
+      "name": "Fetch Job Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        704,
+        -576
+      ],
+      "id": "eb69921a-8ad7-45ae-879e-663d32eb7ce4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract job data based on actual HTML structure from jobfind.gr\nconst html = $input.all()[0].json.data;\nconst jobs = [];\n\n// Split by jobitem divs which contain the full job listing\nconst jobItemPattern = /<div class=\"jobitem[^>]*>([\\s\\S]*?)<\\/div>\\s*<\\/div>\\s*<\\/div>\\s*<\\/div>/g;\nlet jobMatch;\n\nwhile ((jobMatch = jobItemPattern.exec(html)) !== null) {\n  const jobContent = jobMatch[1];\n  \n  // Extract date from col-xs-6 div (usually contains datemob span)\n  const dateMatch = jobContent.match(/<span class=\"datemob\">([^<]+)<\\/span>/);\n  const date = dateMatch ? dateMatch[1].trim() : 'Not specified';\n  \n  // Extract title and URL from h3 > a\n  const titleMatch = jobContent.match(/<h3[^>]*>\\s*<a[^>]*href=\"([^\"]+)\"[^>]*>([^<]+)<\\/a>/);\n  if (!titleMatch) continue;\n  \n  const urlPath = titleMatch[1];\n  const title = titleMatch[2].trim();\n  const url = urlPath.startsWith('http') ? urlPath : 'https://www.jobfind.gr' + urlPath;\n  \n  // Extract location from city div\n  const locationMatch = jobContent.match(/<div class=\"city\"[^>]*>\\s*<img[^>]*>\\s*([^<]+)<\\/div>/);\n  const location = locationMatch ? locationMatch[1].trim() : 'Not specified';\n  \n  // Extract working model from type div\n  const typeMatch = jobContent.match(/<div class=\"type\"[^>]*>\\s*<img[^>]*>\\s*([^<]+)<\\/div>/);\n  const workingModel = typeMatch ? typeMatch[1].trim() : 'Not specified';\n  \n  jobs.push({\n    date: date,\n    title: title,\n    location: location,\n    workingModel: workingModel,\n    url: url\n  });\n}\n\nreturn jobs;"
+      },
+      "name": "Extract Job Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -576
+      ],
+      "id": "7e961e0b-fc10-4c11-ad16-675ecffb9883"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Format message for Telegram\nconst job = $input.item.json;\n\nconst message =\n  `🧾 *NEW JOB OPPORTUNITY*\\n` +\n  `━━━━━━━━━━━━━━━━━━\\n\\n` +\n\n  `📅 *Posted On*\\n` +\n  `${job.date || 'N/A'}\\n\\n` +\n\n  `💼 *Position*\\n` +\n  `${job.title || 'N/A'}\\n\\n` +\n\n  `📍 *Location*\\n` +\n  `${job.location || 'N/A'}\\n\\n` +\n\n  `🕒 *Employment Type*\\n` +\n  `${job.workingModel || 'N/A'}\\n\\n` +\n\n    `🔗 *Apply Here*\\n` +\n  `${job.url}`;\n\nreturn {\n  message,\n  jobTitle: job.title,\n  url: job.url\n};\n"
+      },
+      "name": "Format Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -576
+      ],
+      "id": "b4a55a3d-fa57-4868-9f92-e86e87e711ac"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        -576
+      ],
+      "id": "89fecd5d-06d3-4201-9ccb-12894ab740e3",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "5870531738",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        -576
+      ],
+      "id": "37038ed2-cb81-47e2-8863-f40e9cf1b489",
+      "name": "Send a text message",
+      "webhookId": "8d51f85a-dd45-4b49-a91c-fd7c69e3ddad",
+      "credentials": {
+        "telegramApi": {
+          "id": "i5VGPAGcIQB6DQ6M",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Fetch Job Page": {
+      "main": [
+        [
+          {
+            "node": "Extract Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Job Data": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Job Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "28fd13d9-a656-4a5a-8c5f-42fb7e08c02e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-17T15:42:40.547Z",
+      "createdAt": "2025-12-17T15:42:40.547Z",
+      "role": "workflow:owner",
+      "workflowId": "XLtUt55usgvSi1bL",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
