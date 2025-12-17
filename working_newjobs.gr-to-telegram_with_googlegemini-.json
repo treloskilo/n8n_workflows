@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-16T10:45:59.386Z",
+  "updatedAt": "2025-12-17T13:53:11.681Z",
   "createdAt": "2025-11-27T11:36:59.599Z",
   "id": "ivTyzJgTkmC4WNGE",
   "name": "Working_Newjobs.gr to Telegram_with_GoogleGemini",
@@ -177,13 +177,14 @@
     },
     {
       "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        144,
-        64
+        272,
+        112
       ],
       "id": "3f9910e1-54a9-4285-8aef-d9524964cf33",
       "name": "Google Gemini Chat Model",
@@ -206,8 +207,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        816,
-        -176
+        832,
+        -144
       ],
       "id": "1e3850e7-5132-4862-b8f6-69732c6736f5",
       "name": "Send a message",
@@ -226,7 +227,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        656,
+        624,
         -144
       ],
       "id": "4045f6ef-1ab5-42cd-aaf9-0675391a4fa2",
@@ -339,8 +340,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "b15ab7d3-6a8d-42d8-ac2d-6a8dcf324c9b",
-  "activeVersionId": "b15ab7d3-6a8d-42d8-ac2d-6a8dcf324c9b",
+  "versionId": "684155fb-5c1d-48b5-b77e-eee1951624fa",
+  "activeVersionId": "684155fb-5c1d-48b5-b77e-eee1951624fa",
   "triggerCount": 1,
   "shared": [
     {
@@ -352,9 +353,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-16T10:45:59.387Z",
-    "createdAt": "2025-12-16T10:45:59.387Z",
-    "versionId": "b15ab7d3-6a8d-42d8-ac2d-6a8dcf324c9b",
+    "updatedAt": "2025-12-17T13:53:11.682Z",
+    "createdAt": "2025-12-17T13:53:11.682Z",
+    "versionId": "684155fb-5c1d-48b5-b77e-eee1951624fa",
     "workflowId": "ivTyzJgTkmC4WNGE",
     "nodes": [
       {
@@ -528,13 +529,14 @@
       },
       {
         "parameters": {
+          "modelName": "models/gemini-2.5-flash-lite",
           "options": {}
         },
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
         "typeVersion": 1,
         "position": [
-          144,
-          64
+          272,
+          112
         ],
         "id": "3f9910e1-54a9-4285-8aef-d9524964cf33",
         "name": "Google Gemini Chat Model",
@@ -557,8 +559,8 @@
         "type": "n8n-nodes-base.gmail",
         "typeVersion": 2.1,
         "position": [
-          816,
-          -176
+          832,
+          -144
         ],
         "id": "1e3850e7-5132-4862-b8f6-69732c6736f5",
         "name": "Send a message",
@@ -577,7 +579,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          656,
+          624,
           -144
         ],
         "id": "4045f6ef-1ab5-42cd-aaf9-0675391a4fa2",
