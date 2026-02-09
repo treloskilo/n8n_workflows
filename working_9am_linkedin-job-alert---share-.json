@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-12-17T13:56:03.983Z",
+  "updatedAt": "2026-02-09T11:52:17.149Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -15,7 +15,7 @@
       "typeVersion": 1,
       "position": [
         464,
-        -288
+        -304
       ],
       "id": "9e624485-999a-4e30-9873-45884dcfe876",
       "name": "Split Out"
@@ -37,7 +37,9 @@
       "parameters": {
         "chatId": "5870531738",
         "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
-        "additionalFields": {}
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -109,8 +111,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        368,
-        -16
+        496,
+        -96
       ],
       "id": "9b6cf46c-0166-49fc-bb71-0586a44e3ca9",
       "name": "Parse"
@@ -245,8 +247,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        656,
-        -112
+        736,
+        -64
       ],
       "id": "d64a29c2-d89f-49f4-b688-22e082bfb283",
       "name": "Basic LLM Chain"
@@ -259,8 +261,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        592,
-        96
+        720,
+        160
       ],
       "id": "b9f19ec8-65fe-461b-be3c-31d0b2ffd161",
       "name": "Google Gemini Chat Model",
@@ -270,6 +272,20 @@
           "name": "Google Gemini(PaLM) Api account"
         }
       }
+    },
+    {
+      "parameters": {
+        "amount": 40
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        -64
+      ],
+      "id": "03eaa992-e2ab-4280-b865-86942dde742e",
+      "name": "Wait1",
+      "webhookId": "2a0ece94-e1e4-4d0c-b9d4-dc2dda66e33c"
     }
   ],
   "connections": {
@@ -333,7 +349,7 @@
       "main": [
         [
           {
-            "node": "Parse",
+            "node": "Wait1",
             "type": "main",
             "index": 0
           }
@@ -434,6 +450,17 @@
           }
         ]
       ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -453,8 +480,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "51ea8b49-83bc-44b8-9696-19659429e273",
-  "activeVersionId": "51ea8b49-83bc-44b8-9696-19659429e273",
+  "versionId": "20653bea-d702-433c-8cd4-e469a87ab45c",
+  "activeVersionId": "20653bea-d702-433c-8cd4-e469a87ab45c",
   "triggerCount": 1,
   "shared": [
     {
@@ -466,9 +493,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-12-17T13:56:03.984Z",
-    "createdAt": "2025-12-17T13:56:03.984Z",
-    "versionId": "51ea8b49-83bc-44b8-9696-19659429e273",
+    "updatedAt": "2026-02-09T11:52:17.150Z",
+    "createdAt": "2026-02-09T11:52:17.150Z",
+    "versionId": "20653bea-d702-433c-8cd4-e469a87ab45c",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
@@ -480,7 +507,7 @@
         "typeVersion": 1,
         "position": [
           464,
-          -288
+          -304
         ],
         "id": "9e624485-999a-4e30-9873-45884dcfe876",
         "name": "Split Out"
@@ -502,7 +529,9 @@
         "parameters": {
           "chatId": "5870531738",
           "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
-          "additionalFields": {}
+          "additionalFields": {
+            "appendAttribution": false
+          }
         },
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
@@ -574,8 +603,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          368,
-          -16
+          496,
+          -96
         ],
         "id": "9b6cf46c-0166-49fc-bb71-0586a44e3ca9",
         "name": "Parse"
@@ -710,8 +739,8 @@
         "type": "@n8n/n8n-nodes-langchain.chainLlm",
         "typeVersion": 1.7,
         "position": [
-          656,
-          -112
+          736,
+          -64
         ],
         "id": "d64a29c2-d89f-49f4-b688-22e082bfb283",
         "name": "Basic LLM Chain"
@@ -724,8 +753,8 @@
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
         "typeVersion": 1,
         "position": [
-          592,
-          96
+          720,
+          160
         ],
         "id": "b9f19ec8-65fe-461b-be3c-31d0b2ffd161",
         "name": "Google Gemini Chat Model",
@@ -735,6 +764,20 @@
             "name": "Google Gemini(PaLM) Api account"
           }
         }
+      },
+      {
+        "parameters": {
+          "amount": 40
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          352,
+          -64
+        ],
+        "id": "03eaa992-e2ab-4280-b865-86942dde742e",
+        "name": "Wait1",
+        "webhookId": "2a0ece94-e1e4-4d0c-b9d4-dc2dda66e33c"
       }
     ],
     "connections": {
@@ -798,7 +841,7 @@
         "main": [
           [
             {
-              "node": "Parse",
+              "node": "Wait1",
               "type": "main",
               "index": 0
             }
@@ -895,6 +938,17 @@
             {
               "node": "Basic LLM Chain",
               "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "Parse",
+              "type": "main",
               "index": 0
             }
           ]
