@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-09T11:52:17.149Z",
+  "updatedAt": "2026-02-10T07:28:42.281Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -480,8 +480,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "20653bea-d702-433c-8cd4-e469a87ab45c",
-  "activeVersionId": "20653bea-d702-433c-8cd4-e469a87ab45c",
+  "versionId": "acf2bd3a-7064-4028-8a67-6df788003f6e",
+  "activeVersionId": "acf2bd3a-7064-4028-8a67-6df788003f6e",
   "triggerCount": 1,
   "shared": [
     {
@@ -493,9 +493,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-02-09T11:52:17.150Z",
-    "createdAt": "2026-02-09T11:52:17.150Z",
-    "versionId": "20653bea-d702-433c-8cd4-e469a87ab45c",
+    "updatedAt": "2026-02-10T07:28:42.282Z",
+    "createdAt": "2026-02-10T07:28:42.282Z",
+    "versionId": "acf2bd3a-7064-4028-8a67-6df788003f6e",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
