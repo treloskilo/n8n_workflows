@@ -1,0 +1,409 @@
+{
+  "updatedAt": "2026-02-10T10:02:18.686Z",
+  "createdAt": "2026-02-10T09:39:29.582Z",
+  "id": "zTttPqK6Unxy2A92",
+  "name": "LinkedIn Job Matcher - SAFE Gemini",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9,
+              "triggerAtMinute": 5
+            }
+          ]
+        }
+      },
+      "id": "6a8df808-a6cc-4bc4-b0a1-c63b6c1735b0",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -864,
+        -320
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "resume",
+              "type": "string",
+              "value": "I am Vasileios Seremetis. Experienced IT Support (L1-L3) and Systems & Network Administrator with 20+ years..."
+            },
+            {
+              "name": "core_skills",
+              "type": "string",
+              "value": "VMware, Proxmox, Hyper-V, Windows Server, Linux, VPN, Firewalls, Cloud, Microsoft 365"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d1b83af8-c219-452d-9baa-2f6953ce6208",
+      "name": "Resume",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -672,
+        -320
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "https://www.linkedin.com/jobs/search?keywords=IT&location=Athens&f_TPR=r604800",
+        "options": {}
+      },
+      "id": "534e4cb3-b3eb-4717-a628-df3bb23c6584",
+      "name": "Scrape LinkedIn Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -464,
+        -320
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfrom urllib.parse import urlparse, urlunparse\nfrom bs4 import BeautifulSoup\n\n\nhtml = _input.all()[0]['json']['data']\nsoup = BeautifulSoup(html, 'html.parser')\n\njob_links = soup.select('ul.jobs-search__results-list li div a[class*=\"base-card\"]')\n\n\n\njob_urls = []\nfor a_tag in job_links:\n    href = a_tag.get('href')\n    if href:\n\n        parsed = urlparse(href)\n        parsed_new = parsed._replace(netloc=\"www.linkedin.com\")\n        new_url = urlunparse(parsed_new)\n        job_urls.append(new_url)\n\n\n\n\nreturn {\"links\": job_urls}"
+      },
+      "id": "182c330d-d3d5-4d48-87ed-beaff8485ee2",
+      "name": "Extract Job Links",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -256,
+        -320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "links",
+        "options": {}
+      },
+      "id": "342d1cc6-aaf0-47ef-9714-8cc5c4e46d3e",
+      "name": "Split Jobs",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        -64,
+        -320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.links }}",
+        "options": {}
+      },
+      "id": "d527d7cd-7987-4871-9d0f-385326ca9a21",
+      "name": "Scrape Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        144,
+        -320
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "id": "8b6db266-584e-4b5d-8c87-c16ba9c4140d",
+      "name": "Parse Job",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        336,
+        -320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {},
+      "id": "8875612c-b321-450e-be3b-332e31e21437",
+      "name": "Rule-Based Pre Score",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        544,
+        -320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.pre_score }}",
+              "rightValue": 40,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "68eade71-80e1-4a8f-821a-303e0f618d7a",
+      "name": "Pre Score >= 40",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        736,
+        -320
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "operation": "aggregate"
+      },
+      "id": "5debd93d-7e13-48ff-8c89-c0053c338c21",
+      "name": "Aggregate Jobs",
+      "type": "n8n-nodes-base.itemLists",
+      "position": [
+        1008,
+        -480
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are a job matcher.\n\nResume:\n{{ $json.resume }}\n\nSkills:\n{{ $json.core_skills }}\n\nJobs:\n{{ $json }}\n\nReturn JSON array ONLY:\n[{\"link\":\"\",\"job_match_score\":0}]",
+        "batching": {}
+      },
+      "id": "2d467519-f50d-40c7-a1b3-4b0cd81a5eee",
+      "name": "Gemini Batch Scoring",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1136,
+        -320
+      ],
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bfe9980f-f03b-4a5c-b6ea-dfb52d430274",
+      "name": "Split Results",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        1280,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.job_match_score }}",
+              "rightValue": 65,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "26abbad9-b1f2-46c0-9aae-7232752d9de7",
+      "name": "Score >= 65",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1536,
+        -320
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "Job Match {{ $json.job_match_score }}%\n{{ $json.link }}",
+        "additionalFields": {}
+      },
+      "id": "a3f8e0c5-8924-4901-8ce2-6991f9d3b0b7",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1744,
+        -320
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "893a023a-4166-43f3-ab7f-4f43e05c2f55"
+    }
+  ],
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resume": {
+      "main": [
+        [
+          {
+            "node": "Scrape LinkedIn Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape LinkedIn Jobs": {
+      "main": [
+        [
+          {
+            "node": "Extract Job Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Job Links": {
+      "main": [
+        [
+          {
+            "node": "Split Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Jobs": {
+      "main": [
+        [
+          {
+            "node": "Scrape Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Job": {
+      "main": [
+        [
+          {
+            "node": "Parse Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Job": {
+      "main": [
+        [
+          {
+            "node": "Rule-Based Pre Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rule-Based Pre Score": {
+      "main": [
+        [
+          {
+            "node": "Pre Score >= 40",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre Score >= 40": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Jobs": {
+      "main": [
+        [
+          {
+            "node": "Gemini Batch Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Batch Scoring": {
+      "main": [
+        [
+          {
+            "node": "Split Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Results": {
+      "main": [
+        [
+          {
+            "node": "Score >= 65",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score >= 65": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "103751fc-3be1-4808-b14f-2c7a90542ad9",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-10T09:39:29.584Z",
+      "createdAt": "2026-02-10T09:39:29.584Z",
+      "role": "workflow:owner",
+      "workflowId": "zTttPqK6Unxy2A92",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
