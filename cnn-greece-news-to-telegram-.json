@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2025-12-16T18:30:41.000Z",
-  "createdAt": "2025-12-16T15:54:38.643Z",
-  "id": "nzUKKuPXh78nFJjR",
+  "updatedAt": "2025-12-16T15:54:10.000Z",
+  "createdAt": "2025-12-16T15:52:39.267Z",
+  "id": "9n31jfrtNszZTOdU",
   "name": "CNN Greece News to Telegram",
   "active": false,
   "isArchived": true,
@@ -17,13 +17,13 @@
           ]
         }
       },
-      "id": "ca04a135-cdee-4ec1-81e9-1f7faa8d7385",
+      "id": "b326af7b-9042-42a5-bd00-56f5df2862e8",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        2256,
-        384
+        0,
+        0
       ]
     },
     {
@@ -31,66 +31,59 @@
         "url": "https://www.cnn.gr/eidhseis",
         "options": {}
       },
-      "id": "f16d973f-0fa5-44a1-aed4-d8bf183c4082",
+      "id": "c1c3df74-60b4-419b-ba6a-dc419f725930",
       "name": "Fetch CNN Greece",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2464,
-        384
+        208,
+        0
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Get HTML content\nconst html = $input.item.json.data || $input.item.json;\n\n// Remove HTML tags function\nfunction stripHtml(text) {\n  return text\n    .replace(/<[^>]*>/g, '')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .trim();\n}\n\nconst articles = [];\n\n// Find all article links with pattern: href=\"/path\" followed by category and h3 title\n// Pattern: <a href=\"URL\">...CATEGORY...###TITLE</a>\nconst linkPattern = /<a[^>]*href=[\"'](\\/[^\"']+)[\"'][^>]*>.*?<h3[^>]*>([^<]+)<\\/h3>.*?<\\/a>/gis;\nlet match;\n\nwhile ((match = linkPattern.exec(html)) !== null && articles.length < 15) {\n  const url = 'https://www.cnn.gr' + match[1];\n  const title = stripHtml(match[2]);\n  \n  // Try to find the date - it's usually before the link in format \"DD MMM YYYY HH:MM\"\n  // Look backwards from current position\n  const beforeLink = html.substring(Math.max(0, match.index - 500), match.index);\n  const datePattern = /(\\d{1,2}\\s+[Α-Ωα-ω]{3}\\s+\\d{4}\\s+\\d{2}:\\d{2})/;\n  const dateMatch = beforeLink.match(datePattern);\n  const datetime = dateMatch ? dateMatch[1] : 'Not available';\n  \n  if (title && url && title.length > 10) {\n    articles.push({\n      title: title,\n      url: url,\n      datetime: datetime,\n      source: 'CNN Greece'\n    });\n  }\n}\n\n// Alternative: Look for simpler pattern with h3 inside links\nif (articles.length < 5) {\n  const simplePattern = /href=[\"'](\\/[^\"']+story\\/[^\"']+)[\"'][^>]*>.*?###([^<]+)<\\/h3>/gis;\n  let simpleMatch;\n  \n  while ((simpleMatch = simplePattern.exec(html)) !== null && articles.length < 15) {\n    const url = 'https://www.cnn.gr' + simpleMatch[1];\n    const title = stripHtml(simpleMatch[2]);\n    \n    if (title && url && title.length > 10) {\n      // Check if we already have this article\n      const exists = articles.some(a => a.url === url);\n      if (!exists) {\n        articles.push({\n          title: title,\n          url: url,\n          datetime: 'Not available',\n          source: 'CNN Greece'\n        });\n      }\n    }\n  }\n}\n\n// Return articles\nif (articles.length === 0) {\n  return [{ json: { \n    title: 'No articles found', \n    url: 'https://www.cnn.gr/eidhseis', \n    datetime: 'N/A',\n    error: true\n  }}];\n}\n\n// Return top 10 articles\nreturn articles.slice(0, 10).map(article => ({ json: article }));"
+        "jsCode": "const cheerio = require('cheerio');\nconst html = $input.item.json.data;\nconst $ = cheerio.load(html);\n\nconst articles = [];\n\n// CNN Greece uses article elements with class 'story'\n$('article.story, div.story, a.story').each((i, elem) => {\n  const $article = $(elem);\n  \n  // Try multiple selectors for title\n  let title = $article.find('h3').first().text().trim() || \n              $article.find('h2').first().text().trim() || \n              $article.find('.story__title').text().trim() ||\n              $article.find('[class*=\"title\"]').first().text().trim();\n  \n  // Try multiple selectors for URL\n  let url = $article.find('a').first().attr('href') || \n            $article.attr('href') ||\n            $article.find('[class*=\"link\"]').attr('href');\n  \n  // Fix relative URLs\n  if (url && !url.startsWith('http')) {\n    url = url.startsWith('/') ? 'https://www.cnn.gr' + url : 'https://www.cnn.gr/' + url;\n  }\n  \n  // Try multiple selectors for date/time\n  let datetime = $article.find('time').attr('datetime') ||\n                 $article.find('time').text().trim() ||\n                 $article.find('.story__time').text().trim() ||\n                 $article.find('[class*=\"date\"], [class*=\"time\"]').first().text().trim();\n  \n  // Only add if we have at least title and URL\n  if (title && url && title.length > 10) {\n    articles.push({\n      title: title,\n      url: url,\n      datetime: datetime || 'Not available',\n      source: 'CNN Greece'\n    });\n  }\n});\n\n// Limit to top 10 news items\nconst topArticles = articles.slice(0, 10);\n\nreturn topArticles.map(article => ({ json: article }));"
       },
-      "id": "b6bd9484-0829-40b5-a179-c7fb0eeb8574",
-      "name": "Parse HTML & Extract News",
+      "id": "1324309d-b3e7-4668-9bb6-465d32e55e7b",
+      "name": "Extract News Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2656,
-        384
+        400,
+        0
       ]
     },
     {
       "parameters": {
-        "jsCode": "const articles = $input.all();\n\nlet message = '📰 *CNN Greece News \\\\- Daily Update*\\n';\nconst now = new Date();\nconst dateStr = now.toLocaleDateString('el-GR', { \n  weekday: 'long', \n  year: 'numeric', \n  month: 'long', \n  day: 'numeric' \n});\nmessage += `📅 ${dateStr}\\n`;\nmessage += `🕐 ${now.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' })}\\n\\n`;\n\nif (articles.length === 0 || articles[0].json.error) {\n  message += '❌ No articles found today\\\\.\\n\\n';\n  message += 'Please check the website manually: https://www\\\\.cnn\\\\.gr/eidhseis';\n} else {\n  articles.forEach((item, index) => {\n    const article = item.json;\n    // Escape special characters for Telegram MarkdownV2\n    const escapedTitle = article.title\n      .replace(/\\\\/g, '\\\\\\\\')\n      .replace(/_/g, '\\\\_')\n      .replace(/\\*/g, '\\\\*')\n      .replace(/\\[/g, '\\\\[')\n      .replace(/\\]/g, '\\\\]')\n      .replace(/\\(/g, '\\\\(')\n      .replace(/\\)/g, '\\\\)')\n      .replace(/~/g, '\\\\~')\n      .replace(/`/g, '\\\\`')\n      .replace(/>/g, '\\\\>')\n      .replace(/#/g, '\\\\#')\n      .replace(/\\+/g, '\\\\+')\n      .replace(/-/g, '\\\\-')\n      .replace(/=/g, '\\\\=')\n      .replace(/\\|/g, '\\\\|')\n      .replace(/\\{/g, '\\\\{')\n      .replace(/\\}/g, '\\\\}')\n      .replace(/\\./g, '\\\\.')\n      .replace(/!/g, '\\\\!');\n    \n    message += `*${index + 1}\\\\. ${escapedTitle}*\\n`;\n    message += `🔗 ${article.url}\\n`;\n    if (article.datetime !== 'Not available') {\n      const escapedDate = article.datetime\n        .replace(/-/g, '\\\\-')\n        .replace(/\\./g, '\\\\.');\n      message += `🕐 ${escapedDate}\\n`;\n    }\n    message += '\\n';\n  });\n}\n\nmessage += '\\n_Powered by n8n automation_';\n\nreturn [{ json: { message } }];"
+        "jsCode": "const articles = $input.all();\n\nif (articles.length === 0) {\n  return [{ json: { \n    message: '📰 *CNN Greece News - Daily Update*\\n\\n❌ No articles found today.\\n\\nPlease check the website manually: https://www.cnn.gr/eidhseis'\n  }}];\n}\n\nlet message = '📰 *CNN Greece News - Daily Update*\\n';\nmessage += `📅 ${new Date().toLocaleDateString('el-GR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}\\n\\n`;\n\narticles.forEach((item, index) => {\n  const article = item.json;\n  message += `*${index + 1}. ${article.title}*\\n`;\n  message += `🔗 ${article.url}\\n`;\n  if (article.datetime !== 'Not available') {\n    message += `🕐 ${article.datetime}\\n`;\n  }\n  message += '\\n';\n});\n\nmessage += '\\n_Powered by n8n automation_';\n\nreturn [{ json: { message } }];"
       },
-      "id": "c405b481-a0ff-4977-97a6-1e44fb674c04",
+      "id": "50f651b0-adac-4926-84a2-5251e8abe879",
       "name": "Format Telegram Message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2864,
-        384
+        608,
+        0
       ]
     },
     {
       "parameters": {
-        "chatId": "5870531738",
+        "chatId": "YOUR_CHAT_ID",
         "text": "={{ $json.message }}",
         "additionalFields": {
-          "appendAttribution": false,
           "disable_web_page_preview": true,
-          "parse_mode": "HTML"
+          "parse_mode": "Markdown"
         }
       },
-      "id": "41d53dcc-a1b9-49a4-a105-6531e4694450",
+      "id": "5b2b4166-1deb-4814-a801-35812307ae31",
       "name": "Send to Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3056,
-        384
+        800,
+        0
       ],
-      "webhookId": "a12c6a4b-8165-4970-8d63-e669c1def3d1",
-      "credentials": {
-        "telegramApi": {
-          "id": "i5VGPAGcIQB6DQ6M",
-          "name": "Telegram account"
-        }
-      }
+      "webhookId": "290480d6-9bc6-42f3-9e77-1a96e57f8c54"
     }
   ],
   "connections": {
@@ -109,14 +102,14 @@
       "main": [
         [
           {
-            "node": "Parse HTML & Extract News",
+            "node": "Extract News Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse HTML & Extract News": {
+    "Extract News Data": {
       "main": [
         [
           {
@@ -143,19 +136,17 @@
     "executionOrder": "v1"
   },
   "staticData": null,
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
+  "meta": null,
   "pinData": {},
-  "versionId": "73955636-064f-4a5b-86df-bcd971c67944",
+  "versionId": "6f425d15-c20c-4628-9a45-cfc3326966e4",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
     {
-      "updatedAt": "2025-12-16T15:54:38.646Z",
-      "createdAt": "2025-12-16T15:54:38.646Z",
+      "updatedAt": "2025-12-16T15:52:39.271Z",
+      "createdAt": "2025-12-16T15:52:39.271Z",
       "role": "workflow:owner",
-      "workflowId": "nzUKKuPXh78nFJjR",
+      "workflowId": "9n31jfrtNszZTOdU",
       "projectId": "7jNXHgiAtPda1pR0"
     }
   ],
