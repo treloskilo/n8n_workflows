@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-10T07:28:42.281Z",
+  "updatedAt": "2026-04-17T16:40:46.091Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -14,7 +14,7 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        464,
+        496,
         -304
       ],
       "id": "9e624485-999a-4e30-9873-45884dcfe876",
@@ -27,7 +27,7 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -240,
+        -224,
         -32
       ],
       "id": "b1fdf1c5-6fba-4c29-b1de-ad78ced2c5ae",
@@ -36,7 +36,7 @@
     {
       "parameters": {
         "chatId": "5870531738",
-        "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
+        "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}\n\n\n📊 Token Usage:\n├─ Prompt Tokens: {{ $('Code in JavaScript').json.tokenMetadata.promptTokens }}\n├─ Completion Tokens: {{ $('Code in JavaScript').json.tokenMetadata.completionTokens }}\n├─ Total Tokens: {{ $('Code in JavaScript').json.tokenMetadata.totalTokensUsed }}\n└─ Processed: {{ $('Code in JavaScript').json.tokenMetadata.timestamp }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -44,8 +44,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        896,
-        256
+        832,
+        208
       ],
       "id": "6d3aea5a-aa3a-47e7-aaaf-49030e882e0e",
       "name": "Telegram",
@@ -93,8 +93,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        192,
-        -16
+        176,
+        -96
       ],
       "id": "a402343b-35b2-4997-baae-fd236113e616",
       "name": "Scrape Each Job",
@@ -106,13 +106,13 @@
     {
       "parameters": {
         "language": "python",
-        "pythonCode": "from bs4 import BeautifulSoup\n\n\nhtml = _input.all()[0]['json']['data']\nsoup = BeautifulSoup(html, 'html.parser')\n\ntitle = soup.select('div h1')[0].text\ncompany = soup.select('div span a')[0].text.strip()\n\nlocation = soup.select(\"div span[class*='topcard__flavor topcard__flavor--bullet']\")[0].text.strip()\n\njd_container = soup.find(\"div\", class_=\"description__text description__text--rich\")\n\nif jd_container:\n    \n  complete_jd = jd_container.get_text(separator=\"\\n\", strip=True)\n    \nelse:\n    company_jd = \"no jd\"\n\n\nurns = [a.get(\"data-semaphore-content-urn\") for a in soup.select(\"a[data-item-type='semaphore']\")]\n\njob_id =urns[0].split(\":\")[-1]\n\n\napply_link = \"https://www.linkedin.com/jobs/view/\" + job_id\napply_link\n\n\nreturn {\n  \"title\": title,\n  \"company\": company,\n  \"location\": location,\n  \"jd\": complete_jd,\n  \"link\": apply_link\n  \n  \n}\n\n\n\n\n\n"
+        "pythonCode": "from bs4 import BeautifulSoup\n\nhtml = _input.all()[0]['json']['data']\nsoup = BeautifulSoup(html, 'html.parser')\n\n# Safe extraction with fallbacks\ntry:\n    title = soup.select('div h1')[0].text.strip()\nexcept:\n    title = \"Unknown Title\"\n\ntry:\n    company = soup.select('div span a')[0].text.strip()\nexcept:\n    company = \"Unknown Company\"\n\ntry:\n    location = soup.select(\"div span[class*='topcard__flavor topcard__flavor--bullet']\")[0].text.strip()\nexcept:\n    location = \"Unknown Location\"\n\n# Extract and truncate job description\njd_container = soup.find(\"div\", class_=\"description__text description__text--rich\")\ncomplete_jd = jd_container.get_text(separator=\"\\n\", strip=True) if jd_container else \"No job description available\"\ncomplete_jd = complete_jd[:2000]\n\n# Extract apply link\ntry:\n    urns = [a.get(\"data-semaphore-content-urn\") for a in soup.select(\"a[data-item-type='semaphore']\")]\n    job_id = urns[0].split(\":\")[-1]\n    apply_link = \"https://www.linkedin.com/jobs/view/\" + job_id\nexcept:\n    apply_link = \"No link available\"\n\nreturn {\n  \"title\": title,\n  \"company\": company,\n  \"location\": location,\n  \"jd\": complete_jd,\n  \"link\": apply_link\n}\n\n\n\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        496,
-        -96
+        544,
+        -80
       ],
       "id": "9b6cf46c-0166-49fc-bb71-0586a44e3ca9",
       "name": "Parse"
@@ -127,15 +127,15 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -208,
-        144
+        -112,
+        160
       ],
       "id": "8f527a0c-5940-49b5-b550-b6fb10f83a45",
       "name": "Edit Fields"
     },
     {
       "parameters": {
-        "amount": 10
+        "amount": 20
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -195,7 +195,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        144,
+        192,
         176
       ],
       "id": "6e750225-4ae7-4ae0-9c42-f18e358c693b",
@@ -233,7 +233,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Hi, you are a helpful job matcher, you analyze the given resume and job description and providing a job matching score in a json format    for example   your response should be like {\"job_match_score\": 80 }  make sure you give project json data, dont give any json markdown text and all  my resume: {{ $('resume').item.json.resume }} and my skills: {{ $('resume').item.json.core_skills }}  job_description:    {{ $json.jd }}",
+        "text": "=You are a senior technical recruiter with 15+ years of experience in talent acquisition and career coaching.\n\nYour task is to analyze the resume and job description below, then return a precise matching score with structured insights.\n\n## INPUTS\n- **Resume**: {{ $('resume').item.json.resume.substring(0, 1500) }}\n- **Core Skills**: {{ $('resume').item.json.core_skills }}\n- **Job Description**: {{ $json.jd.substring(0, 2000) }}\n\n## SCORING CRITERIA\nEvaluate the match across these weighted dimensions:\n1. **Skills Match** (40%) — alignment of technical and soft skills\n2. **Experience Relevance** (30%) — years of experience and domain match\n3. **Education & Certifications** (15%) — required qualifications met\n4. **Keywords & ATS Alignment** (15%) — industry terminology overlap\n\n## STRICT OUTPUT RULES\n- Return ONLY raw JSON\n- No markdown, no code blocks, no backticks, no explanation\n- No text before or after the JSON\n- All fields are required\n- All scores are integers between 0 and 100\n\n## OUTPUT FORMAT\n{\"job_match_score\":85,\"confidence\":90,\"breakdown\":{\"skills_match\":88,\"experience_relevance\":82,\"education_match\":79,\"keywords_alignment\":84},\"matched_keywords\":[\"keyword1\",\"keyword2\",\"keyword3\"],\"missing_skills\":[\"skill1\",\"skill2\"],\"recommendation\":\"Strong Consider\"}\n\n## RECOMMENDATION SCALE\n- 85-100 → \"Hire\"\n- 70-84 → \"Strong Consider\"\n- 50-69 → \"Consider\"\n- 0-49 → \"Reject\"",
         "messages": {
           "messageValues": [
             {
@@ -247,45 +247,50 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
       "position": [
-        736,
-        -64
+        784,
+        -32
       ],
       "id": "d64a29c2-d89f-49f4-b688-22e082bfb283",
-      "name": "Basic LLM Chain"
+      "name": "Basic LLM Chain",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 4
     },
     {
       "parameters": {
-        "modelName": "models/gemini-2.5-flash-lite",
-        "options": {}
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "temperature": 0.1
+        }
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        720,
-        160
+        672,
+        144
       ],
-      "id": "b9f19ec8-65fe-461b-be3c-31d0b2ffd161",
-      "name": "Google Gemini Chat Model",
+      "id": "2a57e7e4-a2c7-4914-adc7-27e101da829b",
+      "name": "Groq Chat Model",
       "credentials": {
-        "googlePalmApi": {
-          "id": "3uUCLR5yvdkNtbXj",
-          "name": "Google Gemini(PaLM) Api account"
+        "groqApi": {
+          "id": "kdgCkpCrW61FR87q",
+          "name": "Groq account"
         }
       }
     },
     {
       "parameters": {
-        "amount": 40
+        "amount": 25
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        352,
-        -64
+        368,
+        -16
       ],
-      "id": "03eaa992-e2ab-4280-b865-86942dde742e",
-      "name": "Wait1",
-      "webhookId": "2a0ece94-e1e4-4d0c-b9d4-dc2dda66e33c"
+      "id": "49222edb-7c3e-4526-b536-d14ff057118e",
+      "name": "Wait2",
+      "webhookId": "76bbeb33-059d-431b-a127-de8fa42aa4bb"
     }
   ],
   "connections": {
@@ -349,7 +354,7 @@
       "main": [
         [
           {
-            "node": "Wait1",
+            "node": "Wait2",
             "type": "main",
             "index": 0
           }
@@ -440,7 +445,7 @@
         ]
       ]
     },
-    "Google Gemini Chat Model": {
+    "Groq Chat Model": {
       "ai_languageModel": [
         [
           {
@@ -451,7 +456,7 @@
         ]
       ]
     },
-    "Wait1": {
+    "Wait2": {
       "main": [
         [
           {
@@ -480,8 +485,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "acf2bd3a-7064-4028-8a67-6df788003f6e",
-  "activeVersionId": "acf2bd3a-7064-4028-8a67-6df788003f6e",
+  "versionId": "b90de0ed-e0ef-414d-a246-10630fa872f5",
+  "activeVersionId": "b90de0ed-e0ef-414d-a246-10630fa872f5",
   "triggerCount": 1,
   "shared": [
     {
@@ -493,9 +498,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-02-10T07:28:42.282Z",
-    "createdAt": "2026-02-10T07:28:42.282Z",
-    "versionId": "acf2bd3a-7064-4028-8a67-6df788003f6e",
+    "updatedAt": "2026-04-17T16:40:46.092Z",
+    "createdAt": "2026-04-17T16:40:46.092Z",
+    "versionId": "b90de0ed-e0ef-414d-a246-10630fa872f5",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
@@ -506,7 +511,7 @@
         "type": "n8n-nodes-base.splitOut",
         "typeVersion": 1,
         "position": [
-          464,
+          496,
           -304
         ],
         "id": "9e624485-999a-4e30-9873-45884dcfe876",
@@ -519,7 +524,7 @@
         "type": "n8n-nodes-base.splitInBatches",
         "typeVersion": 3,
         "position": [
-          -240,
+          -224,
           -32
         ],
         "id": "b1fdf1c5-6fba-4c29-b1de-ad78ced2c5ae",
@@ -528,7 +533,7 @@
       {
         "parameters": {
           "chatId": "5870531738",
-          "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
+          "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}\n\n\n📊 Token Usage:\n├─ Prompt Tokens: {{ $('Code in JavaScript').json.tokenMetadata.promptTokens }}\n├─ Completion Tokens: {{ $('Code in JavaScript').json.tokenMetadata.completionTokens }}\n├─ Total Tokens: {{ $('Code in JavaScript').json.tokenMetadata.totalTokensUsed }}\n└─ Processed: {{ $('Code in JavaScript').json.tokenMetadata.timestamp }}",
           "additionalFields": {
             "appendAttribution": false
           }
@@ -536,8 +541,8 @@
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
         "position": [
-          896,
-          256
+          832,
+          208
         ],
         "id": "6d3aea5a-aa3a-47e7-aaaf-49030e882e0e",
         "name": "Telegram",
@@ -585,8 +590,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          192,
-          -16
+          176,
+          -96
         ],
         "id": "a402343b-35b2-4997-baae-fd236113e616",
         "name": "Scrape Each Job",
@@ -598,13 +603,13 @@
       {
         "parameters": {
           "language": "python",
-          "pythonCode": "from bs4 import BeautifulSoup\n\n\nhtml = _input.all()[0]['json']['data']\nsoup = BeautifulSoup(html, 'html.parser')\n\ntitle = soup.select('div h1')[0].text\ncompany = soup.select('div span a')[0].text.strip()\n\nlocation = soup.select(\"div span[class*='topcard__flavor topcard__flavor--bullet']\")[0].text.strip()\n\njd_container = soup.find(\"div\", class_=\"description__text description__text--rich\")\n\nif jd_container:\n    \n  complete_jd = jd_container.get_text(separator=\"\\n\", strip=True)\n    \nelse:\n    company_jd = \"no jd\"\n\n\nurns = [a.get(\"data-semaphore-content-urn\") for a in soup.select(\"a[data-item-type='semaphore']\")]\n\njob_id =urns[0].split(\":\")[-1]\n\n\napply_link = \"https://www.linkedin.com/jobs/view/\" + job_id\napply_link\n\n\nreturn {\n  \"title\": title,\n  \"company\": company,\n  \"location\": location,\n  \"jd\": complete_jd,\n  \"link\": apply_link\n  \n  \n}\n\n\n\n\n\n"
+          "pythonCode": "from bs4 import BeautifulSoup\n\nhtml = _input.all()[0]['json']['data']\nsoup = BeautifulSoup(html, 'html.parser')\n\n# Safe extraction with fallbacks\ntry:\n    title = soup.select('div h1')[0].text.strip()\nexcept:\n    title = \"Unknown Title\"\n\ntry:\n    company = soup.select('div span a')[0].text.strip()\nexcept:\n    company = \"Unknown Company\"\n\ntry:\n    location = soup.select(\"div span[class*='topcard__flavor topcard__flavor--bullet']\")[0].text.strip()\nexcept:\n    location = \"Unknown Location\"\n\n# Extract and truncate job description\njd_container = soup.find(\"div\", class_=\"description__text description__text--rich\")\ncomplete_jd = jd_container.get_text(separator=\"\\n\", strip=True) if jd_container else \"No job description available\"\ncomplete_jd = complete_jd[:2000]\n\n# Extract apply link\ntry:\n    urns = [a.get(\"data-semaphore-content-urn\") for a in soup.select(\"a[data-item-type='semaphore']\")]\n    job_id = urns[0].split(\":\")[-1]\n    apply_link = \"https://www.linkedin.com/jobs/view/\" + job_id\nexcept:\n    apply_link = \"No link available\"\n\nreturn {\n  \"title\": title,\n  \"company\": company,\n  \"location\": location,\n  \"jd\": complete_jd,\n  \"link\": apply_link\n}\n\n\n\n"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          496,
-          -96
+          544,
+          -80
         ],
         "id": "9b6cf46c-0166-49fc-bb71-0586a44e3ca9",
         "name": "Parse"
@@ -619,15 +624,15 @@
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.4,
         "position": [
-          -208,
-          144
+          -112,
+          160
         ],
         "id": "8f527a0c-5940-49b5-b550-b6fb10f83a45",
         "name": "Edit Fields"
       },
       {
         "parameters": {
-          "amount": 10
+          "amount": 20
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
@@ -687,7 +692,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          144,
+          192,
           176
         ],
         "id": "6e750225-4ae7-4ae0-9c42-f18e358c693b",
@@ -725,7 +730,7 @@
       {
         "parameters": {
           "promptType": "define",
-          "text": "=Hi, you are a helpful job matcher, you analyze the given resume and job description and providing a job matching score in a json format    for example   your response should be like {\"job_match_score\": 80 }  make sure you give project json data, dont give any json markdown text and all  my resume: {{ $('resume').item.json.resume }} and my skills: {{ $('resume').item.json.core_skills }}  job_description:    {{ $json.jd }}",
+          "text": "=You are a senior technical recruiter with 15+ years of experience in talent acquisition and career coaching.\n\nYour task is to analyze the resume and job description below, then return a precise matching score with structured insights.\n\n## INPUTS\n- **Resume**: {{ $('resume').item.json.resume.substring(0, 1500) }}\n- **Core Skills**: {{ $('resume').item.json.core_skills }}\n- **Job Description**: {{ $json.jd.substring(0, 2000) }}\n\n## SCORING CRITERIA\nEvaluate the match across these weighted dimensions:\n1. **Skills Match** (40%) — alignment of technical and soft skills\n2. **Experience Relevance** (30%) — years of experience and domain match\n3. **Education & Certifications** (15%) — required qualifications met\n4. **Keywords & ATS Alignment** (15%) — industry terminology overlap\n\n## STRICT OUTPUT RULES\n- Return ONLY raw JSON\n- No markdown, no code blocks, no backticks, no explanation\n- No text before or after the JSON\n- All fields are required\n- All scores are integers between 0 and 100\n\n## OUTPUT FORMAT\n{\"job_match_score\":85,\"confidence\":90,\"breakdown\":{\"skills_match\":88,\"experience_relevance\":82,\"education_match\":79,\"keywords_alignment\":84},\"matched_keywords\":[\"keyword1\",\"keyword2\",\"keyword3\"],\"missing_skills\":[\"skill1\",\"skill2\"],\"recommendation\":\"Strong Consider\"}\n\n## RECOMMENDATION SCALE\n- 85-100 → \"Hire\"\n- 70-84 → \"Strong Consider\"\n- 50-69 → \"Consider\"\n- 0-49 → \"Reject\"",
           "messages": {
             "messageValues": [
               {
@@ -739,45 +744,50 @@
         "type": "@n8n/n8n-nodes-langchain.chainLlm",
         "typeVersion": 1.7,
         "position": [
-          736,
-          -64
+          784,
+          -32
         ],
         "id": "d64a29c2-d89f-49f4-b688-22e082bfb283",
-        "name": "Basic LLM Chain"
+        "name": "Basic LLM Chain",
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "maxTries": 4
       },
       {
         "parameters": {
-          "modelName": "models/gemini-2.5-flash-lite",
-          "options": {}
+          "model": "llama-3.1-8b-instant",
+          "options": {
+            "temperature": 0.1
+          }
         },
-        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
         "typeVersion": 1,
         "position": [
-          720,
-          160
+          672,
+          144
         ],
-        "id": "b9f19ec8-65fe-461b-be3c-31d0b2ffd161",
-        "name": "Google Gemini Chat Model",
+        "id": "2a57e7e4-a2c7-4914-adc7-27e101da829b",
+        "name": "Groq Chat Model",
         "credentials": {
-          "googlePalmApi": {
-            "id": "3uUCLR5yvdkNtbXj",
-            "name": "Google Gemini(PaLM) Api account"
+          "groqApi": {
+            "id": "kdgCkpCrW61FR87q",
+            "name": "Groq account"
           }
         }
       },
       {
         "parameters": {
-          "amount": 40
+          "amount": 25
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          352,
-          -64
+          368,
+          -16
         ],
-        "id": "03eaa992-e2ab-4280-b865-86942dde742e",
-        "name": "Wait1",
-        "webhookId": "2a0ece94-e1e4-4d0c-b9d4-dc2dda66e33c"
+        "id": "49222edb-7c3e-4526-b536-d14ff057118e",
+        "name": "Wait2",
+        "webhookId": "76bbeb33-059d-431b-a127-de8fa42aa4bb"
       }
     ],
     "connections": {
@@ -841,7 +851,7 @@
         "main": [
           [
             {
-              "node": "Wait1",
+              "node": "Wait2",
               "type": "main",
               "index": 0
             }
@@ -932,7 +942,7 @@
           ]
         ]
       },
-      "Google Gemini Chat Model": {
+      "Groq Chat Model": {
         "ai_languageModel": [
           [
             {
@@ -943,7 +953,7 @@
           ]
         ]
       },
-      "Wait1": {
+      "Wait2": {
         "main": [
           [
             {
