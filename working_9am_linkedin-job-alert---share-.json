@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-17T16:40:46.091Z",
+  "updatedAt": "2026-04-18T06:17:54.284Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -36,7 +36,7 @@
     {
       "parameters": {
         "chatId": "5870531738",
-        "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}\n\n\n📊 Token Usage:\n├─ Prompt Tokens: {{ $('Code in JavaScript').json.tokenMetadata.promptTokens }}\n├─ Completion Tokens: {{ $('Code in JavaScript').json.tokenMetadata.completionTokens }}\n├─ Total Tokens: {{ $('Code in JavaScript').json.tokenMetadata.totalTokensUsed }}\n└─ Processed: {{ $('Code in JavaScript').json.tokenMetadata.timestamp }}",
+        "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -485,8 +485,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "b90de0ed-e0ef-414d-a246-10630fa872f5",
-  "activeVersionId": "b90de0ed-e0ef-414d-a246-10630fa872f5",
+  "versionId": "e84825cc-ac46-42ed-a069-8a7bce76f8a1",
+  "activeVersionId": "e84825cc-ac46-42ed-a069-8a7bce76f8a1",
   "triggerCount": 1,
   "shared": [
     {
@@ -498,9 +498,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-17T16:40:46.092Z",
-    "createdAt": "2026-04-17T16:40:46.092Z",
-    "versionId": "b90de0ed-e0ef-414d-a246-10630fa872f5",
+    "updatedAt": "2026-04-18T06:17:54.285Z",
+    "createdAt": "2026-04-18T06:17:54.285Z",
+    "versionId": "e84825cc-ac46-42ed-a069-8a7bce76f8a1",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
@@ -533,7 +533,7 @@
       {
         "parameters": {
           "chatId": "5870531738",
-          "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}\n\n\n📊 Token Usage:\n├─ Prompt Tokens: {{ $('Code in JavaScript').json.tokenMetadata.promptTokens }}\n├─ Completion Tokens: {{ $('Code in JavaScript').json.tokenMetadata.completionTokens }}\n├─ Total Tokens: {{ $('Code in JavaScript').json.tokenMetadata.totalTokensUsed }}\n└─ Processed: {{ $('Code in JavaScript').json.tokenMetadata.timestamp }}",
+          "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
           "additionalFields": {
             "appendAttribution": false
           }
