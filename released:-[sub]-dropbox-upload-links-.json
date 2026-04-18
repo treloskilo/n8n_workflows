@@ -1,0 +1,526 @@
+{
+  "updatedAt": "2026-04-18T10:47:26.620Z",
+  "createdAt": "2026-04-18T10:47:26.620Z",
+  "id": "d3hGiZ58wsRtptvv",
+  "name": "Released: [SUB] Dropbox upload links",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "8e89a4a5-d567-47e4-9516-813e132d61e9",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -560,
+        128
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "20422c60-bb6e-4ce1-b256-34b2ea376f36",
+      "name": "Normalize Path1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -256,
+        128
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "content": "## Upload & Path Processing\n\n1. **Read Binary File**: Reads file from local filesystem\n2. **Upload a file**: Uploads to Dropbox using OAuth2\n3. **Normalize Path**: Prepares path for sharing API calls",
+        "width": 416,
+        "color": 4
+      },
+      "id": "5ea109a5-d071-4090-898b-b7f4a441156f",
+      "name": "Upload & Path Processing1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        -48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Sharing Link Management\n\n1. **List Shared Links**: Check if link already exists\n2. **Get Existing linlk (if any)**\n3. **IF Node**: Branch based on link existence\n5. **Get Access Token** for shared link creation. Its stored in a data table that you will need to create called cred-Dropbox with a single row, your token and an id of 1\n4. **Create Shared Link**: Generates new link if needed",
+        "height": 224,
+        "width": 480,
+        "color": 2
+      },
+      "id": "b10cb581-9da9-445a-b198-a782d64781cb",
+      "name": "Sharing Link Management1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Direct Link Processing\n\n1. **Rewrite Host**: Process existing links\n2. **Build Direct Link**: Convert Shared to direct download URL\n3. **Success Response**: Return final formatted direct download URL",
+        "width": 496,
+        "color": 5
+      },
+      "id": "00ba115e-8df4-4c3b-9501-6653229a6cd1",
+      "name": "Direct Link Processing1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        -48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"{{ $('Normalize Path1').item.json.path_lower }}\",\n  \"settings\": {\n    \"requested_visibility\": \"public\"\n  }\n}\n",
+        "options": {}
+      },
+      "id": "24f21cc6-af8c-4b87-be8c-6836ee927c1c",
+      "name": "Dropbox: Create Shared Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        576,
+        288
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 1,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ce8a640e-90ae-4337-9110-0e23262a649c",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.links[0].url }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0b71d50c-a6ff-4736-b033-33452ad663c7",
+      "name": "If: Link Exists?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        320,
+        128
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ca47ece7-05e6-4937-a55c-974d7de381e0",
+      "name": "Extract Existing Link",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        176,
+        128
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dropboxapi.com/2/sharing/list_shared_links",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dropboxOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"path\": \"{{ $json.path_lower }}\",\n  \"direct_only\": true\n}",
+        "options": {}
+      },
+      "id": "99dec4ec-52f1-473e-aba4-933a6a6334eb",
+      "name": "Dropbox: List Shared Links",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        16,
+        128
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "fdeb5120-7762-4c14-95b2-093c52fda396",
+      "name": "Rewrite Dropbox Host",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        576,
+        160
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "shared_link_direct",
+              "stringValue": "={{ String($json.links[0].url || '').trim().replace(/^https:\\/\\/(?:www\\.)?dropbox\\.com\\//, 'https://dl.dropboxusercontent.com/') }}"
+            }
+          ]
+        },
+        "include": "none",
+        "options": {}
+      },
+      "id": "e58daacf-3200-4bea-9e2f-4ed528521fd3",
+      "name": "Build Direct Link",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        736,
+        160
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "success_response",
+              "name": "response",
+              "type": "string",
+              "value": "={{ $json.shared_link_direct }}"
+            },
+            {
+              "id": "216b1279-56bc-45a5-9edd-3aeded1c516f",
+              "name": "url",
+              "type": "string",
+              "value": "={{ $json.shared_link_direct }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ed2abb73-9261-48f6-895a-958809ff4f15",
+      "name": "Final Response",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        896,
+        160
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "## Sample code to upload and host on dropbox \n**This works on both remote and local installs of N8N**\n\nInput: the file we are hosting on DropBox.\nOutput: the direct shared link in Dropbox.\n\nTo Do For You: \nModify this workflow to make sure the uploaded filenames are unique, otherwise the shared links you get are going to be wrong, as dropbox will extract the existing link to an older file with the same name.\n\nCredentials needed: Dropbox OAuth2 API is needed for the \"upload a file\" node and the \"Dropbox: List Shared Links\" node. The refresh token will be needed for the \"Dropbox: Create Shared Link\" node, which we will get from the 'cred-Dropbox\" table created for the \"Dropbox Token Refresher\" workflow that refreshes the tokens for us, so we don't have to manually refresh them. \n\nIf you dont have a dropbox app yet, create one here as you will need it for the App Key (aka Client ID) and the App Secret for your OAuth2 and access tokens. For permissions, give it all permissions under \"Files and folders\" and \"Collaboration\". Make sure you set your (callback) Redirect URI's to your N8N instance and generate your first 'access token' manually to test your upload workflow first. Once that is working you use the \"Refresh Token Workflow\" to manually kickstart the refresh process, and auto-refresh the tokens for you so you don't have to do this manually again.\n\nCreate your dropbox app here for the credentials and access token:\nhttps://www.dropbox.com/developers/apps",
+        "height": 576,
+        "width": 608
+      },
+      "id": "96d35093-432d-49ef-98b4-14c5cc498c71",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -688,
+        320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "path": "=/Automate/N8N/host/{{ $json['Upload file'][0].filename }}",
+        "binaryData": true,
+        "binaryPropertyName": "=Upload_file"
+      },
+      "id": "30a6aa9e-a6d7-4460-a8b4-bc978cc8387a",
+      "name": "Upload a file",
+      "type": "n8n-nodes-base.dropbox",
+      "position": [
+        -400,
+        128
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "hZbk3Yqoqdn3lIJ4",
+          "cachedResultUrl": "/projects/w1o5aCEZlpQzzMF5/datatables/hZbk3Yqoqdn3lIJ4",
+          "cachedResultName": "cred-Dropbox"
+        }
+      },
+      "id": "0b6fa7c2-9f58-4684-8741-e72d66e29790",
+      "name": "Get DropBox access token",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        432,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload File To DropBox",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload file",
+              "fieldType": "file",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bea99b0a-2837-438d-ae93-acc61afd6f84",
+      "name": "Upload File",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        160,
+        720
+      ],
+      "webhookId": "af2212c1-ad06-46d9-a6a8-8954da21221a",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {},
+      "id": "dfb3c257-fb6b-4244-b45b-251e1687182f",
+      "name": "Completed",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        528,
+        720
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "DsRqr6QdhNM0TRaQ",
+          "cachedResultUrl": "/workflow/DsRqr6QdhNM0TRaQ",
+          "cachedResultName": "[SUB] Dropbox upload link"
+        },
+        "workflowInputs": {
+          "value": {},
+          "mappingMode": "defineBelow"
+        },
+        "options": {}
+      },
+      "id": "a7bc9759-4b2a-4c4b-b533-b2b3ee0e5c2a",
+      "name": "Call '[SUB] Dropbox upload links'",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "position": [
+        352,
+        720
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "content": "## Test workflow \n**Copy this out to its own workflow** then run it to test this workflow, remember to link the subworkflows together. ",
+        "height": 128,
+        "width": 496
+      },
+      "id": "04b5f226-b990-4963-9f42-fbb024f01cc3",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        576
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Upload File": {
+      "main": [
+        [
+          {
+            "node": "Call '[SUB] Dropbox upload links'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Normalize Path1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Path1": {
+      "main": [
+        [
+          {
+            "node": "Dropbox: List Shared Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Link Exists?": {
+      "main": [
+        [
+          {
+            "node": "Get DropBox access token",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rewrite Dropbox Host",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Direct Link": {
+      "main": [
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rewrite Dropbox Host": {
+      "main": [
+        [
+          {
+            "node": "Build Direct Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Existing Link": {
+      "main": [
+        [
+          {
+            "node": "If: Link Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get DropBox access token": {
+      "main": [
+        [
+          {
+            "node": "Dropbox: Create Shared Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dropbox: List Shared Links": {
+      "main": [
+        [
+          {
+            "node": "Extract Existing Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dropbox: Create Shared Link": {
+      "main": [
+        [
+          {
+            "node": "Dropbox: List Shared Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call '[SUB] Dropbox upload links'": {
+      "main": [
+        [
+          {
+            "node": "Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "5e9d478b-0b1f-4dd4-887f-d28d3a7fed8b",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-18T10:47:26.621Z",
+      "createdAt": "2026-04-18T10:47:26.621Z",
+      "role": "workflow:owner",
+      "workflowId": "d3hGiZ58wsRtptvv",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
