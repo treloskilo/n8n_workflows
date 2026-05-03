@@ -1,0 +1,53 @@
+{
+  "updatedAt": "2026-05-03T18:15:07.863Z",
+  "createdAt": "2026-05-03T17:53:15.989Z",
+  "id": "rB2zma8Sy3JfGOnG",
+  "name": "inalannews",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "feedUrl": "http://192.168.70.250:1200/telegram/channel/InalanNews"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -48
+      ],
+      "id": "9264c529-60b0-4a34-969b-7e306894b5ce",
+      "name": "RSS Feed Trigger"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b976aff1-7612-444d-a089-bd4d17bf8d00",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-03T17:53:15.993Z",
+      "createdAt": "2026-05-03T17:53:15.993Z",
+      "role": "workflow:owner",
+      "workflowId": "rB2zma8Sy3JfGOnG",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
