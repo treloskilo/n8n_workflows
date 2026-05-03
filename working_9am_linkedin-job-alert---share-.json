@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-18T06:17:54.284Z",
+  "updatedAt": "2026-05-03T13:19:18.974Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -15,7 +15,7 @@
       "typeVersion": 1,
       "position": [
         496,
-        -304
+        -336
       ],
       "id": "9e624485-999a-4e30-9873-45884dcfe876",
       "name": "Split Out"
@@ -38,7 +38,8 @@
         "chatId": "5870531738",
         "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
         "additionalFields": {
-          "appendAttribution": false
+          "appendAttribution": false,
+          "parse_mode": "HTML"
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -485,8 +486,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "e84825cc-ac46-42ed-a069-8a7bce76f8a1",
-  "activeVersionId": "e84825cc-ac46-42ed-a069-8a7bce76f8a1",
+  "versionId": "8a6d24b8-a5d6-4c6e-9e66-108c486c87c5",
+  "activeVersionId": "8a6d24b8-a5d6-4c6e-9e66-108c486c87c5",
   "triggerCount": 1,
   "shared": [
     {
@@ -498,9 +499,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-04-18T06:17:54.285Z",
-    "createdAt": "2026-04-18T06:17:54.285Z",
-    "versionId": "e84825cc-ac46-42ed-a069-8a7bce76f8a1",
+    "updatedAt": "2026-05-03T13:19:18.975Z",
+    "createdAt": "2026-05-03T13:19:18.975Z",
+    "versionId": "8a6d24b8-a5d6-4c6e-9e66-108c486c87c5",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
@@ -512,7 +513,7 @@
         "typeVersion": 1,
         "position": [
           496,
-          -304
+          -336
         ],
         "id": "9e624485-999a-4e30-9873-45884dcfe876",
         "name": "Split Out"
@@ -535,7 +536,8 @@
           "chatId": "5870531738",
           "text": "=Title: {{ $('Parse').item.json.title }}\nCompany: {{ $('Parse').item.json.company }}\nLocation: {{ $('Parse').item.json.location }}\nJob Score: {{ $('Edit Fields').item.json.job_match_score }}\nApply: {{ $('Parse').item.json.link }}",
           "additionalFields": {
-            "appendAttribution": false
+            "appendAttribution": false,
+            "parse_mode": "HTML"
           }
         },
         "type": "n8n-nodes-base.telegram",
