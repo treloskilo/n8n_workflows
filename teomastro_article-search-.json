@@ -1,0 +1,693 @@
+{
+  "updatedAt": "2026-05-10T18:08:11.615Z",
+  "createdAt": "2026-05-10T15:28:39.253Z",
+  "id": "hGvfCKIVKYFQCigC",
+  "name": "teomastro_Article search",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "671bd637-64f3-4558-b911-d07201e594ff",
+      "name": "Daily 8AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -304,
+        512
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "id": "b9b28ac0-4043-4024-b397-73c48d2ac8f7",
+      "name": "Merge All Feeds",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        496,
+        512
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-title",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "id": "field-content",
+              "name": "snippet",
+              "type": "string",
+              "value": "=\n{{ ($json.contentSnippet || $json.content || '').substring(0, 200) }}"
+            },
+            {
+              "id": "field-link",
+              "name": "link",
+              "type": "string",
+              "value": "={{ $json.link }}"
+            },
+            {
+              "id": "field-date",
+              "name": "isoDate",
+              "type": "number",
+              "value": "={{ new Date($json.isoDate || $json.pubDate || 0).getTime() }}"
+            },
+            {
+              "id": "field-source",
+              "name": "source",
+              "type": "string",
+              "value": "={{ $json.creator || $json['dc:creator'] || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5f2999df-dfc5-4765-9e44-85690defb5d1",
+      "name": "Normalize Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        736,
+        512
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "filter-24h",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.isoDate }}",
+              "rightValue": "={{ Date.now() - 24 * 60 * 60 * 1000 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "14d8060d-d1c7-470f-94de-c18ae9bef6d4",
+      "name": "Filter Last 24 Hours",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        784,
+        816
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "isoDate",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2a5177ca-ab1c-4ae9-b5d2-7b2b12df4125",
+      "name": "Sort by Date",
+      "type": "n8n-nodes-base.sort",
+      "position": [
+        1024,
+        784
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate all articles into a single text block for the AI agent\nconst articles = $input.all();\n\nlet summaryText = 'TODAY\\'S TOP NEWS ARTICLES (' + articles.length + ' articles from the last 24 hours):\\n\\n';\n\nfor (let i = 0; i < articles.length; i++) {\n  const a = articles[i].json;\n  summaryText += (i + 1) + '. ' + (a.title || 'No title') + '\\n';\n  summaryText += '   URL: ' + (a.link || '') + '\\n';\n  const snippet = (a.snippet || '').substring(0, 250);\n  if (snippet) {\n    summaryText += '   ' + snippet + '\\n';\n  }\n  summaryText += '\\n';\n}\n\nreturn [{ json: { articlesSummary: summaryText, articleCount: articles.length } }];"
+      },
+      "id": "f3f656ee-630f-4410-a1b9-55dd6fbdbf51",
+      "name": "Aggregate Articles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=MANDATORY: You MUST call the fetch_article tool at least once \nbefore writing. Do not write the article without fetching first.\nPick the top article URL from the digest and call fetch_article \nwith that URL now.\nDo not narrate your reasoning steps. Work silently and output ONLY the final result in the specified format.\n\nYou are a professional tech news journalist. Every day you receive a digest of the latest news articles from major tech publications. Your job is to identify ALL newsworthy stories and write a separate, original, polished news article for each one.\n\n## Today's News Digest\n{{ $json.articlesSummary }}\n\n## Tools Available\n- **Fetch Article**: Pass a full article URL (including https://) to read the complete text. Use this to get the full details of the articles you want to write about.\n\n## Your Task\n1. Review ALL headlines and snippets above carefully.\n2. Score each story by newsworthiness (impact, novelty, relevance). Keep every story that scores 7/10 or above. There is no maximum — if 8 stories qualify, write 8 articles.\n3. For each qualifying story, fetch its full article. If 2-3 stories are closely related, you may fetch them together and combine them into one article — but only if they genuinely form a single narrative.\n4. If a fetch fails (paywall, error, timeout), skip it and work with what you have. Do NOT invent facts from unfetched articles.\n5. Write one original news article per qualifying story (or per related cluster).\n6. IMPORTANT: This is a TECH news workflow. If the digest contains no tech stories (AI, software, hardware,cybersecurity, startups, science & technology), output exactly:\nTITLE: NO_TECH_STORIES\nCATEGORY: skip\n%%CONTENT_START%%\n%%CONTENT_END%%\n\n## NEWS ARTICLE STRUCTURE\nEach article must follow this structure:\n\n### Headline\nClear, factual, attention-grabbing.\n\n### Lead Paragraph (1 paragraph)\nThe most important facts: who, what, when, where, why.\n\n### Body (3-5 paragraphs, use <h2> subheadings)\n- Key details and context\n- Background and significance\n- Multiple perspectives where available\n- Concrete data, numbers, or specifics\n\n### What's Next (1-2 paragraphs)\nImplications, what to watch for, what happens next.\n\n## WRITING RULES\n- Neutral, professional journalistic tone\n- 600-1000 words per article\n- All content ORIGINAL — synthesize and rewrite, never copy verbatim\n- If you cannot fetch an article, do NOT invent facts. Only use information confirmed by a successful fetch.\n- Attribute sources naturally (e.g. \"according to Ars Technica\", \"The Verge reports\")\n- Use <h2>, <p>, <strong>, <em> for formatting\n- Do NOT include <html>, <head>, or <body> tags\n- Write in Greek (el-GR)\n\n## OUTPUT FORMAT\nReturn ALL articles sequentially in this EXACT format with no extra text before, between, or after:\n\n%%ARTICLE_START%%\nTITLE: [Your headline]\nCATEGORY: [AI / Security / Hardware / Software / Business]\n%%CONTENT_START%%\n[Full article in HTML]\n%%CONTENT_END%%\n%%ARTICLE_END%%\n\n%%ARTICLE_START%%\nTITLE: [Your headline]\nCATEGORY: [AI / Security / Hardware / Software / Business]\n%%CONTENT_START%%\n[Full article in HTML]\n%%CONTENT_END%%\n%%ARTICLE_END%%\n\nRepeat the %%ARTICLE_START%% ... %%ARTICLE_END%% block for every article you write.\n\n",
+        "options": {
+          "systemMessage": "You are a tech journalist. You follow output format instructions exactly. You never narrate your reasoning. You never add steps or explanations. You output ONLY what is asked."
+        }
+      },
+      "id": "d4fcf914-ba03-435c-a705-c1ed9d407205",
+      "name": "AI Write News Article",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1984,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($input.item.json.output || '');\n\nconst contentMarker = '---CONTENT---';\n\nlet title = 'Untitled';\nlet content = raw;\n\nconst tIdx = raw.indexOf('TITLE:');\nif (tIdx !== -1) {\n  const afterTitle = raw.substring(tIdx + 6);\n  const newline = afterTitle.indexOf('\\n');\n  title = newline !== -1 ? afterTitle.substring(0, newline).trim() : afterTitle.trim();\n}\n\nconst contentIdx = raw.indexOf(contentMarker);\nif (contentIdx !== -1) {\n  content = raw.substring(contentIdx + contentMarker.length).trim();\n}\n\nreturn [{ json: { title, content } }];"
+      },
+      "id": "7ade70cb-660e-408b-9bd1-6d1446701664",
+      "name": "Parse AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        512
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "name": "fetch_article",
+        "description": "Call this tool to fetch and read the full text of a news article. You MUST call this tool before writing. Input: the complete URL of the article including https://",
+        "jsCode": "const url = query.trim();\n\nif (!url.startsWith('http://') && !url.startsWith('https://')) {\n  return 'ERROR: Invalid URL. Must start with http:// or https://';\n}\n\ntry {\n  const html = await this.helpers.httpRequest({\n    method: 'GET',\n    url: url,\n    returnFullResponse: false,\n    timeout: 15000,\n  });\n\n  let text = String(html);\n\n  text = text\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n    .replace(/<nav[\\s\\S]*?<\\/nav>/gi, '')\n    .replace(/<footer[\\s\\S]*?<\\/footer>/gi, '')\n    .replace(/<header[\\s\\S]*?<\\/header>/gi, '')\n    .replace(/<aside[\\s\\S]*?<\\/aside>/gi, '')\n    .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, '')\n    .replace(/<iframe[\\s\\S]*?<\\/iframe>/gi, '')\n    .replace(/<!--[\\s\\S]*?-->/g, '')\n    .replace(/<\\/(p|div|h[1-6]|li|tr|br|hr)[^>]*>/gi, '\\n')\n    .replace(/<br\\s*\\/?>/gi, '\\n')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&nbsp;/g, ' ')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\n\\s*\\n/g, '\\n\\n')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n\n  if (text.length > 4000) {\n    text = text.substring(0, 4000) + '\\n\\n[Content truncated]';\n  }\n\n  if (text.length < 100) {\n    return 'ERROR: Page returned no usable content (likely 404 or paywall). Skip this URL.';\n  }\n\n  return text;\n\n} catch (error) {\n  return 'ERROR: Could not fetch (' + error.message + '). Skip this URL.';\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        752
+      ],
+      "id": "f7dcd8b7-b50d-4425-a6f7-77ea38405638",
+      "name": "Fetch Article"
+    },
+    {
+      "parameters": {
+        "content": "## 📡 RSS Feed Sources\nPulls the latest articles from four tech publications:\n- **BBC Technology**\n- **The Verge**\n- **Ars Technica**\n- **TechCrunch**\n\n### Customizing\n- Swap any feed URL to cover different topics or outlets.\n- To add more feeds: duplicate an RSS node, connect it to the Merge node, and increase the Merge node's `numberInputs` value.",
+        "height": 288,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -16
+      ],
+      "id": "83f94b4a-9cb4-4de3-ad43-57f801d07b5e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Processing Pipeline\n1. **Normalize Fields** — Standardizes all feeds to a common schema (title, snippet, link, date, source) since each RSS feed returns slightly different field names.\n2. **Filter Last 24h** — Drops anything older than 24 hours so the AI only sees fresh news.\n3. **Sort by Date** — Newest articles first.\n4. **Limit** — Caps the list (default: 10) so the AI prompt stays focused and within token limits.",
+        "height": 208,
+        "width": 768
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        672,
+        272
+      ],
+      "id": "5f315190-885f-417e-a5d9-9456546e0bf0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 Publish to WordPress\nThe AI returns output in a structured format (TITLE + CONTENT).\n\n**Parse AI Output** extracts the headline and HTML body.\n**Create WordPress Draft** posts it as a draft to your site.\n\n### Requires\n- **WordPress API credential** (site URL + application password)\n- Default status: `draft` — change to `publish` in node settings if you want posts to go live immediately.",
+        "height": 256,
+        "width": 720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        224
+      ],
+      "id": "bccc1fac-fd96-4d51-8589-075ddae0674a",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 📰 AI-Powered Daily Tech News Writer\nAutomatically writes and publishes an original tech news article every morning.\n\n**Flow:** RSS Feeds → Merge & Filter → AI Agent writes article → WordPress Draft\n\n### Prerequisites\n- OpenAI API key\n- WordPress site with application password\n\n### Customization\n- Swap RSS feeds for different topics\n- Change the schedule trigger time\n- Adjust article count limit\n- Switch AI model in the OpenAI Chat Model node\n\nBuilt with ❤️ for hands-free content creation.",
+        "height": 400,
+        "width": 800
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        400
+      ],
+      "id": "28516de9-7fc0-4d6c-af3e-7c430a191a44",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 AI News Writer\nThe Code node compiles all articles into a single text digest.\n\nThe AI Agent (OpenAI) then:\n1. Reviews headlines and snippets\n2. Picks the most newsworthy story (or combines 2-3 related stories)\n3. Uses the **Fetch Article** tool to read full article text (max 3 fetches)\n4. Writes an original 600-1000 word article in journalistic style\n\n### Requires\n- **OpenAI API credential** (set in the \"OpenAI Chat Model\" sub-node)\n- Model defaults to `gpt-5.1` — change as needed",
+        "height": 320,
+        "width": 672
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        960
+      ],
+      "id": "7aa7d487-7d2b-4d13-aac0-c185ea54871f",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "url": "https://www.newsbeast.gr/feed",
+        "options": {}
+      },
+      "id": "ebaf32b7-58c0-487a-a3eb-0f63119fdcaa",
+      "name": "newsbeast.gr",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        208,
+        352
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "url": "https://www.news.gr/rss",
+        "options": {}
+      },
+      "id": "df21283a-9cc8-482b-925b-0df0c3a52bae",
+      "name": "news.gr",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        208,
+        496
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "url": "https://www.tanea.gr/feed",
+        "options": {}
+      },
+      "id": "2f9f3eb7-c208-44ad-8f90-7d3a88dfba19",
+      "name": "tanea.gr",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        208,
+        656
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "url": "https://www.ethnos.gr/rss.xml",
+        "options": {}
+      },
+      "id": "ce34c9ba-4dd7-46de-a9b5-9a0e20708a1c",
+      "name": "ethnos.gr",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        208,
+        816
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        720
+      ],
+      "id": "16349984-7a01-4941-b06e-7c6e785d93ac",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3uUCLR5yvdkNtbXj",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        384
+      ],
+      "id": "ba101396-c7cf-420b-b580-147d96763754",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "kdgCkpCrW61FR87q",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.first().json.output;\n\nconst articles = [...text.matchAll(\n  /%%ARTICLE_START%%([\\s\\S]*?)%%ARTICLE_END%%/g\n)].map(match => {\n  const block = match[1];\n  const title = block.match(/TITLE:\\s*(.+)/)?.[1]?.trim();\n  const category = block.match(/CATEGORY:\\s*(.+)/)?.[1]?.trim();\n  const content = block.match(/%%CONTENT_START%%([\\s\\S]*?)%%CONTENT_END%%/)?.[1]?.trim();\n  return { json: { title, category, content } };\n});\n\nreturn articles;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        688
+      ],
+      "id": "593e1057-3593-4333-a57c-1786e7c7d714",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        592
+      ],
+      "id": "2d31059a-db8f-4e7e-9b3f-0d0f8491d129",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "dedupeValue": "={{ $('Aggregate Articles').item.json.articlesSummary }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        752
+      ],
+      "id": "c3573a91-d777-4aaa-b98b-3f1e02963a2f",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2432,
+        864
+      ],
+      "id": "95f0c1a3-9e28-426a-811c-e2e314220436",
+      "name": "Wait",
+      "webhookId": "897d8cdc-51cc-4ab4-a25f-610aa54c19d8"
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "id": "96e1dc9d-2efb-4303-9659-4f513f9c847d",
+      "name": "Limit to 20",
+      "type": "n8n-nodes-base.limit",
+      "position": [
+        1168,
+        528
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Daily 8AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "newsbeast.gr",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "news.gr",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "tanea.gr",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ethnos.gr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Feeds": {
+      "main": [
+        [
+          {
+            "node": "Normalize Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Fields": {
+      "main": [
+        [
+          {
+            "node": "Filter Last 24 Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Last 24 Hours": {
+      "main": [
+        [
+          {
+            "node": "Sort by Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by Date": {
+      "main": [
+        [
+          {
+            "node": "Limit to 20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Articles": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Write News Article": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Output": {
+      "main": [
+        []
+      ]
+    },
+    "Fetch Article": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Write News Article",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "newsbeast.gr": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "news.gr": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "tanea.gr": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "ethnos.gr": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Write News Article",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "AI Write News Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 20": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Aggregate Articles": [
+      {
+        "json": {
+          "articlesSummary": "TODAY'S TOP NEWS ARTICLES (20 articles from the last 24 hours):\n\n1. Θεσσαλονίκη: 13 προσαγωγές μετά από παρέμβαση σε κατάστημα στη Θέρμη\n   URL: https://www.ethnos.gr/greece/article/407739/thessalonikh13prosagogesmetaapoparembashsekatasthmasththermh\n   \nΚάποια στιγμή περίπου 13 άτομα, φερόμενα ως μέλη του Ρουβίκωνα, επιχείρησαν να κάνουν παρέμβαση στο κατάστημα εστίασης\n\n2. Γιατί μαχητικά αεροσκάφη πετάνε πάνω από την Αθήνα - Δείτε φωτογραφίες\n   URL: https://www.ethnos.gr/greece/article/407737/giatimaxhtikaaeroskafhpetanepanoapothnathhnadeitefotografies\n   \nΟι Αθηναίοι ξαφνιάστηκαν από τα μαχητικά αεροσκάφη που πετούσαν το απόγευμα της Κυριακής\n\n3. Σοκ στην Κρήτη: Παρέσυρε την σύζυγό του με το αυτοκίνητο ενώ μέσα ήταν τα παιδιά τους\n   URL: https://www.ethnos.gr/greece/article/407736/soksthnkrhthparesyrethnsyzygotoymetoaytokinhtoenomesahtantapaidiatoys\n   \nΔίωξη για απόπειρα ανθρωποκτονίας στον 30χρονο σύζυγο της 28χρονης που βρέθηκε αιμόφυρτη σε χαντάκι - Το χρονικό της φρίκης\n\n4. Πανικός σε ξενοδοχείο στη Ζάκυνθο: 21χρονος κυνηγούσε εργαζόμενη - Είχε κρυμμένο μαχαίρι\n   URL: https://www.ethnos.gr/greece/article/407734/panikossexenodoxeiosthzakyntho21xronoskynhgoyseergazomenheixekrymmenomaxairi\n   \nΠώς ξεκίνησε το απίστευτο περιστατικό που οδήγησε στη σύλληψη του 21χρονου\n\n5. Metallica: Ο Γιώργος Καρράς από τις «Τρύπες» απάντησε για το «Δεν χωράς πουθενά» – Τελικά… κάπου χωράμε όλοι\n   URL: https://www.newsbeast.gr/entertainment/music/arthro/13087254/metallica-o-giorgos-karras-apo-tis-trypes-apantise-gia-to-den-choras-pouthena-telika-kapou-chorame-oloi\n   \nΟ μπασίστας και συνιδρυτής του συγκροτήματος «Τρύπες», Γιώργος Καρράς, αναφέρθηκε στους Metallica και το γεγονός ότι ερμήνευσαν το «Δεν Χωράς Πουθενά» μαζί με 80.000 ανθρώπους. «Ποιος να το φανταζόταν\n\n6. Ο Κουαμέ… χόρεψε πεντοζάλι τον ΟΦΗ\n   URL: https://www.tanea.gr/2026/05/10/sports/football/o-kouame-xorepse-pentozali-ton-ofi/\n   \nO Ιβοριανός είχε κέφια, σφραγίζοντας με δύο γκολ και μία ασίστ τη νίκη του Άρη επί των Κρητικών με 3-1 για την 4η αγωνιστική των πλέι οφ\n\n7. Αδιανόητο τροχαίο στον Καναδά: Μηχανή εκτοξεύτηκε στο υπερυψωμένο φανάρι – Δείτε το βίντεο\n   URL: https://www.newsbeast.gr/world/arthro/13087248/adianoito-trochaio-ston-kanada-michani-ektoxeftike-sto-yperypsomeno-fanari-deite-to-vinteo\n   \nΣοκ έχει προκαλέσει στον Καναδά ένα ασυνήθιστο τροχαίο ατύχημα που σημειώθηκε το απόγευμα του Σαββάτου στη Βρετανική Κολομβία, όταν μοτοσικλέτα, μετά από σφοδρή σύγκρουση με αυτοκίνητο, εκτοξεύτηκε κα\n\n8. Λεβαδειακός – ΟΦΗ 0-3: Βόλτα στο Πανθεσσαλικό\n   URL: https://www.newsbeast.gr/sports/arthro/13087259/levadeiakos-ofi-0-3-volta-sto-panthessaliko\n   \nΜε δύο γκολ του Πεντρόσο και ένα του Βήχου, ο Λεβαδειακός νίκησε εύκολα με 3-0 τον Βόλο στο Πανθεσσαλικό, για την 4η αγωνιστική των play off για τις θέσεις 5-8. Περισσότερα σε λίγο…\n\n9. Βόλος – Λεβαδειακός 0-3: Οι Βοιωτοί έκαναν περίπατο και παρέμειναν μόνοι στην πέμπτη θέση\n   URL: https://www.tanea.gr/2026/05/10/sports/football/volos-levadeiakos-0-3-oi-voiotoi-ekanan-peripato-kai-paremeinan-monoi-stin-pempti-thesi/\n   \nΜε εμφατικό τρόπο πέρασε από το Πανθεσσαλικό Στάδιο ο Λεβαδειακός, επικρατώντας με 3-0 του Βόλου και δείχνοντας εξαιρετική εικόνα σε άμυνα και επίθεση για τις θέσεις 5-8 της Super League. Η εξέλιξη το\n\n10. Self Tan Season: Τα μυστικά για μπρονζέ επιδερμίδα χωρίς λεκέδες και “πορτοκαλί” αποτέλεσμα\n   URL: https://www.newsbeast.gr/woman/omorfia/arthro/13086791/self-tan-season-ta-mystika-gia-bronze-epidermida-choris-lekedes-kai-portokali-apotelesma\n   \nΑυτό το ζεστό, χρυσαφένιο glow που κάνει το δέρμα να δείχνει πιο υγιές, πιο φωτεινό και ταυτόχρονα κάνει ακόμη και το πιο απλό λευκό outfit να μοιάζει καλύτερο, είναι το αποτέλεσμα που αναζητάμε οι πε\n\n11. 36 χρόνια στην πτέρυγα του θανάτου: Ο πραγματικός λόγος που ο Κώστας Φωτόπουλος, ο μοναδικός Έλληνας μελλοθάνατος, παραμένει ακόμα ζωντανός\n   URL: https://www.ethnos.gr/ournetwork/article/407647/36xroniasthnpterygatoythanatoyopragmatikoslogospoyokostasfotopoylosomonadikosellhnasmellothanatosparameneiakomazontanos\n   \nΣενάριο για κινηματογραφική ταινία, αλλά με άγνωστο ακόμα το φινάλε\n\n12. Άρης – ΟΦΗ 3-1: Νίκη γοήτρου με 3άρα\n   URL: https://www.newsbeast.gr/sports/arthro/13087251/aris-ofi-3-1-niki-goitrou-me-3ara\n   \nΜετά τη νίκη στο Ηράκλειο, ο Άρης επικράτησε του ΟΦΗ και στο «Κλεάνθης Βικελίδης», με 3-1 αυτή τη φορά, χωρίς όμως αυτό να κάνει κάποια διαφορά στη βαθμολογία. Από το ξεκίνημα της αναμέτρησης οι «κίτρ\n\n13. Οι μαμάδες celebrities που στη γιορτή της μητέρας άνοιξαν την καρδιά τους\n   URL: https://www.tanea.gr/2026/05/10/lifestyle/oi-mamades-celebrities-pou-sti-giorti-tis-miteras-anoiksan-tin-kardia-tous/\n   \nΟι νεότερες μανούλες Ελένη Φουρέιρα, Ανθή Βούλγαρη, Άννα Πρέλεβιτς, Κατερίνα Καινούργιου, αλλά και η έμπειρη Ελένη Μενεγάκη είναι μερικές απ' αυτές που εξέφρασαν τα συναισθήματά τους στα social media\n\n14. «Οι Τρύπες» απάντησαν στους Metallica για το «Δεν χωράς πουθενά» – Η ανάρτηση του κιθαρίστα\n   URL: https://www.tanea.gr/2026/05/10/lifestyle/oi-trypes-apantisan-stous-metallica-gia-to-den-xoras-pouthena-i-anartisi-tou-kitharista/\n   \nΤο βράδυ του Σαββάτου (9/5), το ΟΑΚΑ πλημμύρισε από κόσμο για την  συναυλία των Metallica  η οποία πραγματοποιήθηκε  στο πλαίσιο της παγκόσμιας περιοδείας M72 World Tour. Το θρυλικό συγκρότημα πρόσφερ\n\n15. Ιρανικά drones έπληξαν δεξαμενόπλοιο αμερικανικών συμφερόντων στον Περσικό Κόλπο\n   URL: https://www.newsbeast.gr/world/arthro/13087223/iranika-drones-eplixan-dexamenoploio-amerikanikon-symferonton-ston-persiko-kolpo\n   \nΤο εμπορικό πλοίο &#8220;Neha&#8221;, αμερικανικών συμφερόντων, δέχθηκε επίθεση από δύο ιρανικά drones στον Περσικό Κόλπο την Κυριακή, 10 Μαΐου, σύμφωνα με τον πρόεδρο της Safesea Group, SV Anchan, ο \n\n16. Οι εντυπωσιακές φωτογραφίες από το airshow της Πολεμικής Αεροπορίας στον Φλοίσβο\n   URL: https://www.newsbeast.gr/greece/arthro/13087229/oi-entyposiakes-fotografies-apo-to-airshow-tis-polemikis-aeroporias-ston-floisvo\n   \nΗ Πολεμική Αεροπορία γιορτάζει, σήμερα, Κυριακή 10 Μαΐου, τα 95 χρόνια της ως ανεξάρτητου κλάδου των Ενόπλων Δυνάμεων, με ένα εντυπωσιακό airshow στην παραλία του Φλοίσβου, μπροστά από το &#8216;Αγαλμ\n\n17. Ολυμπιακός – ΠΑΟΚ: Οι 11άδες για το ντέρμπι στο Καραϊσκάκη\n   URL: https://www.newsbeast.gr/sports/arthro/13087242/olybiakos-paok-oi-11ades-gia-to-nterbi-sto-karaiskaki\n   \nΝτέρμπι στο Καραϊσκάκη με τον Ολυμπιακό να υποδέχεται τον ΠΑΟΚ και τη νίκη να αποτελεί μονόδρομο και για τις δύο ομάδες, προκειμένου να παραμείνουν ζωντανές στη μάχη του τίτλου. Οι «ερυθρόλευκοι» και \n\n18. Οι «Τρύπες» απαντούν στους Metallica για το «Δεν χωράς πουθενά» - Τι λέει ο κιθαρίστας\n   URL: https://www.ethnos.gr/music/article/407731/oitrypesapantoynstoysmetallicagiatodenxoraspoythenatileeiokitharistas\n   \n«Το \"Δεν χωράς πουθενά\" αποδεικνύεται ότι έχει μείνει στην ιστορία της σύγχρονης ελληνικής μουσικής»\n\n19. Παναθηναϊκός: Με τετράδα και Παντελίδη στη Νέα Φιλαδέλφεια!\n   URL: https://www.tanea.gr/2026/05/10/sports/football/panathinaikos-me-tetrada-kai-pantelidi-sti-nea-filadelfeia/\n   \nΗ παρουσία του Παντελίδη στο βασικό σχήμα του Παναθηναϊκού για το ντέρμπι με την ΑΕΚ είναι μια μικρή έκπληξη από τον Ράφα Μπενίτεθ, ο οποίος – αναγκαστικά – επέλεξε τετράδα στην άμυνα των Πράσινων. Ο \n\n20. Με Γιόβιτς η ενδεκάδα της ΑΕΚ στο αθηναϊκό ντέρμπι με τον Παναθηναϊκό\n   URL: https://www.tanea.gr/2026/05/10/sports/football/me-giovits-i-endekada-tis-aek-sto-athinaiko-ntermpi-me-ton-panathinaiko/\n   \nΗ ΑΕΚ υποδέχεται τον Παναθηναϊκό στην Allwyn Arena για την 4η αγωνιστική των Play-Offs της Super League. (19:30, COSMOTE Sport 2). Λίγη ώρα πριν από τη σέντρα, έγινε γνωστή η ενδεκάδα που επέλεξε ο Σέ\n\n",
+          "articleCount": 20
+        }
+      }
+    ]
+  },
+  "versionId": "c2f6daa7-def0-48d3-b9c8-543f6c51c9ba",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-10T15:28:39.256Z",
+      "createdAt": "2026-05-10T15:28:39.256Z",
+      "role": "workflow:owner",
+      "workflowId": "hGvfCKIVKYFQCigC",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
