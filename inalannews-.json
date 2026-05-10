@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-03T18:15:07.863Z",
+  "updatedAt": "2026-05-10T10:16:09.006Z",
   "createdAt": "2026-05-03T17:53:15.989Z",
   "id": "rB2zma8Sy3JfGOnG",
   "name": "inalannews",
@@ -20,14 +20,49 @@
       "type": "n8n-nodes-base.rssFeedReadTrigger",
       "typeVersion": 1,
       "position": [
-        -160,
-        -48
+        -736,
+        -192
       ],
       "id": "9264c529-60b0-4a34-969b-7e306894b5ce",
       "name": "RSS Feed Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "={{ $json.title }}",
+        "message": "={{ $json.pubDate }}\n\n{{ $json.content }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        -192
+      ],
+      "id": "8dc02403-042a-4b3b-a667-b69bcf5fa9db",
+      "name": "Send a message",
+      "webhookId": "053fcd95-f201-40e4-9890-18263b992e74",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
-  "connections": {},
+  "connections": {
+    "RSS Feed Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
   "settings": {
     "executionOrder": "v1"
   },
@@ -36,7 +71,7 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "b976aff1-7612-444d-a089-bd4d17bf8d00",
+  "versionId": "0156a1b8-f521-4b21-bf35-b1912484f83d",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
