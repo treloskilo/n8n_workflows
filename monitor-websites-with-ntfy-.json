@@ -664,7 +664,9 @@
   },
   "staticData": {
     "node:Schedule Trigger": {
-      "recurrenceRules": []
+      "recurrenceRules": [
+        22
+      ]
     }
   },
   "meta": null,
