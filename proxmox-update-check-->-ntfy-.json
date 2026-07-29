@@ -1,0 +1,196 @@
+{
+  "updatedAt": "2026-07-29T10:13:34.490Z",
+  "createdAt": "2026-07-29T10:03:30.430Z",
+  "id": "lEPCsRERXwt8hxYq",
+  "name": "Proxmox Update Check -> ntfy",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "10ba213e-ca67-4f3d-a2bf-d17d58a5e352",
+      "name": "Daily 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "command": "apt-get update > /dev/null 2>&1; apt list --upgradable 2>/dev/null | grep -v \"Listing...\""
+      },
+      "id": "b4adbce6-1ee7-4e3b-8399-2ca08f2d5c1f",
+      "name": "Check Updates (SSH)",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -80
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "JaCbeiVLUojUm8sY",
+          "name": "ProxmoxSSH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.stdout.trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "840007c8-525b-4f48-87ae-1a7373b3153d",
+      "name": "Updates Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.147.17.161:8080/enimerwseis",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Title",
+              "value": "Proxmox Update Needed"
+            },
+            {
+              "name": "Priority",
+              "value": "default"
+            },
+            {
+              "name": "Tags",
+              "value": "warning,package"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "raw",
+        "options": {}
+      },
+      "id": "048fd641-23a4-4a82-ad73-b42df290a030",
+      "name": "Notify via ntfy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        -176
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a603fd80-64e8-45f7-9813-e6e87da29980",
+      "name": "No Updates (No-Op)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        240,
+        32
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 07:00": {
+      "main": [
+        [
+          {
+            "node": "Check Updates (SSH)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Updates (SSH)": {
+      "main": [
+        [
+          {
+            "node": "Updates Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Updates Found?": {
+      "main": [
+        [
+          {
+            "node": "Notify via ntfy",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Updates (No-Op)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "71ec5131-931b-498d-a6ee-3aadb6128dfe",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-29T10:03:30.443Z",
+      "createdAt": "2026-07-29T10:03:30.443Z",
+      "role": "workflow:owner",
+      "workflowId": "lEPCsRERXwt8hxYq",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
