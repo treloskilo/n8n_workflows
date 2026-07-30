@@ -1,31 +1,11 @@
 {
-  "updatedAt": "2026-07-29T10:13:34.490Z",
+  "updatedAt": "2026-07-30T10:02:29.489Z",
   "createdAt": "2026-07-29T10:03:30.430Z",
   "id": "lEPCsRERXwt8hxYq",
   "name": "Proxmox Update Check -> ntfy",
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "0 7 * * *"
-            }
-          ]
-        }
-      },
-      "id": "10ba213e-ca67-4f3d-a2bf-d17d58a5e352",
-      "name": "Daily 07:00",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -480,
-        -80
-      ]
-    },
     {
       "parameters": {
         "command": "apt-get update > /dev/null 2>&1; apt list --upgradable 2>/dev/null | grep -v \"Listing...\""
@@ -82,60 +62,62 @@
       "parameters": {
         "method": "POST",
         "url": "http://10.147.17.161:8080/enimerwseis",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Title",
-              "value": "Proxmox Update Needed"
-            },
-            {
-              "name": "Priority",
-              "value": "default"
-            },
-            {
-              "name": "Tags",
-              "value": "warning,package"
-            }
-          ]
-        },
         "sendBody": true,
-        "specifyBody": "raw",
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "=Proxmox Update Needed\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}\n  - Packages:  {{ $json.stdout }}",
         "options": {}
       },
-      "id": "048fd641-23a4-4a82-ad73-b42df290a030",
-      "name": "Notify via ntfy",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "typeVersion": 4.3,
       "position": [
-        240,
+        256,
         -176
-      ]
+      ],
+      "id": "d1887bd9-bd56-4d16-9620-6d12c3f0235e",
+      "name": "HTTP Request"
     },
     {
-      "parameters": {},
-      "id": "a603fd80-64e8-45f7-9813-e6e87da29980",
-      "name": "No Updates (No-Op)",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.147.17.161:8080/enimerwseis",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "=Proxmox System Up to date\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
       "position": [
-        240,
-        32
+        256,
+        16
+      ],
+      "id": "fbc50fe5-2ab2-4ff9-8ae1-11543c223a99",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "10ba213e-ca67-4f3d-a2bf-d17d58a5e352",
+      "name": "Daily 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        -80
       ]
     }
   ],
   "connections": {
-    "Daily 07:00": {
-      "main": [
-        [
-          {
-            "node": "Check Updates (SSH)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Check Updates (SSH)": {
       "main": [
         [
@@ -151,14 +133,25 @@
       "main": [
         [
           {
-            "node": "Notify via ntfy",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "No Updates (No-Op)",
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 09:00": {
+      "main": [
+        [
+          {
+            "node": "Check Updates (SSH)",
             "type": "main",
             "index": 0
           }
@@ -174,14 +167,18 @@
     "availableInMCP": false,
     "errorWorkflow": "g6VSaJXbw9uphgte"
   },
-  "staticData": null,
+  "staticData": {
+    "node:Daily 09:00": {
+      "recurrenceRules": []
+    }
+  },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "71ec5131-931b-498d-a6ee-3aadb6128dfe",
-  "activeVersionId": null,
-  "triggerCount": 0,
+  "versionId": "24763cad-8f7a-49ee-87f0-3e5f1d17257d",
+  "activeVersionId": "24763cad-8f7a-49ee-87f0-3e5f1d17257d",
+  "triggerCount": 1,
   "shared": [
     {
       "updatedAt": "2026-07-29T10:03:30.443Z",
@@ -191,6 +188,168 @@
       "projectId": "7jNXHgiAtPda1pR0"
     }
   ],
-  "activeVersion": null,
+  "activeVersion": {
+    "updatedAt": "2026-07-30T09:58:59.026Z",
+    "createdAt": "2026-07-30T09:58:59.026Z",
+    "versionId": "24763cad-8f7a-49ee-87f0-3e5f1d17257d",
+    "workflowId": "lEPCsRERXwt8hxYq",
+    "nodes": [
+      {
+        "parameters": {
+          "command": "apt-get update > /dev/null 2>&1; apt list --upgradable 2>/dev/null | grep -v \"Listing...\""
+        },
+        "id": "b4adbce6-1ee7-4e3b-8399-2ca08f2d5c1f",
+        "name": "Check Updates (SSH)",
+        "type": "n8n-nodes-base.ssh",
+        "typeVersion": 1,
+        "position": [
+          -240,
+          -80
+        ],
+        "credentials": {
+          "sshPassword": {
+            "id": "JaCbeiVLUojUm8sY",
+            "name": "ProxmoxSSH"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond1",
+                "leftValue": "={{ $json.stdout.trim() }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "840007c8-525b-4f48-87ae-1a7373b3153d",
+        "name": "Updates Found?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          0,
+          -80
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://10.147.17.161:8080/enimerwseis",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "text/html",
+          "body": "=Proxmox Update Needed\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }}\n  - Packages:  {{ $json.stdout }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          256,
+          -176
+        ],
+        "id": "d1887bd9-bd56-4d16-9620-6d12c3f0235e",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://10.147.17.161:8080/enimerwseis",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "text/html",
+          "body": "=Proxmox System Up to date\n  - Current date: {{ $now.format('dd-MM-yyyy') }}\n  - Current time: {{ $now.format('hh:mm a') }} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          256,
+          16
+        ],
+        "id": "fbc50fe5-2ab2-4ff9-8ae1-11543c223a99",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 9 * * *"
+              }
+            ]
+          }
+        },
+        "id": "10ba213e-ca67-4f3d-a2bf-d17d58a5e352",
+        "name": "Daily 09:00",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -480,
+          -80
+        ]
+      }
+    ],
+    "connections": {
+      "Check Updates (SSH)": {
+        "main": [
+          [
+            {
+              "node": "Updates Found?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Updates Found?": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Daily 09:00": {
+        "main": [
+          [
+            {
+              "node": "Check Updates (SSH)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "trelos skilos",
+    "name": null,
+    "description": null
+  },
   "tags": []
 }
