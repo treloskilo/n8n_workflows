@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-03T13:19:18.974Z",
+  "updatedAt": "2026-08-02T09:05:08.103Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -209,7 +209,7 @@
             {
               "id": "500890d8-f9a0-4075-8419-664c13f9428f",
               "name": "resume",
-              "value": "I am Vasileios Seremetis. I am an experienced in IT Support , L1 - L3, and in  IT Systems & Network Administrator with over 20 years of expertise in IT infrastructure, virtualization, cloud computing, and technical support. Skilled in leading IT operations, managing hybrid environments, and implementing secure, reliable solutions for businesses. Strong communicator with a track record of delivering IT projects and supporting enterprise environments.",
+              "value": "I am an experienced in IT Support , L1 - L3, and in  IT Systems & Network Administrator with over 20 years of expertise in IT infrastructure, virtualization, cloud computing, and technical support. Skilled in leading IT operations, managing hybrid environments, and implementing secure, reliable solutions for businesses. Strong communicator with a track record of delivering IT projects and supporting enterprise environments.",
               "type": "string"
             },
             {
@@ -486,8 +486,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "8a6d24b8-a5d6-4c6e-9e66-108c486c87c5",
-  "activeVersionId": "8a6d24b8-a5d6-4c6e-9e66-108c486c87c5",
+  "versionId": "c4aee713-27b6-4e01-a300-32e440b0e0ae",
+  "activeVersionId": "c4aee713-27b6-4e01-a300-32e440b0e0ae",
   "triggerCount": 1,
   "shared": [
     {
@@ -499,9 +499,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-05-03T13:19:18.975Z",
-    "createdAt": "2026-05-03T13:19:18.975Z",
-    "versionId": "8a6d24b8-a5d6-4c6e-9e66-108c486c87c5",
+    "updatedAt": "2026-08-02T08:43:30.411Z",
+    "createdAt": "2026-08-02T08:43:30.411Z",
+    "versionId": "c4aee713-27b6-4e01-a300-32e440b0e0ae",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
@@ -707,7 +707,7 @@
               {
                 "id": "500890d8-f9a0-4075-8419-664c13f9428f",
                 "name": "resume",
-                "value": "I am Vasileios Seremetis. I am an experienced in IT Support , L1 - L3, and in  IT Systems & Network Administrator with over 20 years of expertise in IT infrastructure, virtualization, cloud computing, and technical support. Skilled in leading IT operations, managing hybrid environments, and implementing secure, reliable solutions for businesses. Strong communicator with a track record of delivering IT projects and supporting enterprise environments.",
+                "value": "I am an experienced in IT Support , L1 - L3, and in  IT Systems & Network Administrator with over 20 years of expertise in IT infrastructure, virtualization, cloud computing, and technical support. Skilled in leading IT operations, managing hybrid environments, and implementing secure, reliable solutions for businesses. Strong communicator with a track record of delivering IT projects and supporting enterprise environments.",
                 "type": "string"
               },
               {
