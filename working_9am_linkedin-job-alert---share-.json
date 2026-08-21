@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-02T09:05:08.103Z",
+  "updatedAt": "2026-08-21T15:57:15.759Z",
   "createdAt": "2025-10-20T10:43:34.438Z",
   "id": "ctDJnyAsl0S17Pva",
   "name": "Working_9am_Linkedin Job Alert - share",
@@ -259,7 +259,7 @@
     },
     {
       "parameters": {
-        "model": "llama-3.1-8b-instant",
+        "model": "openai/gpt-oss-20b",
         "options": {
           "temperature": 0.1
         }
@@ -292,6 +292,21 @@
       "id": "49222edb-7c3e-4526-b536-d14ff057118e",
       "name": "Wait2",
       "webhookId": "76bbeb33-059d-431b-a127-de8fa42aa4bb"
+    },
+    {
+      "parameters": {
+        "content": "\n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\ngroq api key",
+        "height": 80,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        16
+      ],
+      "id": "cfe12d79-1922-4a88-8dc7-200772cbe576",
+      "name": "Sticky Note"
     }
   ],
   "connections": {
@@ -485,9 +500,30 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {},
-  "versionId": "c4aee713-27b6-4e01-a300-32e440b0e0ae",
-  "activeVersionId": "c4aee713-27b6-4e01-a300-32e440b0e0ae",
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-08-21T09:05:46.003+03:00",
+          "Readable date": "August 21st 2026, 9:05:46 am",
+          "Readable time": "9:05:46 am",
+          "Day of week": "Friday",
+          "Year": "2026",
+          "Month": "August",
+          "Day of month": "21",
+          "Hour": "09",
+          "Minute": "05",
+          "Second": "46",
+          "Timezone": "Europe/Athens (UTC+03:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "5ff34aec-8880-4a35-8ae5-31ab3c0a5390",
+  "activeVersionId": "5ff34aec-8880-4a35-8ae5-31ab3c0a5390",
   "triggerCount": 1,
   "shared": [
     {
@@ -499,9 +535,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-08-02T08:43:30.411Z",
-    "createdAt": "2026-08-02T08:43:30.411Z",
-    "versionId": "c4aee713-27b6-4e01-a300-32e440b0e0ae",
+    "updatedAt": "2026-08-21T15:57:15.761Z",
+    "createdAt": "2026-08-21T15:57:15.761Z",
+    "versionId": "5ff34aec-8880-4a35-8ae5-31ab3c0a5390",
     "workflowId": "ctDJnyAsl0S17Pva",
     "nodes": [
       {
@@ -757,7 +793,7 @@
       },
       {
         "parameters": {
-          "model": "llama-3.1-8b-instant",
+          "model": "openai/gpt-oss-20b",
           "options": {
             "temperature": 0.1
           }
@@ -790,6 +826,21 @@
         "id": "49222edb-7c3e-4526-b536-d14ff057118e",
         "name": "Wait2",
         "webhookId": "76bbeb33-059d-431b-a127-de8fa42aa4bb"
+      },
+      {
+        "parameters": {
+          "content": "\n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\ngroq api key",
+          "height": 80,
+          "width": 560
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -848,
+          16
+        ],
+        "id": "cfe12d79-1922-4a88-8dc7-200772cbe576",
+        "name": "Sticky Note"
       }
     ],
     "connections": {
