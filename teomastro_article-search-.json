@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-17T11:21:08.115Z",
+  "updatedAt": "2026-09-13T12:57:52.994Z",
   "createdAt": "2026-05-10T15:28:39.253Z",
   "id": "hGvfCKIVKYFQCigC",
   "name": "teomastro_Article search",
@@ -329,7 +329,7 @@
     },
     {
       "parameters": {
-        "model": "llama-3.1-8b-instant",
+        "model": "openai/gpt-oss-20b",
         "options": {
           "maxTokensToSample": 4001
         }
@@ -579,9 +579,18 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {},
-  "versionId": "ea548c74-bb90-4729-a533-520e7584f030",
-  "activeVersionId": "ea548c74-bb90-4729-a533-520e7584f030",
+  "pinData": {
+    "Aggregate Articles": [
+      {
+        "json": {
+          "articlesSummary": "TODAY'S TOP NEWS ARTICLES (10 articles from the last 24 hours):\n\n1. Δυστύχημα στο Κορωπί: Νεκρός άνδρας μετά από τροχαίο στο Κίτσι\n   URL: https://www.ethnos.gr/greece/article/420410/dystyxhmastokoropinekrosandrasmetaapotroxaiostokitsi\n   \nΤα αίτια και οι συνθήκες του δυστυχήματος διερευνώνται από την Τροχαία\n\n2. Ανδρουλάκης στο ethnos.gr από τη ΔΕΘ 2026: «Το ΠΑΣΟΚ δεν είναι κόμμα-σφραγίδα, ούτε one man show»\n   URL: https://www.ethnos.gr/Politics/article/420413/androylakhsstoethnosgrapothdeth2026topasokdeneinaikommasfragidaoyteonemanshow\n   \nΟ πρόεδρος του ΠΑΣΟΚ απάντησε στην ερώτηση του ethnos.gr για όσα πρέπει να αλλάξουν στο εσωτερικό του κόμματος πριν από την «πολιτική αλλαγή» - Το μήνυμα για την ενότητα, την κυβερνητική προοπτική και\n\n3. Τρίκαλα: 38χρονη ξυλοκοπήθηκε άγρια από τον σύντροφό της\n   URL: https://www.ethnos.gr/greece/article/420412/trikala38xronhxylokophthhkeagriaapotonsyntrofoths\n   \nΟ δράστης συνελήφθη και ακολουθείται η διαδικασία του αυτοφώρου\n\n4. Θάνατος Μαζωνάκη: Η ώρα της απολογίας για τους γιατρούς - Σε τι θα κληθούν να απαντήσουν και τι ερευνούν τώρα οι Αρχές\n   URL: https://www.ethnos.gr/greece/article/420408/giorgosmazonakhshorathsapologiasgiatoysgiatroyssetithaklhthoynnaapanthsoynkaitiereynoyntoraoiarxes\n   \nΣε ξεχωριστά κρατητήρια οι δύο γιατροί\n\n5. Το σκίτσο του Κώστα Σκλαβενίτη για ΤΑ ΝΕΑ 12/9/2026\n   URL: https://www.tanea.gr/2026/09/13/skitsa/to-skitso-tou-kosta-sklaveniti-gia-ta-nea-12-9-2026/\n   \n<div><img loading=\"lazy\" width=\"640\" height=\"335\" src=\"https://www.tanea.gr/wp-content/uploads/2026/09/astynomika-6.jpg\" class=\"attachment-large size-large wp-post-image\" alt=\"\" style=\"margin-bottom: \n\n6. Πυρά Παπανδρέου σε Μητσοτάκη για τον συμβολισμό του Καστελόριζου: «Η ιστορία δεν ξαναγράφεται»\n   URL: https://www.tanea.gr/2026/09/13/politics/pyra-papandreou-se-mitsotaki-gia-ton-symvolismo-tou-kastelorizou-i-istoria-den-ksanagrafetai/\n   \nΣκληρή επίθεση στον Κυριάκο Μητσοτάκη με αφορμή την επίσκεψή του στο Καστελόριζο εξαπολύει ο Γιώργος Παπανδρέου, επαναφέροντας στο προσκήνιο την περίοδο της οικονομικής κρίσης και τις ευθύνες που κατα\n\n7. Σοκ στην Αίγινα: Έκαναν ΚΑΡΠΑ σε γυναίκα για 50 λεπτά περιμένοντας ασθενοφόρο που δεν έφθασε ποτέ – Βίντεο ντοκουμέντο\n   URL: https://www.tanea.gr/2026/09/13/greece/sok-stin-aigina-ekanan-karpa-se-gynaika-gia-50-lepta-perimenontas-asthenoforo-pou-den-efthase-pote-vinteo-ntokoumento/\n   \nΗ άτυχη γυναίκα κατέληξε στην παραλία πριν φθάσει το ασθενοφόρο\n\n8. Η Σαουδική Αραβία κινδυνεύει να μείνει χωρίς διαθέσιμα αποθέματα πετρελαίου για εξαγωγές\n   URL: https://www.tanea.gr/2026/09/13/world/i-saoudiki-aravia-kindyneyei-na-meinei-xoris-diathesima-apothemata-petrelaiou-gia-eksagoges/\n   \nΑπό τις 11 Σεπτεμβρίου, οι επιθέσεις με drones ανάγκασαν το Ριάντ να διακόψει τη λειτουργία του μεγάλου αγωγού Ανατολής-Δύσης\n\n9. Η Ελλάδα των VIP διακοπών: Ποιοι νοικιάζουν βίλες με 25.000 ευρώ τη βραδιά – Οι προορισμοί που προσελκύουν τους υπερπλούσιους\n   URL: https://www.newsbeast.gr/greece/arthro/13353067/i-ellada-ton-vip-diakopon-poioi-noikiazoun-viles-me-25-000-evro-ti-vradia-oi-proorismoi-pou-proselkyoun-tous-yperplousious\n   \nΈως και 25.000 ευρώ για μία μόνο βραδιά, προσωπικός σεφ, μπάτλερ, ιδιωτική πισίνα, ελικοδρόμιο και πρόσβαση στη θάλασσα. Είναι η άλλη πλευρά του ελληνικού τουρισμού, που απευθύνεται σε ένα εξαιρετικά \n\n10. Superbet Κύπελλο Ελλάδας: Οι διαιτητές της 3ης αγωνιστικής\n   URL: https://www.tanea.gr/2026/09/13/sports/football/superbet-kypello-elladas-oi-diaitites-tis-3is-agonistikis/\n   \nΗ ΕΠΟ έκανε γνωστούς τους διαιτητές που θα διευθύνουν τις αναμετρήσεις της 3ης αγωνιστικής της League Phase στο Superbet Κύπελλο Ελλάδος. Το πρόγραμμα περιλαμβάνει σημαντικά παιχνίδια, με το Ατρόμητος\n\n",
+          "articleCount": 10
+        }
+      }
+    ]
+  },
+  "versionId": "03656a13-f54a-41e0-a9dc-c4ac695f22ec",
+  "activeVersionId": "03656a13-f54a-41e0-a9dc-c4ac695f22ec",
   "triggerCount": 1,
   "shared": [
     {
@@ -593,9 +602,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-05-17T11:21:08.116Z",
-    "createdAt": "2026-05-17T11:21:08.116Z",
-    "versionId": "ea548c74-bb90-4729-a533-520e7584f030",
+    "updatedAt": "2026-09-13T12:57:52.996Z",
+    "createdAt": "2026-09-13T12:57:52.996Z",
+    "versionId": "03656a13-f54a-41e0-a9dc-c4ac695f22ec",
     "workflowId": "hGvfCKIVKYFQCigC",
     "nodes": [
       {
@@ -921,7 +930,7 @@
       },
       {
         "parameters": {
-          "model": "llama-3.1-8b-instant",
+          "model": "openai/gpt-oss-20b",
           "options": {
             "maxTokensToSample": 4001
           }
