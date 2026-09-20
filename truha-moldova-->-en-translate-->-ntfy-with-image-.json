@@ -1,0 +1,624 @@
+{
+  "updatedAt": "2026-09-20T10:48:27.589Z",
+  "createdAt": "2026-09-20T10:41:29.195Z",
+  "id": "KlyCqsUflz5mJPxU",
+  "name": "Truha Moldova -> EN translate -> ntfy with image",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "79c545da-86fe-4cb0-9f74-43b1e055a046",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://t.me/s/truexa_moldova_news",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "e1da1e28-c773-4870-9404-17070ed533d8",
+      "name": "Fetch Channel HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1264,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.data || '';\n\nconst staticData = $getWorkflowStaticData('node');\nconst lastId = staticData.lastMessageId || 0;\nconst isFirstRun = lastId === 0;\n\n// Split the page into one chunk per message, anchored on each data-post\nconst blockRegex = /<div class=\"tgme_widget_message[^\"]*\"\\s+data-post=\"([^\"]+)\"/g;\nconst anchors = [];\nlet m;\nwhile ((m = blockRegex.exec(html)) !== null) {\n  anchors.push({ index: m.index, dataPost: m[1] });\n}\n\nconst posts = [];\n\nfor (let i = 0; i < anchors.length; i++) {\n  const start = anchors[i].index;\n  const end = (i + 1 < anchors.length) ? anchors[i + 1].index : html.length;\n  const block = html.slice(start, end);\n  const dataPost = anchors[i].dataPost;\n  const idPart = dataPost.split('/')[1];\n  const id = parseInt(idPart, 10);\n  if (!id) continue;\n\n  // Extract text\n  const textMatch = block.match(/<div class=\"tgme_widget_message_text[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/);\n  let text = textMatch ? textMatch[1] : '';\n  text = text.replace(/<br\\s*\\/?>/g, '\\n');\n  text = text.replace(/<[^>]+>/g, '');\n  text = text\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .trim();\n\n  // Extract photo(s) - Telegram preview uses a background-image style on the photo wrap link\n  const photoMatches = [...block.matchAll(/tgme_widget_message_photo_wrap[^\"]*\"\\s+style=\"background-image:url\\('([^']+)'\\)/g)];\n  const images = photoMatches.map(p => p[1]);\n\n  if (id > lastId && (text.length > 0 || images.length > 0)) {\n    posts.push({\n      id,\n      text,\n      link: `https://t.me/${dataPost}`,\n      image: images.length > 0 ? images[0] : ''\n    });\n  }\n}\n\nposts.sort((a, b) => a.id - b.id);\n\nif (posts.length > 0) {\n  staticData.lastMessageId = posts[posts.length - 1].id;\n}\n\n// BOOTSTRAP: proti fora pou trexei (lastId itan 0) mono apothikevoume to\n// teleftaio id kai den stelnoume tipota, gia na min plimmyrisoun ola ta\n// yparxonta posts san nea. Apo tin epomeni ektelesi kai meta mono ta nea.\nif (isFirstRun) {\n  return [];\n}\n\nreturn posts.map(p => ({ json: p }));"
+      },
+      "id": "ab912a65-c2b4-44af-92ec-dfd6c5cabca1",
+      "name": "Parse New Posts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.70.250:5000/translate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "source",
+              "value": "ru"
+            },
+            {
+              "name": "target",
+              "value": "en"
+            },
+            {
+              "name": "format",
+              "value": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0274d353-b8c2-44bc-a610-d957b97052f5",
+      "name": "Translate RU->EN (LibreTranslate)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -816,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const translated = $json.translatedText || '';\nconst original = $('Parse New Posts').item.json;\n\nreturn [{\n  json: {\n    title: 'Труха ⚡️ Молдова',\n    message: translated,\n    link: original.link,\n    image: original.image || ''\n  }\n}];"
+      },
+      "id": "55c4ee2f-43ca-4a87-8d26-4c01ab3e43c2",
+      "name": "Build Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-has-image",
+              "leftValue": "={{ $json.image }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8b7ca2a1-14b6-4580-b579-d37d43cf9d6f",
+      "name": "Has Image?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.147.17.161:8080/enimerwseis",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "X-Click",
+              "value": "={{ $json.link }}"
+            },
+            {
+              "name": "X-Attach",
+              "value": "={{ $json.image }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/plain",
+        "body": "=Telegram truxa_moldova_news — {{ $now.setZone('Europe/Athens').toFormat('dd/MM/yyyy HH:mm') }}\n\n{{ $json.message }}",
+        "options": {}
+      },
+      "id": "8f20c5d7-9771-43f7-a605-1e5e612a8724",
+      "name": "Send to ntfy (with image)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.147.17.161:8080/enimerwseis",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "X-Click",
+              "value": "={{ $json.link }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/plain",
+        "body": "={{ $json.message }}",
+        "options": {}
+      },
+      "id": "14e14184-7310-480a-af3a-de90f7a9e2f0",
+      "name": "Send to ntfy (text only)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -144,
+        128
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Channel HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Channel HTML": {
+      "main": [
+        [
+          {
+            "node": "Parse New Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse New Posts": {
+      "main": [
+        [
+          {
+            "node": "Translate RU->EN (LibreTranslate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Notification": {
+      "main": [
+        [
+          {
+            "node": "Has Image?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate RU->EN (LibreTranslate)": {
+      "main": [
+        [
+          {
+            "node": "Build Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Image?": {
+      "main": [
+        [
+          {
+            "node": "Send to ntfy (with image)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send to ntfy (text only)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Parse New Posts": {
+      "lastMessageId": 8308
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "4ca20580-97f3-434d-bebf-558f954ea82f",
+  "activeVersionId": "4ca20580-97f3-434d-bebf-558f954ea82f",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-09-20T10:41:29.197Z",
+      "createdAt": "2026-09-20T10:41:29.197Z",
+      "role": "workflow:owner",
+      "workflowId": "KlyCqsUflz5mJPxU",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-09-20T10:48:27.589Z",
+    "createdAt": "2026-09-20T10:48:27.589Z",
+    "versionId": "4ca20580-97f3-434d-bebf-558f954ea82f",
+    "workflowId": "KlyCqsUflz5mJPxU",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 10
+              }
+            ]
+          }
+        },
+        "id": "79c545da-86fe-4cb0-9f74-43b1e055a046",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1520,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://t.me/s/truexa_moldova_news",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "text"
+              }
+            }
+          }
+        },
+        "id": "e1da1e28-c773-4870-9404-17070ed533d8",
+        "name": "Fetch Channel HTML",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1264,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const html = $input.first().json.data || '';\n\nconst staticData = $getWorkflowStaticData('node');\nconst lastId = staticData.lastMessageId || 0;\nconst isFirstRun = lastId === 0;\n\n// Split the page into one chunk per message, anchored on each data-post\nconst blockRegex = /<div class=\"tgme_widget_message[^\"]*\"\\s+data-post=\"([^\"]+)\"/g;\nconst anchors = [];\nlet m;\nwhile ((m = blockRegex.exec(html)) !== null) {\n  anchors.push({ index: m.index, dataPost: m[1] });\n}\n\nconst posts = [];\n\nfor (let i = 0; i < anchors.length; i++) {\n  const start = anchors[i].index;\n  const end = (i + 1 < anchors.length) ? anchors[i + 1].index : html.length;\n  const block = html.slice(start, end);\n  const dataPost = anchors[i].dataPost;\n  const idPart = dataPost.split('/')[1];\n  const id = parseInt(idPart, 10);\n  if (!id) continue;\n\n  // Extract text\n  const textMatch = block.match(/<div class=\"tgme_widget_message_text[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/);\n  let text = textMatch ? textMatch[1] : '';\n  text = text.replace(/<br\\s*\\/?>/g, '\\n');\n  text = text.replace(/<[^>]+>/g, '');\n  text = text\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .trim();\n\n  // Extract photo(s) - Telegram preview uses a background-image style on the photo wrap link\n  const photoMatches = [...block.matchAll(/tgme_widget_message_photo_wrap[^\"]*\"\\s+style=\"background-image:url\\('([^']+)'\\)/g)];\n  const images = photoMatches.map(p => p[1]);\n\n  if (id > lastId && (text.length > 0 || images.length > 0)) {\n    posts.push({\n      id,\n      text,\n      link: `https://t.me/${dataPost}`,\n      image: images.length > 0 ? images[0] : ''\n    });\n  }\n}\n\nposts.sort((a, b) => a.id - b.id);\n\nif (posts.length > 0) {\n  staticData.lastMessageId = posts[posts.length - 1].id;\n}\n\n// BOOTSTRAP: proti fora pou trexei (lastId itan 0) mono apothikevoume to\n// teleftaio id kai den stelnoume tipota, gia na min plimmyrisoun ola ta\n// yparxonta posts san nea. Apo tin epomeni ektelesi kai meta mono ta nea.\nif (isFirstRun) {\n  return [];\n}\n\nreturn posts.map(p => ({ json: p }));"
+        },
+        "id": "ab912a65-c2b4-44af-92ec-dfd6c5cabca1",
+        "name": "Parse New Posts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1040,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://192.168.70.250:5000/translate",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "={{ $json.text }}"
+              },
+              {
+                "name": "source",
+                "value": "ru"
+              },
+              {
+                "name": "target",
+                "value": "en"
+              },
+              {
+                "name": "format",
+                "value": "text"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "0274d353-b8c2-44bc-a610-d957b97052f5",
+        "name": "Translate RU->EN (LibreTranslate)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -816,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const translated = $json.translatedText || '';\nconst original = $('Parse New Posts').item.json;\n\nreturn [{\n  json: {\n    title: 'Труха ⚡️ Молдова',\n    message: translated,\n    link: original.link,\n    image: original.image || ''\n  }\n}];"
+        },
+        "id": "55c4ee2f-43ca-4a87-8d26-4c01ab3e43c2",
+        "name": "Build Notification",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -608,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "cond-has-image",
+                "leftValue": "={{ $json.image }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "8b7ca2a1-14b6-4580-b579-d37d43cf9d6f",
+        "name": "Has Image?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -384,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://10.147.17.161:8080/enimerwseis",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "X-Click",
+                "value": "={{ $json.link }}"
+              },
+              {
+                "name": "X-Attach",
+                "value": "={{ $json.image }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/plain; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "text/plain",
+          "body": "=Telegram truxa_moldova_news — {{ $now.setZone('Europe/Athens').toFormat('dd/MM/yyyy HH:mm') }}\n\n{{ $json.message }}",
+          "options": {}
+        },
+        "id": "8f20c5d7-9771-43f7-a605-1e5e612a8724",
+        "name": "Send to ntfy (with image)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -160,
+          -80
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://10.147.17.161:8080/enimerwseis",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "X-Click",
+                "value": "={{ $json.link }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/plain; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "text/plain",
+          "body": "={{ $json.message }}",
+          "options": {}
+        },
+        "id": "14e14184-7310-480a-af3a-de90f7a9e2f0",
+        "name": "Send to ntfy (text only)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -144,
+          128
+        ]
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Channel HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Channel HTML": {
+        "main": [
+          [
+            {
+              "node": "Parse New Posts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse New Posts": {
+        "main": [
+          [
+            {
+              "node": "Translate RU->EN (LibreTranslate)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Notification": {
+        "main": [
+          [
+            {
+              "node": "Has Image?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Translate RU->EN (LibreTranslate)": {
+        "main": [
+          [
+            {
+              "node": "Build Notification",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Image?": {
+        "main": [
+          [
+            {
+              "node": "Send to ntfy (with image)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Send to ntfy (text only)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "trelos skilos",
+    "name": null,
+    "description": null
+  },
+  "tags": []
+}
