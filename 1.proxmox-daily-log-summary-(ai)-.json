@@ -1,0 +1,516 @@
+{
+  "updatedAt": "2026-09-26T16:27:36.696Z",
+  "createdAt": "2026-09-26T14:51:15.322Z",
+  "id": "QxQdpWh7rXEquNLq",
+  "name": "1.Proxmox Daily Log Summary (AI)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ntfy.sh/YOUR-TOPIC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Title",
+              "value": "=Proxmox Log Summary - {{ $json.dateLabel }}"
+            },
+            {
+              "name": "Priority",
+              "value": "={{ $json.status === 'ISSUES' ? 'high' : 'default' }}"
+            },
+            {
+              "name": "Tags",
+              "value": "={{ $json.status === 'ISSUES' ? 'warning' : 'white_check_mark' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "raw",
+        "options": {}
+      },
+      "name": "Send to ntfy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -448,
+        -96
+      ],
+      "id": "09e0d518-3e96-4344-bf11-c3f6e2a96d94"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Every Day 10AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -4256,
+        -256
+      ],
+      "id": "4b54fb86-e444-41ac-baf5-796703a4502e"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = new Date(Date.now() - 24 * 60 * 60 * 1000);\nconst pad = n => String(n).padStart(2, '0');\nconst ymd = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;\nreturn [{\n  json: {\n    since: `${ymd} 00:00:00`,\n    until: `${ymd} 23:59:59`,\n    dateLabel: ymd\n  }\n}];"
+      },
+      "name": "Compute Date Range",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4064,
+        -256
+      ],
+      "id": "0ad2e6d6-931d-4ef2-982a-a190bd351369"
+    },
+    {
+      "parameters": {
+        "url": "https://192.168.70.254:8006/api2/json/nodes/prxm02/syslog",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "since",
+              "value": "={{ $json.since }}"
+            },
+            {
+              "name": "until",
+              "value": "={{ $json.until }}"
+            },
+            {
+              "name": "limit",
+              "value": "20000"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "name": "Get Proxmox Syslog",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3856,
+        -256
+      ],
+      "id": "0ecff417-2df7-475b-a1ec-0ab002ef34c1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "BMyIoVnO7E6Yg2yd",
+          "name": "ProxmoxAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.data || [];\n\nconst keep = /error|fail(?:ed|ure)?|warn|critical|denied|timeout|panic|oom|degraded|corrupt|unreachable|refused|expired|exceeded|bounced|blocked|deferred|rejected|unauthenticated|reset by peer|retry|retries|nic link is (down|up)|no.?carrier|netdev watchdog|bonding:.*(down|fail)|link is down|stp topology change|rx_error|tx_error/i;\n\n// Bridge-port state changes on a REAL physical/bond NIC are worth flagging (uplink flapping).\n// Changes on virtual VM interfaces (tap/veth/fwln/fwpr/fwbr) are normal VM start/stop noise, so they're excluded.\nconst physicalIfaceBridgeChange = /vmbr\\d+: port \\d+\\((?!tap|veth|fwln|fwpr|fwbr)[a-z0-9.]+\\) entered (disabled|blocking) state/i;\n\nlet lines = raw\n  .map(l => l.t)\n  .filter(t => keep.test(t) || physicalIfaceBridgeChange.test(t));\n\nconst counts = new Map();\nfor (const line of lines) {\n  const key = line.replace(/^\\S+\\s+\\d+\\s+[\\d:]+\\s+\\S+\\s+/, '').trim();\n  counts.set(key, (counts.get(key) || 0) + 1);\n}\n\nconst deduped = [...counts.entries()].map(([msg, n]) => n > 1 ? `[x${n}] ${msg}` : msg);\n\nreturn [{\n  json: {\n    text: deduped.join('\\n'),\n    originalLineCount: raw.length,\n    filteredLineCount: lines.length,\n    dedupedLineCount: deduped.length,\n    dateLabel: $('Compute Date Range').first().json.dateLabel\n  }\n}];"
+      },
+      "name": "Filter and Dedupe Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3664,
+        -256
+      ],
+      "id": "3170e982-48ff-4139-a83e-4cdbc1b2f917"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst lines = data.text.split('\\n').filter(Boolean);\nconst CHUNK_SIZE = 1200; // lines per chunk, keeps each AI call well inside context limits\nconst chunks = [];\nfor (let i = 0; i < lines.length; i += CHUNK_SIZE) {\n  chunks.push(lines.slice(i, i + CHUNK_SIZE).join('\\n'));\n}\nif (chunks.length === 0) chunks.push('(no notable lines after filtering)');\n\nreturn chunks.map((text, idx) => ({\n  json: {\n    text,\n    chunkIndex: idx + 1,\n    totalChunks: chunks.length,\n    dateLabel: data.dateLabel\n  }\n}));"
+      },
+      "name": "Chunk Log For Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3456,
+        -256
+      ],
+      "id": "4dc9295c-7756-41bc-801f-6ed0ad209bbc"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Log excerpt {{ $json.chunkIndex }}/{{ $json.totalChunks }} from a Proxmox host, covering {{ $json.dateLabel }}. Analyze and extract notable events only, following the rules in your instructions:\n\n{{ $json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a Proxmox VE system log analyst. You will be given a raw excerpt of syslog/journal entries from a Proxmox host. Your only job is to extract genuinely notable events from this excerpt — nothing else.\n\nFlag only:\n- Errors, failures, crashes, panics\n- Security-relevant events: authentication failures, unauthorized access attempts, firewall denials\n- Resource issues: disk full/near-full, ZFS pool degraded/corrupt, OOM killer, high load, memory pressure\n- Hardware warnings: disk SMART errors, network interface flapping, thermal issues\n- Backup/replication failures\n- Anything else clearly abnormal for a healthy running system\n\nIgnore routine, expected chatter: normal service start/stop messages, routine cron/systemd timer ticks, pvestatd/pvedaemon polling, normal DHCP renewals, and anything that is just informational status with no problem indicated.\n\nOutput format: one line per notable event, formatted as:\n[TIME] SEVERITY: short description\n\nIf this excerpt contains no notable events, output exactly: NONE\n\nDo not summarize the whole excerpt. Do not add commentary. Do not repeat identical events more than once — if you see the same issue many times, note it once with an approximate count."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "name": "AI - Extract Issues (Map)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -3216,
+        -256
+      ],
+      "id": "adfba8a7-af73-499f-a023-d1dfd7dd72a9"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $input.item.json.text ?? '';\nconst chunkInfo = $('Chunk Log For Analysis').item.json;\nreturn [{\n  json: {\n    chunkIndex: chunkInfo.chunkIndex,\n    extracted: content\n  }\n}];"
+      },
+      "name": "Normalize Map Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2928,
+        -256
+      ],
+      "id": "dd69a511-3fe1-4d92-a1d4-0d2423345c0e"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "name": "Aggregate Chunk Results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -2736,
+        -256
+      ],
+      "id": "15a18726-7273-490b-87ce-18bc6a2aec40"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.data || [];\nconst list = items.map(i => i.extracted).filter(Boolean);\nconst meaningful = list.filter(x => x.trim().toUpperCase() !== 'NONE');\nconst combined = meaningful.length ? meaningful.join('\\n') : 'NONE';\n\nreturn [{\n  json: {\n    combinedIssues: combined,\n    totalChunks: list.length,\n    dateLabel: $('Compute Date Range').first().json.dateLabel\n  }\n}];"
+      },
+      "name": "Combine Extracted Issues",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2496,
+        -256
+      ],
+      "id": "c215bb4b-e16b-4520-84ac-b995ef658189"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Notable events extracted from yesterday's ({{ $json.dateLabel }}) Proxmox syslog, gathered from {{ $json.totalChunks }} chunk(s):\n\n{{ $json.combinedIssues }}\n\nWrite the daily report now, following your instructions exactly.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a daily health report for a Proxmox VE host, to be read by its administrator over morning coffee. You will be given a list of notable events already extracted from yesterday's system log (possibly gathered from several chunks — merge any obvious duplicates).\n\nWrite a concise plain-text report (no markdown, no headers) with this structure:\n1. First line: exactly \"STATUS: OK\" if there were no genuinely notable events, or exactly \"STATUS: ISSUES\" if there were.\n2. A 2-4 sentence overview of the day.\n3. If STATUS: ISSUES, a bulleted list (using \"-\") of the specific notable events, grouped by category (errors, security, resources, hardware, backups), each with a one-line plain-English explanation of what it means and, if obvious, a suggested next step.\n4. If STATUS: OK, keep the whole report to 2-3 sentences total and skip the bulleted list.\n\nKeep the total report under 250 words. Be direct and specific — name services, error codes, or device names where present. Do not invent events that are not in the input."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "name": "AI - Write Daily Report (Reduce)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -2256,
+        -256
+      ],
+      "id": "83ca5b39-c68b-4f47-8ab7-6e1b9458dc6d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = ($input.item.json.text ?? '').trim();\nconst status = /^STATUS:\\s*ISSUES/i.test(raw) ? 'ISSUES' : 'OK';\nreturn [{\n  json: {\n    report: raw,\n    status,\n    dateLabel: $('Compute Date Range').first().json.dateLabel\n  }\n}];"
+      },
+      "name": "Parse Final Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1984,
+        -256
+      ],
+      "id": "06dc6d01-5202-4539-991d-00def471aeb9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ntfy.sh/YOUR-TOPIC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Title",
+              "value": "=Proxmox Log Summary - {{ $json.dateLabel }}"
+            },
+            {
+              "name": "Priority",
+              "value": "={{ $json.status === 'ISSUES' ? 'high' : 'default' }}"
+            },
+            {
+              "name": "Tags",
+              "value": "={{ $json.status === 'ISSUES' ? 'warning' : 'white_check_mark' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "raw",
+        "options": {}
+      },
+      "name": "Send to ntfy1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1776,
+        -384
+      ],
+      "id": "8f49556b-5f73-4baa-ae46-5a528e83b5ae"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -3296,
+        -48
+      ],
+      "id": "a2cee37a-3783-4359-82b4-a7bb2667c1fd",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "kdgCkpCrW61FR87q",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -2336,
+        -48
+      ],
+      "id": "88fe6adf-0ed9-4ff1-95ef-eb2328d87a91",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "kdgCkpCrW61FR87q",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "seremvas76@gmail.com",
+        "subject": "=Proxmox Daily Log Summary - {{ DateTime.fromFormat($json.dateLabel, 'yyyy-MM-dd').toFormat('dd-MM-yyyy') }}",
+        "message": "={{ $json.report }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1728,
+        -224
+      ],
+      "id": "94f52376-83c4-4134-af74-5f1640c1f976",
+      "name": "Send a message",
+      "webhookId": "d81499ff-ed52-466d-924a-af0f04efbfbe",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WBaGzd89qjgz8bxH",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every Day 10AM": {
+      "main": [
+        [
+          {
+            "node": "Compute Date Range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Date Range": {
+      "main": [
+        [
+          {
+            "node": "Get Proxmox Syslog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Proxmox Syslog": {
+      "main": [
+        [
+          {
+            "node": "Filter and Dedupe Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter and Dedupe Log": {
+      "main": [
+        [
+          {
+            "node": "Chunk Log For Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunk Log For Analysis": {
+      "main": [
+        [
+          {
+            "node": "AI - Extract Issues (Map)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Extract Issues (Map)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Map Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Map Output": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Chunk Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Chunk Results": {
+      "main": [
+        [
+          {
+            "node": "Combine Extracted Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Extracted Issues": {
+      "main": [
+        [
+          {
+            "node": "AI - Write Daily Report (Reduce)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Write Daily Report (Reduce)": {
+      "main": [
+        [
+          {
+            "node": "Parse Final Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Final Report": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Extract Issues (Map)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Write Daily Report (Reduce)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Athens",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "g6VSaJXbw9uphgte"
+  },
+  "staticData": {
+    "node:Every Day 10AM": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d40aaaaf-0fc2-4719-ae30-762d80ffa21e",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-09-26T14:51:15.332Z",
+      "createdAt": "2026-09-26T14:51:15.332Z",
+      "role": "workflow:owner",
+      "workflowId": "QxQdpWh7rXEquNLq",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
