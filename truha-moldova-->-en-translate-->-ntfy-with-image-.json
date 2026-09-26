@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-20T10:48:27.589Z",
+  "updatedAt": "2026-09-26T18:11:24.987Z",
   "createdAt": "2026-09-20T10:41:29.195Z",
   "id": "KlyCqsUflz5mJPxU",
   "name": "Truha Moldova -> EN translate -> ntfy with image",
@@ -48,7 +48,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const html = $input.first().json.data || '';\n\nconst staticData = $getWorkflowStaticData('node');\nconst lastId = staticData.lastMessageId || 0;\nconst isFirstRun = lastId === 0;\n\n// Split the page into one chunk per message, anchored on each data-post\nconst blockRegex = /<div class=\"tgme_widget_message[^\"]*\"\\s+data-post=\"([^\"]+)\"/g;\nconst anchors = [];\nlet m;\nwhile ((m = blockRegex.exec(html)) !== null) {\n  anchors.push({ index: m.index, dataPost: m[1] });\n}\n\nconst posts = [];\n\nfor (let i = 0; i < anchors.length; i++) {\n  const start = anchors[i].index;\n  const end = (i + 1 < anchors.length) ? anchors[i + 1].index : html.length;\n  const block = html.slice(start, end);\n  const dataPost = anchors[i].dataPost;\n  const idPart = dataPost.split('/')[1];\n  const id = parseInt(idPart, 10);\n  if (!id) continue;\n\n  // Extract text\n  const textMatch = block.match(/<div class=\"tgme_widget_message_text[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/);\n  let text = textMatch ? textMatch[1] : '';\n  text = text.replace(/<br\\s*\\/?>/g, '\\n');\n  text = text.replace(/<[^>]+>/g, '');\n  text = text\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .trim();\n\n  // Extract photo(s) - Telegram preview uses a background-image style on the photo wrap link\n  const photoMatches = [...block.matchAll(/tgme_widget_message_photo_wrap[^\"]*\"\\s+style=\"background-image:url\\('([^']+)'\\)/g)];\n  const images = photoMatches.map(p => p[1]);\n\n  if (id > lastId && (text.length > 0 || images.length > 0)) {\n    posts.push({\n      id,\n      text,\n      link: `https://t.me/${dataPost}`,\n      image: images.length > 0 ? images[0] : ''\n    });\n  }\n}\n\nposts.sort((a, b) => a.id - b.id);\n\nif (posts.length > 0) {\n  staticData.lastMessageId = posts[posts.length - 1].id;\n}\n\n// BOOTSTRAP: proti fora pou trexei (lastId itan 0) mono apothikevoume to\n// teleftaio id kai den stelnoume tipota, gia na min plimmyrisoun ola ta\n// yparxonta posts san nea. Apo tin epomeni ektelesi kai meta mono ta nea.\nif (isFirstRun) {\n  return [];\n}\n\nreturn posts.map(p => ({ json: p }));"
+        "jsCode": "const html = $input.first().json.data || '';\n\nconst staticData = $getWorkflowStaticData('node');\nconst lastId = staticData.lastMessageId || 0;\nconst isFirstRun = lastId === 0;\n\n// Split the page into one chunk per message, anchored on each data-post\nconst blockRegex = /<div class=\"tgme_widget_message[^\"]*\"\\s+data-post=\"([^\"]+)\"/g;\nconst anchors = [];\nlet m;\nwhile ((m = blockRegex.exec(html)) !== null) {\n  anchors.push({ index: m.index, dataPost: m[1] });\n}\n\n// Changed from const to let so we can filter for the first run if needed\nlet posts = [];\n\nfor (let i = 0; i < anchors.length; i++) {\n  const start = anchors[i].index;\n  const end = (i + 1 < anchors.length) ? anchors[i + 1].index : html.length;\n  const block = html.slice(start, end);\n  const dataPost = anchors[i].dataPost;\n  const idPart = dataPost.split('/')[1];\n  const id = parseInt(idPart, 10);\n  if (!id) continue;\n\n  // Extract text\n  const textMatch = block.match(/<div class=\"tgme_widget_message_text[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/);\n  let text = textMatch ? textMatch[1] : '';\n  text = text.replace(/<br\\s*\\/?>/g, '\\n');\n  text = text.replace(/<[^>]+>/g, '');\n  text = text\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .trim();\n\n  // Extract photo(s)\n  const photoMatches = [...block.matchAll(/tgme_widget_message_photo_wrap[^>]*background-image:url\\('([^']+)'\\)/g)];\n  const images = photoMatches.map(p => p[1]);\n\n  if (id > lastId && (text.length > 0 || images.length > 0)) {\n    posts.push({\n      id,\n      text,\n      link: `https://t.me/${dataPost}`,\n      image: images.length > 0 ? images[0] : ''\n    });\n  }\n}\n\nposts.sort((a, b) => a.id - b.id);\n\n// If it's the very first run, only keep the single newest post to avoid spamming history\nif (isFirstRun && posts.length > 0) {\n  posts = [posts[posts.length - 1]];\n}\n\nif (posts.length > 0) {\n  staticData.lastMessageId = posts[posts.length - 1].id;\n}\n\nreturn posts.map(p => ({ json: p }));"
       },
       "id": "ab912a65-c2b4-44af-92ec-dfd6c5cabca1",
       "name": "Parse New Posts",
@@ -124,7 +124,8 @@
               "rightValue": "",
               "operator": {
                 "type": "string",
-                "operation": "notEquals"
+                "operation": "notEmpty",
+                "singleValue": true
               }
             }
           ],
@@ -153,12 +154,12 @@
               "value": "={{ $json.title }}"
             },
             {
-              "name": "X-Click",
-              "value": "={{ $json.link }}"
-            },
-            {
               "name": "X-Attach",
               "value": "={{ $json.image }}"
+            },
+            {
+              "name": "X-Click",
+              "value": "={{ $json.message }}"
             },
             {
               "name": "Content-Type",
@@ -177,9 +178,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -160,
-        -80
-      ]
+        -560,
+        -320
+      ],
+      "disabled": true
     },
     {
       "parameters": {
@@ -215,6 +217,34 @@
       "position": [
         -144,
         128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.147.17.161:8080/enimerwseis",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Markdown",
+              "value": "=true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "=**Telegram truxa_moldova_news — {{ $now.setZone('Europe/Athens').toFormat('dd/MM/yyyy HH:mm') }}**\n\n![image]({{ $json.image }})\n\n{{ $json.message }}\n\n",
+        "options": {}
+      },
+      "id": "bed09e88-8358-4869-9738-1a3ea9d6ad9c",
+      "name": "Send to ntfy (with image)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -96,
+        -112
       ]
     }
   ],
@@ -278,7 +308,7 @@
       "main": [
         [
           {
-            "node": "Send to ntfy (with image)",
+            "node": "Send to ntfy (with image)1",
             "type": "main",
             "index": 0
           }
@@ -306,13 +336,13 @@
       "recurrenceRules": []
     },
     "node:Parse New Posts": {
-      "lastMessageId": 8360
+      "lastMessageId": 8366
     }
   },
   "meta": null,
   "pinData": {},
-  "versionId": "4ca20580-97f3-434d-bebf-558f954ea82f",
-  "activeVersionId": "4ca20580-97f3-434d-bebf-558f954ea82f",
+  "versionId": "915b96b9-c1f9-463c-9363-99601eb9dda1",
+  "activeVersionId": "915b96b9-c1f9-463c-9363-99601eb9dda1",
   "triggerCount": 1,
   "shared": [
     {
@@ -324,9 +354,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-09-20T10:48:27.589Z",
-    "createdAt": "2026-09-20T10:48:27.589Z",
-    "versionId": "4ca20580-97f3-434d-bebf-558f954ea82f",
+    "updatedAt": "2026-09-26T18:11:24.988Z",
+    "createdAt": "2026-09-26T18:11:24.988Z",
+    "versionId": "915b96b9-c1f9-463c-9363-99601eb9dda1",
     "workflowId": "KlyCqsUflz5mJPxU",
     "nodes": [
       {
@@ -371,7 +401,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const html = $input.first().json.data || '';\n\nconst staticData = $getWorkflowStaticData('node');\nconst lastId = staticData.lastMessageId || 0;\nconst isFirstRun = lastId === 0;\n\n// Split the page into one chunk per message, anchored on each data-post\nconst blockRegex = /<div class=\"tgme_widget_message[^\"]*\"\\s+data-post=\"([^\"]+)\"/g;\nconst anchors = [];\nlet m;\nwhile ((m = blockRegex.exec(html)) !== null) {\n  anchors.push({ index: m.index, dataPost: m[1] });\n}\n\nconst posts = [];\n\nfor (let i = 0; i < anchors.length; i++) {\n  const start = anchors[i].index;\n  const end = (i + 1 < anchors.length) ? anchors[i + 1].index : html.length;\n  const block = html.slice(start, end);\n  const dataPost = anchors[i].dataPost;\n  const idPart = dataPost.split('/')[1];\n  const id = parseInt(idPart, 10);\n  if (!id) continue;\n\n  // Extract text\n  const textMatch = block.match(/<div class=\"tgme_widget_message_text[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/);\n  let text = textMatch ? textMatch[1] : '';\n  text = text.replace(/<br\\s*\\/?>/g, '\\n');\n  text = text.replace(/<[^>]+>/g, '');\n  text = text\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .trim();\n\n  // Extract photo(s) - Telegram preview uses a background-image style on the photo wrap link\n  const photoMatches = [...block.matchAll(/tgme_widget_message_photo_wrap[^\"]*\"\\s+style=\"background-image:url\\('([^']+)'\\)/g)];\n  const images = photoMatches.map(p => p[1]);\n\n  if (id > lastId && (text.length > 0 || images.length > 0)) {\n    posts.push({\n      id,\n      text,\n      link: `https://t.me/${dataPost}`,\n      image: images.length > 0 ? images[0] : ''\n    });\n  }\n}\n\nposts.sort((a, b) => a.id - b.id);\n\nif (posts.length > 0) {\n  staticData.lastMessageId = posts[posts.length - 1].id;\n}\n\n// BOOTSTRAP: proti fora pou trexei (lastId itan 0) mono apothikevoume to\n// teleftaio id kai den stelnoume tipota, gia na min plimmyrisoun ola ta\n// yparxonta posts san nea. Apo tin epomeni ektelesi kai meta mono ta nea.\nif (isFirstRun) {\n  return [];\n}\n\nreturn posts.map(p => ({ json: p }));"
+          "jsCode": "const html = $input.first().json.data || '';\n\nconst staticData = $getWorkflowStaticData('node');\nconst lastId = staticData.lastMessageId || 0;\nconst isFirstRun = lastId === 0;\n\n// Split the page into one chunk per message, anchored on each data-post\nconst blockRegex = /<div class=\"tgme_widget_message[^\"]*\"\\s+data-post=\"([^\"]+)\"/g;\nconst anchors = [];\nlet m;\nwhile ((m = blockRegex.exec(html)) !== null) {\n  anchors.push({ index: m.index, dataPost: m[1] });\n}\n\n// Changed from const to let so we can filter for the first run if needed\nlet posts = [];\n\nfor (let i = 0; i < anchors.length; i++) {\n  const start = anchors[i].index;\n  const end = (i + 1 < anchors.length) ? anchors[i + 1].index : html.length;\n  const block = html.slice(start, end);\n  const dataPost = anchors[i].dataPost;\n  const idPart = dataPost.split('/')[1];\n  const id = parseInt(idPart, 10);\n  if (!id) continue;\n\n  // Extract text\n  const textMatch = block.match(/<div class=\"tgme_widget_message_text[^\"]*\"[^>]*>([\\s\\S]*?)<\\/div>/);\n  let text = textMatch ? textMatch[1] : '';\n  text = text.replace(/<br\\s*\\/?>/g, '\\n');\n  text = text.replace(/<[^>]+>/g, '');\n  text = text\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .trim();\n\n  // Extract photo(s)\n  const photoMatches = [...block.matchAll(/tgme_widget_message_photo_wrap[^>]*background-image:url\\('([^']+)'\\)/g)];\n  const images = photoMatches.map(p => p[1]);\n\n  if (id > lastId && (text.length > 0 || images.length > 0)) {\n    posts.push({\n      id,\n      text,\n      link: `https://t.me/${dataPost}`,\n      image: images.length > 0 ? images[0] : ''\n    });\n  }\n}\n\nposts.sort((a, b) => a.id - b.id);\n\n// If it's the very first run, only keep the single newest post to avoid spamming history\nif (isFirstRun && posts.length > 0) {\n  posts = [posts[posts.length - 1]];\n}\n\nif (posts.length > 0) {\n  staticData.lastMessageId = posts[posts.length - 1].id;\n}\n\nreturn posts.map(p => ({ json: p }));"
         },
         "id": "ab912a65-c2b4-44af-92ec-dfd6c5cabca1",
         "name": "Parse New Posts",
@@ -447,7 +477,8 @@
                 "rightValue": "",
                 "operator": {
                   "type": "string",
-                  "operation": "notEquals"
+                  "operation": "notEmpty",
+                  "singleValue": true
                 }
               }
             ],
@@ -476,12 +507,12 @@
                 "value": "={{ $json.title }}"
               },
               {
-                "name": "X-Click",
-                "value": "={{ $json.link }}"
-              },
-              {
                 "name": "X-Attach",
                 "value": "={{ $json.image }}"
+              },
+              {
+                "name": "X-Click",
+                "value": "={{ $json.message }}"
               },
               {
                 "name": "Content-Type",
@@ -500,9 +531,10 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          -160,
-          -80
-        ]
+          -560,
+          -320
+        ],
+        "disabled": true
       },
       {
         "parameters": {
@@ -538,6 +570,34 @@
         "position": [
           -144,
           128
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://10.147.17.161:8080/enimerwseis",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Markdown",
+                "value": "=true"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "text/html",
+          "body": "=**Telegram truxa_moldova_news — {{ $now.setZone('Europe/Athens').toFormat('dd/MM/yyyy HH:mm') }}**\n\n![image]({{ $json.image }})\n\n{{ $json.message }}\n\n",
+          "options": {}
+        },
+        "id": "bed09e88-8358-4869-9738-1a3ea9d6ad9c",
+        "name": "Send to ntfy (with image)1",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -96,
+          -112
         ]
       }
     ],
@@ -601,7 +661,7 @@
         "main": [
           [
             {
-              "node": "Send to ntfy (with image)",
+              "node": "Send to ntfy (with image)1",
               "type": "main",
               "index": 0
             }
