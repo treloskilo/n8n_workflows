@@ -1,0 +1,698 @@
+{
+  "updatedAt": "2026-09-27T16:47:43.889Z",
+  "createdAt": "2026-09-27T16:47:43.889Z",
+  "id": "2JwWZ718cMWAbkmh",
+  "name": "MikroTik Daily Log & Health Summary (AI)",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Every Day 10AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -704,
+        160
+      ],
+      "id": "745d264f-2baa-4d21-9d08-8a34d9641d49"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = new Date(Date.now() - 24 * 60 * 60 * 1000);\nconst pad = n => String(n).padStart(2, '0');\nconst ymd = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;\nreturn [{ json: { dateLabel: ymd } }];"
+      },
+      "name": "Compute Date Range",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        160
+      ],
+      "id": "977e353d-4ba5-4258-a4df-a241478e81be"
+    },
+    {
+      "parameters": {
+        "url": "https://YOUR-ROUTER-IP/rest/log",
+        "authentication": "httpBasicAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "name": "Get RouterOS Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -304,
+        -112
+      ],
+      "id": "4954c58b-80c4-4919-af90-19a9bdb08eb7"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawResp = $input.first().json;\nconst entries = Array.isArray(rawResp) ? rawResp : (rawResp.data || rawResp.log || []);\n\n// RouterOS tags severity directly in \"topics\" (e.g. \"system,error\"), so that's the primary signal.\n// A supplementary keyword check catches info-level entries that still matter.\nconst severityMatch = /error|warning|critical/i;\nconst keywordMatch = /reboot|password|login failure|failed login|blocked|dropped|reject|dos attack|flood|link down|link up|disconnect|timeout|expired|certificate|license|out of memory|high cpu/i;\n\nconst filtered = entries.filter(e => {\n  const topics = (e.topics || '').toLowerCase();\n  const msg = e.message || '';\n  return severityMatch.test(topics) || keywordMatch.test(msg);\n});\n\nconst counts = new Map();\nfor (const e of filtered) {\n  const key = `[${e.topics || 'unknown'}] ${e.message || ''}`.trim();\n  counts.set(key, (counts.get(key) || 0) + 1);\n}\nconst deduped = [...counts.entries()].map(([msg, n]) => n > 1 ? `[x${n}] ${msg}` : msg);\n\nreturn [{\n  json: {\n    text: deduped.join('\\n'),\n    originalCount: entries.length,\n    filteredCount: filtered.length,\n    dedupedCount: deduped.length,\n    dateLabel: $('Compute Date Range').first().json.dateLabel\n  }\n}];"
+      },
+      "name": "Filter and Dedupe RouterOS Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -112
+      ],
+      "id": "f9d2a516-27df-404c-aa75-dc34a0c6d13b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst lines = data.text.split('\\n').filter(Boolean);\nconst CHUNK_SIZE = 1200;\nconst chunks = [];\nfor (let i = 0; i < lines.length; i += CHUNK_SIZE) {\n  chunks.push(lines.slice(i, i + CHUNK_SIZE).join('\\n'));\n}\nif (chunks.length === 0) chunks.push('(no notable lines after filtering)');\n\nreturn chunks.map((text, idx) => ({\n  json: {\n    text,\n    chunkIndex: idx + 1,\n    totalChunks: chunks.length,\n    dateLabel: data.dateLabel\n  }\n}));"
+      },
+      "name": "Chunk Log For Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -112
+      ],
+      "id": "f753d168-1358-4eae-a5b2-b7d41d69a427"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Log excerpt {{ $json.chunkIndex }}/{{ $json.totalChunks }} from a MikroTik router, covering {{ $json.dateLabel }}. Analyze and extract notable events only, following the rules in your instructions:\n\n{{ $json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a MikroTik RouterOS log analyst. You will be given a raw excerpt of log entries from a MikroTik router, each formatted as [topics] message (with repeat counts noted as [xN] where applicable). Your only job is to extract genuinely notable events — nothing else.\n\nFlag only:\n- System errors, critical events, unexpected reboots, and firmware/package issues\n- Security events: failed logins (winbox/ssh/telnet/api/web), brute-force attempts, new admin/user accounts, unexpected configuration changes\n- WAN/connectivity issues: PPPoE/DHCP client failures or repeated reconnects, link up/down flapping, VPN (IPsec/WireGuard/OpenVPN) tunnel drops or authentication failures\n- Firewall: unusual spikes in dropped/rejected traffic, sustained blocks from a single source (possible attack/scan)\n- Wireless (if present): repeated client disconnects, DFS radar events, unexpected channel changes\n- Resource issues: low memory, sustained high CPU, license or certificate expiry warnings\n\nIgnore routine, expected chatter: normal DHCP lease renewals, routine NTP sync messages, scheduled/expected reboots, and anything purely informational with no problem indicated.\n\nOutput format: one line per notable event:\n[TOPIC] SEVERITY: short description\n\nIf this excerpt contains no notable events, output exactly: NONE\n\nDo not summarize the whole excerpt. Do not add commentary. Do not repeat identical events more than once — if you see the same issue many times, note it once with an approximate count."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "name": "AI - Extract Issues (Map)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        336,
+        -112
+      ],
+      "id": "876fd411-10b2-471f-b825-56806785b1e9"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "openai/gpt-oss-120b"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "name": "OpenAI Chat Model (Map)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        112
+      ],
+      "id": "d22222c4-84f5-4cc3-a68f-2c7637ce8cac"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $input.item.json.text ?? '';\nconst chunkInfo = $('Chunk Log For Analysis').item.json;\nreturn [{ json: { chunkIndex: chunkInfo.chunkIndex, extracted: content } }];"
+      },
+      "name": "Normalize Map Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -112
+      ],
+      "id": "30f0c4c7-421c-4ad6-83af-b3d4cd5af0d4"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "name": "Aggregate Chunk Results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -112
+      ],
+      "id": "5f868a88-d0f8-4142-8a77-b8c13fafbdd5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.data || [];\nconst list = items.map(i => i.extracted).filter(Boolean);\nconst meaningful = list.filter(x => x.trim().toUpperCase() !== 'NONE');\nconst combined = meaningful.length ? meaningful.join('\\n') : 'NONE';\n\nreturn [{\n  json: {\n    combinedIssues: combined,\n    totalChunks: list.length,\n    dateLabel: $('Compute Date Range').first().json.dateLabel\n  }\n}];"
+      },
+      "name": "Combine Extracted Issues",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        -112
+      ],
+      "id": "b0d0c7d5-1432-4569-9b2e-6f90abb8afe9"
+    },
+    {
+      "parameters": {
+        "url": "https://YOUR-ROUTER-IP/rest/system/resource",
+        "authentication": "httpBasicAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "name": "Get Router Resource",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -304,
+        368
+      ],
+      "id": "afccc66f-60e2-42f2-aaf5-deac441eb43e"
+    },
+    {
+      "parameters": {
+        "url": "https://YOUR-ROUTER-IP/rest/system/health",
+        "authentication": "httpBasicAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "name": "Get Router Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -304,
+        560
+      ],
+      "id": "a7e73fbd-25a2-4c22-ae18-2d432fa292e4"
+    },
+    {
+      "parameters": {
+        "url": "https://YOUR-ROUTER-IP/rest/interface",
+        "authentication": "httpBasicAuth",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "name": "Get Router Interfaces",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -304,
+        736
+      ],
+      "id": "94249fb9-e02a-4011-bf41-91bc1bacc257"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "health",
+        "options": {}
+      },
+      "name": "Aggregate Health",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        560
+      ],
+      "id": "6999fdd9-6e02-4d33-af73-10a48e238e3e"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "interfaces",
+        "options": {}
+      },
+      "name": "Aggregate Interfaces",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        736
+      ],
+      "id": "578a40de-ecf6-42c9-8a59-c0126b82d9ee"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "name": "Merge Resource + Health",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        144,
+        448
+      ],
+      "id": "8d0752cc-8aef-4441-9762-9774e1ee547d"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "name": "Merge + Interfaces",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        384,
+        560
+      ],
+      "id": "cd9a0529-6eba-48e4-929d-bf759b49183f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nconst cpuLoad = item['cpu-load'] ?? 'unknown';\nconst freeMem = parseInt(item['free-memory'] ?? 0, 10);\nconst totalMem = parseInt(item['total-memory'] ?? 0, 10);\nconst memUsedPct = totalMem ? (((totalMem - freeMem) / totalMem) * 100).toFixed(1) : 'unknown';\nconst uptime = item.uptime ?? 'unknown';\nconst boardName = item['board-name'] ?? 'unknown';\n\nconst health = item.health || [];\nconst healthLines = health.map(h => `${h.name}: ${h.value}${h.type || ''}`);\n\nconst interfaces = item.interfaces || [];\nconst ifaceSummaries = interfaces\n  .filter(i => !/loopback/i.test(i.type || ''))\n  .map(i => {\n    const running = (i.running === true || i.running === 'true');\n    const disabled = (i.disabled === true || i.disabled === 'true');\n    const state = running ? 'UP' : (disabled ? 'DISABLED' : 'DOWN');\n    const rxErr = i['rx-error'] ?? 0;\n    const txErr = i['tx-error'] ?? 0;\n    const rxDrop = i['rx-drop'] ?? 0;\n    const txDrop = i['tx-drop'] ?? 0;\n    const linkDowns = i['link-downs'] ?? 0;\n    return `${i.name} (${i.type || '?'}): ${state}, RX errors=${rxErr} drops=${rxDrop}, TX errors=${txErr} drops=${txDrop}, link-downs=${linkDowns}`;\n  });\n\nconst hardwareSummary =\n`CPU load: ${cpuLoad}%\nMemory used: ${memUsedPct}% (${freeMem} bytes free of ${totalMem})\nUptime: ${uptime}\nBoard: ${boardName}\n\nHealth sensors:\n${healthLines.length ? healthLines.join('\\n') : '(no health sensors reported by this model)'}\n\nInterfaces:\n${ifaceSummaries.length ? ifaceSummaries.join('\\n') : '(no interfaces found)'}`;\n\nreturn [{\n  json: {\n    hardwareSummary,\n    cpuLoad,\n    memUsedPct,\n    dateLabel: $('Compute Date Range').first().json.dateLabel\n  }\n}];"
+      },
+      "name": "Parse Router Hardware Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        560
+      ],
+      "id": "cc0520c8-4cc1-4a45-abd1-73360f05cbb4"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "name": "Merge Log + Hardware",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1296,
+        96
+      ],
+      "id": "e35d4a52-9ffa-46f5-b442-66abe25c043c"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Notable events extracted from yesterday's ({{ $json.dateLabel }}) MikroTik log, gathered from {{ $json.totalChunks }} chunk(s):\n\n{{ $json.combinedIssues }}\n\nCurrent CPU, memory, health and interface snapshot (collected this morning):\n\n{{ $json.hardwareSummary }}\n\nWrite the daily report now, following your instructions exactly.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are writing a daily health report for a MikroTik router, to be read by its administrator over morning coffee. You will be given two things: (1) notable events extracted from yesterday's router log (possibly gathered from several chunks — merge any obvious duplicates), and (2) a live snapshot of CPU, memory, health sensors and interface statistics collected this morning.\n\nWrite a concise plain-text report (no markdown, no headers) with this structure:\n1. First line: exactly \"STATUS: OK\" if there is nothing notable in either the log events or the hardware snapshot, or exactly \"STATUS: ISSUES\" if there is.\n2. A 2-4 sentence overview of the day, covering both the log events and anything notable in the hardware snapshot.\n3. If STATUS: ISSUES, a bulleted list (using \"-\") of the specific notable items, grouped by category (security, WAN/connectivity, firewall, wireless, resources, hardware), each with a one-line plain-English explanation of what it means and, if obvious, a suggested next step.\n4. If STATUS: OK, keep the whole report to 2-3 sentences total and skip the bulleted list.\n\nFor the hardware snapshot specifically, only call it out as notable if: CPU load is above roughly 80%, memory used is above roughly 90%, any health sensor (temperature/voltage) looks abnormal for this hardware, or any interface shows a nonzero error/drop count, is unexpectedly DOWN, or has a high link-downs count. Otherwise treat the snapshot as healthy and do not mention it in detail.\n\nKeep the total report under 280 words. Be direct and specific — name interfaces, error codes, or IPs where present. Do not invent events that are not in the input."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "name": "AI - Write Daily Report (Reduce)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1536,
+        96
+      ],
+      "id": "da9a0720-191b-4e44-bd3a-0effef5c373c"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "openai/gpt-oss-120b"
+        },
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "name": "OpenAI Chat Model (Reduce)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        320
+      ],
+      "id": "166c68cb-af05-4a92-bb3c-a7a1ddd8068b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = ($input.item.json.text ?? '').trim();\nconst status = /^STATUS:\\s*ISSUES/i.test(raw) ? 'ISSUES' : 'OK';\n\nconst hardwareSummary = $('Parse Router Hardware Stats').first().json.hardwareSummary ?? '';\n\nfunction escapeHtml(s) {\n  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n}\n\nconst report = hardwareSummary\n  ? `${raw}\\n\\n---\\nHardware snapshot (raw):\\n${hardwareSummary}`\n  : raw;\n\nconst reportHtml = `<div style=\"font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5;\">\n${escapeHtml(raw).replace(/\\n/g, '<br>\\n')}\n${hardwareSummary\n  ? `<br><br><hr style=\"border: none; border-top: 1px solid #ccc;\"><br><strong>Hardware snapshot (raw):</strong><br>${escapeHtml(hardwareSummary).replace(/\\n/g, '<br>\\n')}`\n  : ''}\n</div>`;\n\nreturn [{\n  json: {\n    report,\n    reportHtml,\n    status,\n    dateLabel: $('Compute Date Range').first().json.dateLabel\n  }\n}];"
+      },
+      "name": "Parse Final Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        96
+      ],
+      "id": "903661dd-7643-452e-b49b-be400955743a"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ntfy.sh/YOUR-TOPIC",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Title",
+              "value": "=MikroTik Log Summary - {{ DateTime.fromFormat($json.dateLabel, 'yyyy-MM-dd').toFormat('dd-MM-yyyy') }}"
+            },
+            {
+              "name": "Priority",
+              "value": "={{ $json.status === 'ISSUES' ? 'high' : 'default' }}"
+            },
+            {
+              "name": "Tags",
+              "value": "={{ $json.status === 'ISSUES' ? 'warning' : 'white_check_mark' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "raw",
+        "options": {}
+      },
+      "name": "Send to ntfy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2016,
+        -32
+      ],
+      "id": "84146702-dd76-4e2a-8d63-7da1ae1ca398"
+    },
+    {
+      "parameters": {
+        "fromEmail": "mikrotik-alerts@yourdomain.com",
+        "toEmail": "you@yourdomain.com",
+        "subject": "=MikroTik Daily Log Summary - {{ DateTime.fromFormat($json.dateLabel, 'yyyy-MM-dd').toFormat('dd-MM-yyyy') }}",
+        "html": "={{ $json.reportHtml }}",
+        "options": {}
+      },
+      "name": "Send Email Summary",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        208
+      ],
+      "id": "89de2ece-f832-42f7-b794-cc9590590461",
+      "webhookId": "d41c0c8f-c3f7-4dc1-a018-4ab3327b604b"
+    }
+  ],
+  "connections": {
+    "Every Day 10AM": {
+      "main": [
+        [
+          {
+            "node": "Compute Date Range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Date Range": {
+      "main": [
+        [
+          {
+            "node": "Get RouterOS Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Router Resource",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Router Health",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Router Interfaces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get RouterOS Log": {
+      "main": [
+        [
+          {
+            "node": "Filter and Dedupe RouterOS Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter and Dedupe RouterOS Log": {
+      "main": [
+        [
+          {
+            "node": "Chunk Log For Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunk Log For Analysis": {
+      "main": [
+        [
+          {
+            "node": "AI - Extract Issues (Map)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Extract Issues (Map)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Map Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Map Output": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Chunk Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Chunk Results": {
+      "main": [
+        [
+          {
+            "node": "Combine Extracted Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Router Health": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Router Interfaces": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Interfaces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Router Resource": {
+      "main": [
+        [
+          {
+            "node": "Merge Resource + Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Health": {
+      "main": [
+        [
+          {
+            "node": "Merge Resource + Health",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Resource + Health": {
+      "main": [
+        [
+          {
+            "node": "Merge + Interfaces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Interfaces": {
+      "main": [
+        [
+          {
+            "node": "Merge + Interfaces",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge + Interfaces": {
+      "main": [
+        [
+          {
+            "node": "Parse Router Hardware Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Extracted Issues": {
+      "main": [
+        [
+          {
+            "node": "Merge Log + Hardware",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Router Hardware Stats": {
+      "main": [
+        [
+          {
+            "node": "Merge Log + Hardware",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Log + Hardware": {
+      "main": [
+        [
+          {
+            "node": "AI - Write Daily Report (Reduce)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Write Daily Report (Reduce)": {
+      "main": [
+        [
+          {
+            "node": "Parse Final Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Final Report": {
+      "main": [
+        [
+          {
+            "node": "Send to ntfy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model (Map)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Extract Issues (Map)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model (Reduce)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI - Write Daily Report (Reduce)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "48b748be-4e56-4306-83ca-6b93c47a0c90",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-09-27T16:47:43.890Z",
+      "createdAt": "2026-09-27T16:47:43.890Z",
+      "role": "workflow:owner",
+      "workflowId": "2JwWZ718cMWAbkmh",
+      "projectId": "7jNXHgiAtPda1pR0"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
