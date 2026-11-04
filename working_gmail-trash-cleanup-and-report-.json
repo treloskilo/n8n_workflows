@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2025-11-12T09:30:53.000Z",
+  "updatedAt": "2026-11-04T19:07:09.886Z",
   "createdAt": "2025-10-30T13:25:43.278Z",
   "id": "sqdxLLXbE12ijy5h",
   "name": "Working_Gmail Trash Cleanup and Report",
@@ -58,8 +58,8 @@
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 9,
-              "triggerAtMinute": 5
+              "field": "cronExpression",
+              "expression": "5 9,21 * * *"
             }
           ]
         }
@@ -119,7 +119,7 @@
       "typeVersion": 2,
       "position": [
         272,
-        32
+        16
       ],
       "webhookId": "ddda4fc0-ece8-42a0-8536-e3996b5ea095",
       "credentials": {
@@ -233,8 +233,8 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "versionId": "724cc071-cbf1-4038-95a6-d4cff39d0f97",
-  "activeVersionId": "724cc071-cbf1-4038-95a6-d4cff39d0f97",
+  "versionId": "33daf84a-7400-43e8-a41f-3544c738a94a",
+  "activeVersionId": "33daf84a-7400-43e8-a41f-3544c738a94a",
   "triggerCount": 1,
   "shared": [
     {
@@ -246,9 +246,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2025-11-28T13:36:06.316Z",
-    "createdAt": "2025-11-28T13:36:06.316Z",
-    "versionId": "724cc071-cbf1-4038-95a6-d4cff39d0f97",
+    "updatedAt": "2026-11-04T19:07:09.886Z",
+    "createdAt": "2026-11-04T19:07:09.886Z",
+    "versionId": "33daf84a-7400-43e8-a41f-3544c738a94a",
     "workflowId": "sqdxLLXbE12ijy5h",
     "nodes": [
       {
@@ -303,8 +303,8 @@
           "rule": {
             "interval": [
               {
-                "triggerAtHour": 9,
-                "triggerAtMinute": 5
+                "field": "cronExpression",
+                "expression": "5 9,21 * * *"
               }
             ]
           }
@@ -364,7 +364,7 @@
         "typeVersion": 2,
         "position": [
           272,
-          32
+          16
         ],
         "webhookId": "ddda4fc0-ece8-42a0-8536-e3996b5ea095",
         "credentials": {
@@ -462,7 +462,7 @@
         ]
       }
     },
-    "authors": "system migration",
+    "authors": "trelos skilos",
     "name": null,
     "description": null
   },
